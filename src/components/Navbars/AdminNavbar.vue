@@ -1,60 +1,50 @@
 <template>
   <!-- Navbar -->
-  <nav class="bg-white shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between h-16">
-        <div class="flex-1 flex items-center">
-          <!-- Logo -->
-          <div class="flex-shrink-0 flex items-center">
-            <h1 class="text-xl font-bold text-gray-800">JieNote</h1>
-          </div>
-          
-          <!-- Search Bar -->
-          <div class="flex-1 max-w-2xl ml-8">
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <i class="fas fa-search text-gray-400"></i>
-              </div>
-              <input
-                type="text"
-                v-model="searchQuery"
-                @input="handleSearch"
-                placeholder="搜索文献、笔记..."
-                class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Right side buttons -->
-        <div class="flex items-center">
-          <button
-            @click="showNewItemModal = true"
-            class="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+  <nav
+    class="absolute top-0 left-0 w-full z-10 bg-transparent md:flex-row md:flex-nowrap md:justify-start flex items-center p-4"
+  >
+    <div
+      class="w-full mx-autp items-center flex justify-between md:flex-nowrap flex-wrap md:px-10 px-4"
+    >
+      <!-- Brand -->
+      <a
+        class="text-white text-sm uppercase hidden lg:inline-block font-semibold"
+        href="javascript:void(0)"
+      >
+        Dashboard
+      </a>
+      <!-- Form -->
+      <form
+        class="md:flex hidden flex-row flex-wrap items-center lg:ml-auto mr-3"
+      >
+        <div class="relative flex w-full flex-wrap items-stretch">
+          <span
+            class="z-10 h-full leading-snug font-normal absolute text-center text-blueGray-300 absolute bg-transparent rounded text-base items-center justify-center w-8 pl-3 py-3"
           >
-            <i class="fas fa-plus mr-2"></i>
-            新建
-          </button>
+            <i class="fas fa-search"></i>
+          </span>
+          <input
+            type="text"
+            placeholder="Search here..."
+            class="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 relative bg-white bg-white rounded text-sm shadow outline-none focus:outline-none focus:ring w-full pl-10"
+          />
         </div>
-      </div>
+      </form>
+      <!-- User -->
+      <ul class="flex-col md:flex-row list-none items-center hidden md:flex">
+        <user-dropdown />
+      </ul>
     </div>
   </nav>
+  <!-- End Navbar -->
 </template>
 
 <script>
+import UserDropdown from "@/components/Dropdowns/UserDropdown.vue";
+
 export default {
-  name: "AdminNavbar",
-  data() {
-    return {
-      searchQuery: "",
-      showNewItemModal: false,
-    };
-  },
-  methods: {
-    handleSearch() {
-      // 触发搜索事件，将搜索关键词传递给父组件
-      this.$emit('search', this.searchQuery);
-    },
+  components: {
+    UserDropdown,
   },
 };
 </script>
