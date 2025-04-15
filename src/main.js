@@ -11,6 +11,9 @@ import "@/assets/styles/tailwind.css";
 import App from "@/App.vue";
 
 // layouts
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
+import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
 import Admin from "@/layouts/Admin.vue";
 import Auth from "@/layouts/Auth.vue";
@@ -94,4 +97,10 @@ const router = createRouter({
   routes,
 });
 
-createApp(App).use(router).mount("#app");
+const app = createApp(App)
+app.use(ElementPlus)
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+  app.component(key, component)
+}
+app.use(router).mount("#app");
+
