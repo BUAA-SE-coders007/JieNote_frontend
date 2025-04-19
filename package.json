@@ -21,6 +21,7 @@
     "chart.js": "2.9.4",
     "core-js": "3.9.1",
     "element-plus": "^2.9.7",
+    "gojs": "^3.0.21",
     "gulp": "4.0.2",
     "gulp-append-prepend": "1.0.8",
     "tailwindcss": "2.0.4",
