@@ -16,11 +16,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Set up Node.js
+      # Set up the latest Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 'lts/*' # Use the latest LTS version of Node.js
           cache: 'npm'
 
       # Upgrade npm to the latest version
