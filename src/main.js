@@ -60,6 +60,14 @@ const routes = [
         path: "/admin/maps",
         component: Maps,
       },
+      {
+        path: "/landing",
+        component: Landing,
+      },
+      {
+        path: "/profile",
+        component: Profile,
+      }
     ],
   },
   {
@@ -76,14 +84,6 @@ const routes = [
         component: Register,
       },
     ],
-  },
-  {
-    path: "/landing",
-    component: Landing,
-  },
-  {
-    path: "/profile",
-    component: Profile,
   },
   {
     path: "/",
