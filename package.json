@@ -24,6 +24,7 @@
     "gojs": "^3.0.21",
     "gulp": "4.0.2",
     "gulp-append-prepend": "1.0.8",
+    "jszip": "^3.10.1",
     "tailwindcss": "2.0.4",
     "vue": "3.2.47",
     "vue-router": "4.0.5"
