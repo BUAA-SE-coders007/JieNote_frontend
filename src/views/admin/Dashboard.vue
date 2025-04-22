@@ -42,7 +42,7 @@
                  href="javascript:;"
                  @click="toggleCheckbox">
                 <i class="fas fa-check-square text-lg leading-lg text-white opacity-75"></i>
-                <span class="ml-2">{{ showCheckbox ? "隐藏选择框" : "显示选择框" }}</span>
+                <span class="ml-2">{{ showCheckbox ? "取消选择" : "批量选择" }}</span>
               </a>
             </li>
             <li class="nav-item">
@@ -139,13 +139,15 @@
       <div class="container-fluid px-4 py-4">
         <div class="bg-white rounded-lg shadow p-4">
           <el-tree
+              @node-expand="handleNodeExpand"
+              @node-collapse="handleNodeCollapse"
               class="modern-tree"
               :data="dataSource"
               :check-strictly="true"
               draggable
               :show-checkbox="showCheckbox"
               node-key="id"
-              default-expand-all
+              :default-expanded-keys="[...expandedKeys]"
               :expand-on-click-node="false"
               ref="treeRef"
           >
@@ -154,35 +156,63 @@
                 <span class="node-label">{{ getIconForNode(data) }} {{ data.label }}</span>
                 <div class="node-actions">
                   <!-- 只在前两级展示添加按钮 -->
-                  <el-button
-                      type="warning"
-                      size="small"
-                      round
-                      @click.stop="append(data)"
-                      class="action-btn edit-btn"
-                  >
-                    <el-icon><Edit /></el-icon>
-                  </el-button>
-                  <el-button
-                      v-if="node.level < 3"
-                      type="primary"
-                      size="small"
-                      round
-                      @click.stop="append(data)"
-                      class="action-btn add-btn"
-                  >
-                    <el-icon><DocumentAdd /></el-icon>
-                  </el-button>
-                  <!-- 所有节点都可删除 -->
-                  <el-button
-                      type="danger"
-                      size="small"
-                      round
-                      @click.stop="remove(node, data)"
-                      class="action-btn delete-btn"
-                  >
-                    <el-icon><Delete /></el-icon>
-                  </el-button>
+                  <el-tooltip content="编辑信息" placement="top" :enterable="false" :duration="50">
+                    <el-button
+                        type="warning"
+                        size="small"
+                        round
+                        @click.stop="append(data)"
+                        class="action-btn edit-btn"
+                    >
+                      <el-icon><Edit /></el-icon>
+                    </el-button>
+                  </el-tooltip>
+                  <el-tooltip v-if="node.level <2" content="添加文献" placement="top" :enterable="false" :duration="50">
+                    <el-button
+                        type="primary"
+                        size="small"
+                        round
+                        @click.stop="append(data)"
+                        class="action-btn add-btn"
+                    >
+                      <el-icon><DocumentAdd /></el-icon>
+                    </el-button>
+                  </el-tooltip>
+
+                  <el-tooltip v-if="node.level === 2" content="添加笔记" placement="top" :enterable="false" :duration="50">
+                    <el-button
+                        type="primary"
+                        size="small"
+                        round
+                        @click.stop="append(data)"
+                        class="action-btn add-btn"
+                    >
+                      <el-icon><DocumentAdd /></el-icon>
+                    </el-button>
+                  </el-tooltip>
+
+                  <el-tooltip content="删除" placement="top" :enterable="false" :duration="50">
+                    <el-button
+                        type="danger"
+                        size="small"
+                        round
+                        @click.stop="remove(node, data)"
+                        class="action-btn delete-btn"
+                    >
+                      <el-icon><Delete /></el-icon>
+                    </el-button>
+                  </el-tooltip>
+                  <el-tooltip v-if="node.level > 1" content="阅读" placement="top" :enterable="false" :duration="50">
+                    <el-button
+                        type="success"
+                        size="small"
+                        round
+                        @click.stop="remove(node, data)"
+                        class="action-btn read-btn"
+                    >
+                      <el-icon><Management /></el-icon>
+                    </el-button>
+                  </el-tooltip>
                 </div>
               </div>
             </template>
@@ -194,8 +224,8 @@
 </template>
 
 <script>
-import { ref,nextTick} from 'vue'
-import { Edit, DocumentAdd, Delete } from '@element-plus/icons-vue'
+import { ref,nextTick,onMounted} from 'vue'
+import { Edit, DocumentAdd, Delete,Management  } from '@element-plus/icons-vue'
 import KnowledgeGraph from '/src/components/Tree/KnowledgeGraph.vue'
 import JSZip from 'jszip'
 import { ElMessage } from 'element-plus'
@@ -206,9 +236,21 @@ export default {
     Edit,
     DocumentAdd,
     Delete,
-    KnowledgeGraph
+    KnowledgeGraph,
+    Management
   },
+
+
   setup() {
+    const defaultExpandedKeys = ref([])
+
+    const setInitialExpandedKeys = () => {
+      const firstLevelIds = dataSource.value.map(item => item.id)
+      defaultExpandedKeys.value = firstLevelIds
+      // 同步到 expandedKeys，用于 icon 判断
+      expandedKeys.value = new Set(firstLevelIds)
+    }
+    const expandedKeys = ref(new Set())
     let id = 1000
     const showCheckbox = ref(false)
     const showGraph = ref(false)
@@ -257,17 +299,33 @@ export default {
           .filter(Boolean)
     }
 
+    onMounted(() => {
+      nextTick(() => {
+        setInitialExpandedKeys()
+      })
+    })
+
+
+
 
     const getIconForNode = (node) => {
       const depth = getNodeDepth(node, dataSource.value) // 获取节点深度
 
       if (depth === 0) {
-        return '📁' // 一级：文件夹
+        return expandedKeys.value.has(node.id) ? '📂' : node.children && node.children.length > 0 ? '🗂️' : '📁'
       } else if (depth === 1) {
         return node.children && node.children.length > 0 ? '📚' : '📖' // 二级：PDF（有子节点是📚，没有是📖）
       }
       return '📝' // 三级：笔记
     }
+
+    const handleNodeExpand = (data) => {
+      expandedKeys.value.add(data.id)
+    }
+    const handleNodeCollapse = (data) => {
+      expandedKeys.value.delete(data.id)
+    }
+
 
     // 递归查找节点的深度（通过 node.id）
     const getNodeDepth = (node, tree, depth = 0) => {
@@ -454,6 +512,7 @@ export default {
         data.children = []
       }
       data.children.push(newChild)
+      expandedKeys.value.add(data.id)
       dataSource.value = [...dataSource.value]
       console.log(dataSource.value)
     }
@@ -570,7 +629,11 @@ export default {
       graphTreeData,
       handleSearch,
       clearSearch,
-      getIconForNode
+      getIconForNode,
+      handleNodeExpand,
+      handleNodeCollapse,
+      defaultExpandedKeys,
+      expandedKeys
     }
   }
 }
@@ -688,6 +751,16 @@ export default {
 
     &:hover {
       background-color: var(--el-color-danger);
+      color: white;
+    }
+  }
+
+  &.read-btn {
+    background-color: rgba(189, 232, 125, 0.62);
+    border-color: transparent;
+
+    &:hover {
+      background-color: rgb(148.6, 212.3, 117.1);
       color: white;
     }
   }
