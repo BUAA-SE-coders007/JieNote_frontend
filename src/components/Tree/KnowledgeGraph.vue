@@ -28,7 +28,7 @@ const DEBUG = true
 const getNodeVisuals = (type) => {
   switch (type) {
     case 'folder': return { icon: '📁', fill: '#e0f2fe' }
-    case 'pdf': return { icon: '📘', fill: '#f1f5f9' }
+    case 'pdf': return { icon: '📕', fill: '#f1f5f9' }
     case 'note': return { icon: '📝', fill: '#fef9c3' }
     default: return { icon: '', fill: '#f8fafc' }
   }
