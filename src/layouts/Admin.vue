@@ -1,7 +1,7 @@
 <template>
   <div>
     <sidebar />
-    <div class="relative md:ml-64 bg-blueGray-100">
+    <div class="relative md:ml-64 bg-blueGray-100 min-h-screen">
       <router-view />
     </div>
   </div>

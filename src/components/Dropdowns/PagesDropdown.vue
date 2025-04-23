@@ -22,6 +22,12 @@
         Admin Layout
       </span>
       <router-link
+        to="/admin/note"
+        class="text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-blueGray-700"
+      >
+        Note
+      </router-link>
+      <router-link
         to="/admin/dashboard"
         class="text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-blueGray-700"
       >
