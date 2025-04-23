@@ -42,7 +42,7 @@
                  href="javascript:;"
                  @click="toggleCheckbox">
                 <i class="fas fa-check-square text-lg leading-lg text-white opacity-75"></i>
-                <span class="ml-2">{{ showCheckbox ? "隐藏选择框" : "显示选择框" }}</span>
+                <span class="ml-2">{{ showCheckbox ? "取消选择" : "批量选择" }}</span>
               </a>
             </li>
             <li class="nav-item">
@@ -115,37 +115,73 @@
       </template>
     </el-dialog>
 
-    <!-- 搜索输入框 -->
-    <div v-if="showSearchInput" class="search-container">
-      <el-input
-          v-model="searchQuery"
-          placeholder="搜索分类..."
-          class="search-input"
-          @input="handleSearch"
-      >
-        <template #prefix>
-          <el-icon><Search /></el-icon>
-        </template>
-        <template #append>
-          <el-button @click="clearSearch">
-            <el-icon><Close /></el-icon>
-          </el-button>
-        </template>
-      </el-input>
-    </div>
+    <!-- PDF上传弹窗 -->
+    <el-dialog
+        v-model="showPdfUploadDialog"
+        title="上传PDF文件"
+        width="40%"
+        :close-on-click-modal="false"
+        custom-class="pdf-upload-modal"
+        :destroy-on-close="true"
+    >
+      <el-form :model="pdfUploadForm" label-width="80px">
+        <el-form-item label="PDF文件">
+          <el-upload
+              class="pdf-uploader"
+              action="#"
+              :auto-upload="false"
+              :on-change="handlePdfFileChange"
+              :limit="1"
+              accept=".pdf"
+          >
+            <template #trigger>
+              <el-button type="primary" class="upload-btn">选择文件</el-button>
+            </template>
+            <template #tip>
+              <div class="el-upload__tip">
+                请选择PDF文件，文件名将作为节点名称
+              </div>
+            </template>
+          </el-upload>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button
+              @click="showPdfUploadDialog = false"
+              class="modal-cancel-btn"
+          >取消</el-button>
+          <el-button
+              type="primary"
+              @click="confirmPdfUpload"
+              class="modal-confirm-btn"
+              :disabled="!pdfUploadForm.file"
+          >上传</el-button>
+        </span>
+      </template>
+    </el-dialog>
 
     <!-- 主要内容区域 -->
     <div class="flex-1 overflow-y-auto bg-gray-100">
       <div class="container-fluid px-4 py-4">
         <div class="bg-white rounded-lg shadow p-4">
+          <div class="tree-container">
+            <div v-if="isLoading" class="loading-wrapper">
+              <div class="loading-content">
+                <el-icon class="is-loading"><Loading /></el-icon>
+                <span class="loading-text">正在加载知识库结构...</span>
+              </div>
+            </div>
           <el-tree
+              @node-expand="handleNodeExpand"
+              @node-collapse="handleNodeCollapse"
               class="modern-tree"
               :data="dataSource"
               :check-strictly="true"
               draggable
               :show-checkbox="showCheckbox"
               node-key="id"
-              default-expand-all
+              :default-expanded-keys="[...expandedKeys]"
               :expand-on-click-node="false"
               ref="treeRef"
           >
@@ -154,39 +190,68 @@
                 <span class="node-label">{{ getIconForNode(data) }} {{ data.label }}</span>
                 <div class="node-actions">
                   <!-- 只在前两级展示添加按钮 -->
-                  <el-button
-                      type="warning"
-                      size="small"
-                      round
-                      @click.stop="append(data)"
-                      class="action-btn edit-btn"
-                  >
-                    <el-icon><Edit /></el-icon>
-                  </el-button>
-                  <el-button
-                      v-if="node.level < 3"
-                      type="primary"
-                      size="small"
-                      round
-                      @click.stop="append(data)"
-                      class="action-btn add-btn"
-                  >
-                    <el-icon><DocumentAdd /></el-icon>
-                  </el-button>
-                  <!-- 所有节点都可删除 -->
-                  <el-button
-                      type="danger"
-                      size="small"
-                      round
-                      @click.stop="remove(node, data)"
-                      class="action-btn delete-btn"
-                  >
-                    <el-icon><Delete /></el-icon>
-                  </el-button>
+                  <el-tooltip content="编辑信息" placement="top" :enterable="false" :duration="50">
+                    <el-button
+                        type="warning"
+                        size="small"
+                        round
+                        @click.stop="append(node, data)"
+                        class="action-btn edit-btn"
+                    >
+                      <el-icon><Edit /></el-icon>
+                    </el-button>
+                  </el-tooltip>
+                  <el-tooltip v-if="node.level <2" content="添加文献" placement="top" :enterable="false" :duration="50">
+                    <el-button
+                        type="primary"
+                        size="small"
+                        round
+                        @click.stop="append(node, data)"
+                        class="action-btn add-btn"
+                    >
+                      <el-icon><DocumentAdd /></el-icon>
+                    </el-button>
+                  </el-tooltip>
+
+                  <el-tooltip v-if="node.level === 2" content="添加笔记" placement="top" :enterable="false" :duration="50">
+                    <el-button
+                        type="primary"
+                        size="small"
+                        round
+                        @click.stop="append(node, data)"
+                        class="action-btn add-btn"
+                    >
+                      <el-icon><DocumentAdd /></el-icon>
+                    </el-button>
+                  </el-tooltip>
+
+                  <el-tooltip content="删除" placement="top" :enterable="false" :duration="50">
+                    <el-button
+                        type="danger"
+                        size="small"
+                        round
+                        @click.stop="remove(node, data)"
+                        class="action-btn delete-btn"
+                    >
+                      <el-icon><Delete /></el-icon>
+                    </el-button>
+                  </el-tooltip>
+                  <el-tooltip v-if="node.level > 1" content="阅读" placement="top" :enterable="false" :duration="50">
+                    <el-button
+                        type="success"
+                        size="small"
+                        round
+                        @click.stop="remove(node, data)"
+                        class="action-btn read-btn"
+                    >
+                      <el-icon><Management /></el-icon>
+                    </el-button>
+                  </el-tooltip>
                 </div>
               </div>
             </template>
           </el-tree>
+          </div>
         </div>
       </div>
     </div>
@@ -194,11 +259,12 @@
 </template>
 
 <script>
-import { ref,nextTick} from 'vue'
-import { Edit, DocumentAdd, Delete } from '@element-plus/icons-vue'
+import { ref,nextTick,onMounted} from 'vue'
+import { Edit, DocumentAdd, Delete,Management  } from '@element-plus/icons-vue'
 import KnowledgeGraph from '/src/components/Tree/KnowledgeGraph.vue'
 import JSZip from 'jszip'
 import { ElMessage } from 'element-plus'
+import { Loading } from '@element-plus/icons-vue'
 
 export default {
   name: "dashboard-page",
@@ -206,10 +272,28 @@ export default {
     Edit,
     DocumentAdd,
     Delete,
-    KnowledgeGraph
+    KnowledgeGraph,
+    Management,
+    Loading
   },
+
+
   setup() {
+    const defaultExpandedKeys = ref([])
+
+    const setInitialExpandedKeys = () => {
+      // 获取一级分类的ID
+      const firstLevelIds = dataSource.value.map(item => item.id)
+
+      // 设置默认展开的键（只展开一级分类）
+      defaultExpandedKeys.value = firstLevelIds
+
+      // 同步到 expandedKeys，用于 icon 判断
+      expandedKeys.value = new Set(firstLevelIds)
+    }
+    const expandedKeys = ref(new Set())
     let id = 1000
+    const isLoading = ref(true)
     const showCheckbox = ref(false)
     const showGraph = ref(false)
     const treeRef = ref(null)
@@ -220,6 +304,14 @@ export default {
     const showSearchInput = ref(false)
     const searchQuery = ref('')
     const graphTreeData = ref([]) // 新增图谱数据
+
+    // PDF上传相关
+    const showPdfUploadDialog = ref(false)
+    const pdfUploadForm = ref({
+      file: null,
+      parentNode: null,
+      parentData: null
+    })
 
     const toggleCheckbox = () => {
       showCheckbox.value = !showCheckbox.value
@@ -257,33 +349,95 @@ export default {
           .filter(Boolean)
     }
 
+    onMounted(async () => {
+      try {
+        await findAllfolders()
+        // 数据加载完成后设置默认展开
+        setInitialExpandedKeys()
+      } catch (error) {
+        ElMessage.error('数据加载失败: ' + error.message)
+      } finally {
+        isLoading.value = false
+      }
+    })
+
+
+
 
     const getIconForNode = (node) => {
-      const depth = getNodeDepth(node, dataSource.value) // 获取节点深度
+      // 获取节点深度
+      const depth = node.depth
 
+      // 调试信息
+      console.log(`Node: ${node.label}, ID: ${node.id}, Depth: ${node.depth}, Has children: ${node.children && node.children.length > 0}, Is expanded: ${expandedKeys.value.has(node.id)}`)
+
+      // 根据节点深度和状态返回对应图标
       if (depth === 0) {
-        return '📁' // 一级：文件夹
+        // 一级分类
+        if (expandedKeys.value.has(node.id)) {
+          return '📂' // 展开的文件夹
+        } else if (node.children && node.children.length > 0) {
+          return '🗂️' // 有子节点但未展开的文件夹
+        } else {
+          return '📁' // 空文件夹
+        }
       } else if (depth === 1) {
-        return node.children && node.children.length > 0 ? '📚' : '📖' // 二级：PDF（有子节点是📚，没有是📖）
+        // 二级 PDF
+        if (node.children && node.children.length > 0) {
+          return '📚' // 有笔记的 PDF
+        } else {
+          return '📖' // 无笔记的 PDF
+        }
+      } else if (depth === 2) {
+        // 三级笔记
+        return '📝' // 笔记
+      } else {
+        // 未知深度，根据节点类型返回默认图标
+        if (node.children && node.children.length > 0) {
+          return '📄' // 有子节点的文档
+        } else {
+          return '📄' // 普通文档
+        }
       }
-      return '📝' // 三级：笔记
     }
+
+    const handleNodeExpand = (data) => {
+      expandedKeys.value.add(data.id)
+    }
+    const handleNodeCollapse = (data) => {
+      expandedKeys.value.delete(data.id)
+    }
+
 
     // 递归查找节点的深度（通过 node.id）
-    const getNodeDepth = (node, tree, depth = 0) => {
-      for (const item of tree) {
-        if (item.id === node.id) {
-          return depth // 找到节点，返回深度
-        }
-        if (item.children && item.children.length > 0) {
-          const childDepth = getNodeDepth(node, item.children, depth + 1)
-          if (childDepth >= 0) {
-            return childDepth // 如果在子节点中找到，返回深度
-          }
-        }
-      }
-      return -1 // 如果没有找到返回-1
-    }
+    // const getNodeDepth = (node, tree, depth = 0) => {
+    //   // 如果树为空，返回-1
+    //   console.log(`Node: ${node.label}, ID: ${node.id}, Depth: ${depth}`)
+    //   console.log(tree)
+    //   if (!tree || tree.length === 0) {
+    //     return -1
+    //   }
+    //
+    //   // 遍历当前层级的节点
+    //   for (const item of tree) {
+    //     // 如果找到目标节点，返回当前深度
+    //     if (item.id === node.id) {
+    //       return depth
+    //     }
+    //
+    //     // 如果当前节点有子节点，递归查找
+    //     if (item.children && item.children.length > 0) {
+    //       const childDepth = getNodeDepth(node, item.children, depth + 1)
+    //       // 如果在子节点中找到，返回子节点的深度
+    //       if (childDepth >= 0) {
+    //         return childDepth
+    //       }
+    //     }
+    //   }
+    //
+    //   // 如果在当前层级及其子节点中都没有找到，返回-1
+    //   return -1
+    // }
 
 
 
@@ -444,7 +598,35 @@ export default {
     }
 
 
-    const append = (data) => {
+    // const append = (data) => {
+    //   const newChild = {
+    //     id: id++,
+    //     label: `新节点 ${id}`,
+    //     children: []
+    //   }
+    //   if (!data.children) {
+    //     data.children = []
+    //   }
+    //   data.children.push(newChild)
+    //   expandedKeys.value.add(data.id)
+    //   dataSource.value = [...dataSource.value]
+    //   console.log(dataSource.value)
+    // }
+
+    const append = (node, data) => {
+      if (node.parent.parent === null) {
+        // 如果是一级分类，显示PDF上传弹窗
+        pdfUploadForm.value = {
+          file: null,
+          parentNode: node,
+          parentData: data
+        }
+        expandedKeys.value.add(data.id)
+        showPdfUploadDialog.value = true
+        return
+      }
+
+      // 如果不是一级分类，则按照原来的逻辑添加新节点
       const newChild = {
         id: id++,
         label: `新节点 ${id}`,
@@ -454,16 +636,44 @@ export default {
         data.children = []
       }
       data.children.push(newChild)
+      expandedKeys.value.add(data.id)
       dataSource.value = [...dataSource.value]
-      console.log(dataSource.value)
     }
 
-    const remove = (node, data) => {
+    const remove = async (node, data) => {
       const parent = node.parent
       const children = parent.data.children || parent.data
       const index = children.findIndex((d) => d.id === data.id)
       children.splice(index, 1)
       dataSource.value = [...dataSource.value]
+
+
+      // 判断节点类型
+      if (parent.parent === null) {
+        // 如果父节点的父节点是null，说明当前节点是一级分类
+        const res = await fetch(`http://127.0.0.1:4523/m1/6178223-5870624-default/article/selfFolderToRecycleBin?folder_id=${node.id}`, {
+          method: 'DELETE'
+        })
+        if (!res.ok) {
+          ElMessage({
+            message: '删除文件夹失败',
+            type: 'error'
+          })
+        }
+        console.log(res);
+      } else {
+        // 否则是二级分类
+        const res = await fetch(`http://127.0.0.1:4523/m1/6178223-5870624-default/article/selfArticleToRecycleBin?article_id=${node.id}`, {
+          method: 'DELETE'
+        })
+        if (!res.ok) {
+          ElMessage({
+            message: '删除文件失败',
+            type: 'error'
+          })
+        }
+        console.log(res);
+      }
     }
 
     const createNewCategory = () => {
@@ -471,7 +681,7 @@ export default {
       newCategoryForm.value.name = ''
     }
 
-    const confirmNewCategory = () => {
+    const confirmNewCategory = async() => {
       if (!newCategoryForm.value.name.trim()) {
         ElMessage({
           message: '请输入分类名称',
@@ -487,6 +697,25 @@ export default {
       }
       dataSource.value.push(newCategory)
       dataSource.value = [...dataSource.value]
+      //新建文件夹的信息传回后端
+      //http://127.0.0.1:4523/m1/6178223-5870624-default/article/selfCreateFolder
+      const newFolderData = {
+        folder_name: newCategoryForm.value.name,
+      }
+      const res = await fetch("http://127.0.0.1:4523/m1/6178223-5870624-default/article/selfCreateFolder", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newFolderData)
+      })
+      console.log(res);
+      if (!res.ok) {
+        ElMessage({
+          message: '新建分类失败',
+          type: 'error'
+        })
+      }
       showNewCategoryDialog.value = false
       ElMessage({
         message: '新建分类成功',
@@ -503,55 +732,177 @@ export default {
       showSearchInput.value = false
     }
 
-    const dataSource = ref([
-      {
-        id: 1,
-        label: '计算机科学',
-        date:'2天前',
-        children: [
-          {
-            id: 4,
-            label: '数据结构与算法分析.pdf',
-            date: '1天前',
-            children: [
-              { id: 9, label: '第一章笔记',date: '1天前' },
-              { id: 10, label: '第二章笔记',date: '1天前' }
-            ]
-          },
-          {
-            id: 5,
-            label: '计算机网络.pdf',
-            date: '1天前',
-            children: [
-              { id: 11, label: '网络协议笔记',date: '1天前' }
-            ]
-          }
-        ]
-      },
-      {
-        id: 2,
-        label: '人工智能',
-        date: '1天前',
-        children: [
-          { id: 6, label: '深度学习.pdf',date: '1天前' },
-          { id: 7, label: '自然语言处理.pdf',date: '1天前' }
-        ]
-      },
-      {
-        id: 3,
-        label: '机器学习',
-        date: '1天前',
-        children: [
-          { id: 8, label: '机器学习实战.pdf',date: '1天前' },
-          { id: 12, label: '统计学习方法.pdf',date: '1天前' }
-        ]
+    const dataSource = ref([])
+
+    // const dataSource = ref([
+    //   {
+    //     id: 1,
+    //     label: '计算机科学',
+    //     date:'2天前',
+    //     children: [
+    //       {
+    //         id: 4,
+    //         label: '数据结构与算法分析.pdf',
+    //         date: '1天前',
+    //         children: [
+    //           { id: 9, label: '第一章笔记',date: '1天前' },
+    //           { id: 10, label: '第二章笔记',date: '1天前' }
+    //         ]
+    //       },
+    //       {
+    //         id: 5,
+    //         label: '计算机网络.pdf',
+    //         date: '1天前',
+    //         children: [
+    //           { id: 11, label: '网络协议笔记',date: '1天前' }
+    //         ]
+    //       }
+    //     ]
+    //   },
+    //   {
+    //     id: 2,
+    //     label: '人工智能',
+    //     date: '1天前',
+    //     children: [
+    //       { id: 6, label: '深度学习.pdf',date: '1天前' },
+    //       { id: 7, label: '自然语言处理.pdf',date: '1天前' }
+    //     ]
+    //   },
+    //   {
+    //     id: 3,
+    //     label: '机器学习',
+    //     date: '1天前',
+    //     children: [
+    //       { id: 8, label: '机器学习实战.pdf',date: '1天前' },
+    //       { id: 12, label: '统计学习方法.pdf',date: '1天前' }
+    //     ]
+    //   }
+    // ])
+
+
+
+    //这个是新写的
+
+    const findAllfolders = async () => {
+      try {
+        console.log('拿一级目录');
+        const res = await fetch('http://127.0.0.1:4523/m1/6178223-5870624-default/article/getSelfFolders');
+        const data = await res.json();
+
+        const transformedData = [];
+        // 使用Promise.all并行处理一级目录
+        await Promise.all(data.result.map(async folder => {
+          const firstLevel = {
+            id: folder.folder_id,
+            label: folder.folder_name,
+            depth: 0,
+            children: []
+          };
+
+          // 获取二级目录
+          const secondRes = await fetch(`http://127.0.0.1:4523/m1/6178223-5870624-default/article/getArticlesInFolder?folder_id=${folder.folder_id}`);
+          const secondData = await secondRes.json();
+
+          // 并行处理二级目录
+          firstLevel.children = await Promise.all(secondData.result.map(async article => {
+            const secondLevel = {
+              id: article.article_id,
+              label: article.article_name,
+              depth: 1,
+              children: []
+            };
+
+            // 获取三级目录
+            const thirdRes = await fetch(`http://127.0.0.1:4523/m1/6178223-5870624-default/article/getArticlesInFolder?folder_id=${article.article_id}`);
+            const thirdData = await thirdRes.json();
+
+            if (thirdData.result?.length) {
+              secondLevel.children = thirdData.result.map(item => ({
+                id: item.article_id,
+                label: item.article_name,
+                depth: 2
+              }));
+            }
+            return secondLevel;
+          }));
+
+          transformedData.push(firstLevel);
+        }));
+
+        dataSource.value = transformedData;
+        console.log('数据转换完成:', transformedData);
+      } catch (error) {
+        console.error('数据加载失败:', error);
+        throw error; // 抛出错误供外层捕获
       }
-    ])
+    };
 
 
+    // 处理PDF文件选择
+    const handlePdfFileChange = (file) => {
+      pdfUploadForm.value.file = file.raw
+    }
 
+    // 确认PDF上传
+    const confirmPdfUpload = async () => {
+      if (!pdfUploadForm.value.file) {
+        ElMessage({
+          message: '请选择PDF文件',
+          type: 'warning'
+        })
+        return
+      }
+
+      try {
+        // 获取文件名（不包含扩展名）作为节点名称
+        const fileName = pdfUploadForm.value.file.name.replace('.pdf', '')
+
+        // 创建FormData对象用于上传文件
+        const formData = new FormData()
+        formData.append('article', pdfUploadForm.value.file)
+
+        // 发送文件到后端
+        const res = await fetch('http://127.0.0.1:4523/m1/6178223-5870624-default/article/uploadToSelfFolder?folder_id=${pdfUploadForm.value.parentNode.id}', {
+          method: 'POST',
+          body: formData
+        })
+
+        if (!res.ok) {
+          throw new Error('上传失败')
+        }
+
+        // 创建新节点
+        const newChild = {
+          id: pdfUploadForm.value.parentNode.id || id++,
+          label: `${fileName}.pdf`,
+          children: []
+        }
+
+        // 添加到父节点
+        if (!pdfUploadForm.value.parentData.children) {
+          pdfUploadForm.value.parentData.children = []
+        }
+        pdfUploadForm.value.parentData.children.push(newChild)
+        dataSource.value = [...dataSource.value]
+
+        // 关闭弹窗
+        showPdfUploadDialog.value = false
+
+        ElMessage({
+          message: 'PDF上传成功',
+          type: 'success'
+        })
+      } catch (error) {
+        console.error('上传PDF失败:', error)
+        ElMessage({
+          message: '上传PDF失败: ' + error.message,
+          type: 'error'
+        })
+      }
+    }
 
     return {
+      findAllfolders,
       showCheckbox,
       showGraph,
       showNewCategoryDialog,
@@ -570,7 +921,17 @@ export default {
       graphTreeData,
       handleSearch,
       clearSearch,
-      getIconForNode
+      getIconForNode,
+      handleNodeExpand,
+      handleNodeCollapse,
+      defaultExpandedKeys,
+      expandedKeys,
+      // PDF上传相关
+      showPdfUploadDialog,
+      pdfUploadForm,
+      handlePdfFileChange,
+      confirmPdfUpload,
+      isLoading
     }
   }
 }
@@ -688,6 +1049,16 @@ export default {
 
     &:hover {
       background-color: var(--el-color-danger);
+      color: white;
+    }
+  }
+
+  &.read-btn {
+    background-color: rgba(189, 232, 125, 0.62);
+    border-color: transparent;
+
+    &:hover {
+      background-color: rgb(148.6, 212.3, 117.1);
       color: white;
     }
   }
@@ -868,6 +1239,7 @@ export default {
         .el-input__inner {
           font-size: 15px;
           color: #1f2937;
+
           &::placeholder {
             color: #9ca3af;
           }
@@ -1024,6 +1396,93 @@ export default {
     .search-input {
       max-width: 100%;
     }
+  }
+}
+
+:deep(.pdf-upload-modal) {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(5, 150, 105, 0.2);
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
+
+  .el-dialog__header {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    margin-right: 0;
+    padding: 16px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+    .el-dialog__title {
+      color: white;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  .el-dialog__body {
+    padding: 24px;
+    background: rgba(255, 255, 255, 0.95);
+  }
+
+  .pdf-uploader {
+    width: 100%;
+
+    .upload-btn {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px rgba(5, 150, 105, 0.2);
+      }
+    }
+
+    .el-upload__tip {
+      color: #6b7280;
+      font-size: 14px;
+      margin-top: 8px;
+    }
+  }
+}
+
+.loading-wrapper {
+  height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.is-loading {
+  animation: rotating 2s linear infinite;
+  font-size: 32px;
+}
+
+.loading-text {
+  color: #666;
+  font-size: 14px;
+}
+
+@keyframes rotating {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 </style>
