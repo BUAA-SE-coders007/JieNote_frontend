@@ -630,6 +630,7 @@ export default {
       const newChild = {
         id: id++,
         label: `新节点 ${id}`,
+        depth: 2,
         children: []
       }
       if (!data.children) {
@@ -693,6 +694,7 @@ export default {
       const newCategory = {
         id: id++,
         label: newCategoryForm.value.name,
+        depth:0,
         children: []
       }
       dataSource.value.push(newCategory)
@@ -811,6 +813,7 @@ export default {
               depth: 1,
               children: []
             };
+            console.log(secondLevel.tags);
 
             // 获取三级目录
             const thirdRes = await fetch(`http://127.0.0.1:4523/m1/6178223-5870624-default/article/getArticlesInFolder?folder_id=${article.article_id}`);
@@ -873,8 +876,10 @@ export default {
 
         // 创建新节点
         const newChild = {
-          id: pdfUploadForm.value.parentNode.id || id++,
+          id:  id++,
           label: `${fileName}.pdf`,
+          depth: 1,
+          tags:[],
           children: []
         }
 
