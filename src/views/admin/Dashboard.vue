@@ -871,6 +871,7 @@ export default {
       const newChild = {
         id: id++,
         label: `新节点 ${id}`,
+        depth: 2,
         children: []
       }
       if (!data.children) {
@@ -934,6 +935,7 @@ export default {
       const newCategory = {
         id: id++,
         label: newCategoryForm.value.name,
+        depth: 0,
         children: []
       }
       dataSource.value.push(newCategory)
@@ -1094,8 +1096,10 @@ export default {
 
         // 创建新节点
         const newChild = {
-          id: pdfUploadForm.value.parentNode.id || id++,
+          id: id++,
           label: `${fileName}.pdf`,
+          depth: 1,
+          tags:[],
           children: []
         }
 
