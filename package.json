@@ -30,7 +30,8 @@
     "tailwindcss": "2.0.4",
     "vditor": "^3.11.0",
     "vue": "3.2.47",
-    "vue-router": "4.0.5"
+    "vue-router": "4.0.5",
+    "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.13.10",

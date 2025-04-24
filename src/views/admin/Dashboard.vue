@@ -165,14 +165,14 @@
     <div class="flex-1 overflow-y-auto bg-gray-100">
       <div class="container-fluid px-4 py-4">
         <div class="bg-white rounded-lg shadow p-4">
-          <div class="tree-container">
-            <div v-if="isLoading" class="loading-wrapper">
-              <div class="loading-content">
-                <el-icon class="is-loading"><Loading /></el-icon>
-                <span class="loading-text">正在加载知识库结构...</span>
-              </div>
+          <div v-if="isLoading" class="loading-wrapper">
+            <div class="loading-content">
+              <el-icon class="is-loading"><Loading /></el-icon>
+              <span class="loading-text">正在加载知识库结构...</span>
             </div>
-          <el-tree
+          </div>
+          <div v-if="!isLoading" class="tree-container">
+           <el-tree
               @node-expand="handleNodeExpand"
               @node-collapse="handleNodeCollapse"
               class="modern-tree"
@@ -184,10 +184,32 @@
               :default-expanded-keys="[...expandedKeys]"
               :expand-on-click-node="false"
               ref="treeRef"
-          >
+           >
             <template #default="{ node, data }">
               <div class="modern-node">
                 <span class="node-label">{{ getIconForNode(data) }} {{ data.label }}</span>
+                <div class="tag-container" v-if="data.depth === 1">
+                  <el-tooltip
+                      v-for="(tag, index) in data.tags.slice(0,3)"
+                      :key="index"
+                      placement="top"
+                      :disabled="!isTruncated(tag.tag_content)"
+                      manual
+                      v-model="tag.showFullText"
+                  >
+                    <template #content>
+                      <div class="full-tag-content">{{ tag.tag_content }}</div>
+                    </template>
+                    <el-tag
+                        size="small"
+                        type="info"
+                        class="tag-item"
+                        @click="toggleTagTooltip(tag)"
+                    >
+                      {{ truncateText(tag.tag_content) }}
+                    </el-tag>
+                  </el-tooltip>
+                </div>
                 <div class="node-actions">
                   <!-- 只在前两级展示添加按钮 -->
                   <el-tooltip content="编辑信息" placement="top" :enterable="false" :duration="50">
@@ -195,7 +217,7 @@
                         type="warning"
                         size="small"
                         round
-                        @click.stop="append(node, data)"
+                        @click.stop="openEditDialog(node, data)"
                         class="action-btn edit-btn"
                     >
                       <el-icon><Edit /></el-icon>
@@ -250,19 +272,112 @@
                 </div>
               </div>
             </template>
-          </el-tree>
+           </el-tree>
           </div>
         </div>
       </div>
     </div>
+    <div v-if="!isLoading" class="pagination-container mt-4 flex justify-between items-center">
+      <div class="page-size-selector">
+        <span class="text-sm text-gray-600 mr-2">每页显示：</span>
+        <el-select
+            v-model="pageSize"
+            @change="handlePageSizeChange"
+            size="small"
+            style="width: 100px"
+        >
+          <el-option
+              v-for="size in [5, 10, 15, 20]"
+              :key="size"
+              :label="size"
+              :value="size"
+          />
+        </el-select>
+        <span class="text-sm text-gray-600 mr-2"> 文件夹</span>
+      </div>
+
+      <el-pagination
+          background
+          layout="prev, pager, next"
+          :page-size="pageSize"
+          :total="totalFolders"
+          :current-page="currentPage"
+          @current-change="handlePageChange"
+      />
+    </div>
+    <el-dialog
+        v-model="showEditDialog"
+        :title="`编辑 ${currentEditNode?.label}`"
+        width="500px"
+        :close-on-click-modal="false"
+    >
+      <el-form label-width="80px">
+        <!-- 名称编辑 -->
+        <el-form-item label="名称">
+          <el-input v-model="currentEditNode.label" />
+        </el-form-item>
+
+        <!-- 标签管理（仅depth=1显示） -->
+        <el-form-item v-if="currentEditNode?.depth === 1" label="标签管理">
+          <div class="tag-manager">
+            <div class="tag-list">
+              <transition-group name="tag-list">
+                <draggable
+                    v-model="currentEditNode.tags"
+                    item-key="tag_id"
+                    handle=".drag-handle"
+                    @end="onTagDragEnd"
+                >
+                  <template #item="{element, index}">
+                    <div class="tag-item">
+                      <el-icon class="drag-handle"><Rank /></el-icon>
+                      <el-tag
+                          closable
+                          @close="removeTag(index)"
+                      >
+                        {{ element.tag_content }}
+                      </el-tag>
+                    </div>
+                  </template>
+                </draggable>
+              </transition-group>
+            </div>
+
+            <!-- 添加新标签 -->
+            <div class="add-tag">
+              <el-input
+                  v-model="newTag"
+                  placeholder="输入新标签"
+                  size="small"
+                  style="width: 120px"
+                  @keyup.enter="addTag"
+              />
+              <el-button
+                  type="primary"
+                  size="small"
+                  @click="addTag"
+              >
+                添加
+              </el-button>
+            </div>
+          </div>
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <el-button @click="showEditDialog = false">取消</el-button>
+        <el-button type="primary" @click="saveEdit">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import { ref,nextTick,onMounted} from 'vue'
-import { Edit, DocumentAdd, Delete,Management  } from '@element-plus/icons-vue'
+import { Edit, DocumentAdd, Delete,Management,Rank  } from '@element-plus/icons-vue'
 import KnowledgeGraph from '/src/components/Tree/KnowledgeGraph.vue'
 import JSZip from 'jszip'
+import draggable from 'vuedraggable'
 import { ElMessage } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
 
@@ -274,25 +389,28 @@ export default {
     Delete,
     KnowledgeGraph,
     Management,
-    Loading
+    Loading,
+    draggable,
+    Rank
   },
 
 
   setup() {
-    const defaultExpandedKeys = ref([])
+    const currentPage = ref(1)
+    const pageSize = ref(5)
+    const totalFolders = ref(10)
 
     const setInitialExpandedKeys = () => {
       // 获取一级分类的ID
       const firstLevelIds = dataSource.value.map(item => item.id)
-
-      // 设置默认展开的键（只展开一级分类）
-      defaultExpandedKeys.value = firstLevelIds
+      console.log('this is expand-id')
 
       // 同步到 expandedKeys，用于 icon 判断
       expandedKeys.value = new Set(firstLevelIds)
+      console.log(expandedKeys)
     }
     const expandedKeys = ref(new Set())
-    let id = 1000
+    let id = 0
     const isLoading = ref(true)
     const showCheckbox = ref(false)
     const showGraph = ref(false)
@@ -312,6 +430,83 @@ export default {
       parentNode: null,
       parentData: null
     })
+
+
+    const showEditDialog = ref(false)
+    const currentEditNode = ref(null)
+    const newTag = ref('')
+
+    // 打开编辑弹窗
+    const openEditDialog = (node, data) => {
+      currentEditNode.value = {
+        ...data,
+        tags: [...(data.tags || [])] // 深度拷贝标签数组
+      }
+      showEditDialog.value = true
+    }
+
+    // 添加标签
+    const addTag = () => {
+      if (newTag.value.trim()) {
+        currentEditNode.value.tags.push({
+          tag_id: Date.now(), // 临时ID
+          tag_content: newTag.value.trim()
+        })
+        newTag.value = ''
+      }
+    }
+
+    // 删除标签
+    const removeTag = (index) => {
+      currentEditNode.value.tags.splice(index, 1)
+    }
+
+    // 标签拖拽结束
+    const onTagDragEnd = () => {
+      console.log('标签顺序已更新')
+    }
+
+    // 保存修改
+    const saveEdit = async () => {
+      try {
+        // 更新节点名称
+        const nodeData = {
+          id: currentEditNode.value.true_id,
+          name: currentEditNode.value.label
+        }
+
+        // 根据节点类型调用不同API
+        const apiUrl = currentEditNode.value.depth === 0
+            ? '/api/updateFolder'
+            : '/api/updateArticle'
+
+        // 更新标签
+        if (currentEditNode.value.depth === 1) {
+          await updateTags(currentEditNode.value.true_id, currentEditNode.value.tags)
+        }
+
+        // 调用保存接口
+        await fetch(apiUrl, {
+          method: 'PUT',
+          body: JSON.stringify(nodeData)
+        })
+
+        // 刷新数据
+        await findAllfolders()
+        ElMessage.success('保存成功')
+        showEditDialog.value = false
+      } catch (error) {
+        ElMessage.error('保存失败: ' + error.message)
+      }
+    }
+
+    // 更新标签到后端
+    const updateTags = async (articleId, tags) => {
+      await fetch(`/api/updateTags?article_id=${articleId}`, {
+        method: 'POST',
+        body: JSON.stringify(tags.map(t => t.tag_content))
+      })
+    }
 
     const toggleCheckbox = () => {
       showCheckbox.value = !showCheckbox.value
@@ -361,6 +556,20 @@ export default {
       }
     })
 
+    const truncateText = (text) => {
+      return text.length > 10 ? text.slice(0, 10) + '...' : text
+    }
+
+    const isTruncated = (text) => {
+      return text.length > 10
+    }
+
+    const toggleTagTooltip = (tag) => {
+      if (isTruncated(tag.tag_content)) {
+        tag.showFullText = !tag.showFullText
+      }
+    }
+
 
 
 
@@ -406,6 +615,38 @@ export default {
     }
     const handleNodeCollapse = (data) => {
       expandedKeys.value.delete(data.id)
+    }
+
+    const handlePageChange = async (newPage) => {
+      currentPage.value = newPage
+      isLoading.value = true
+      try {
+        await findAllfolders()
+        // 数据加载完成后设置默认展开
+        setInitialExpandedKeys()
+        console.log('this is first')
+        console.log(expandedKeys)
+      } catch (error) {
+        ElMessage.error('数据加载失败: ' + error.message)
+      } finally {
+        isLoading.value = false
+      }
+    }
+
+// 处理每页数量变化
+    const handlePageSizeChange = async (newSize) => {
+      pageSize.value = newSize
+      currentPage.value = 1 // 重置到第一页
+      isLoading.value = true
+      try {
+        await findAllfolders()
+        // 数据加载完成后设置默认展开
+        setInitialExpandedKeys()
+      } catch (error) {
+        ElMessage.error('数据加载失败: ' + error.message)
+      } finally {
+        isLoading.value = false
+      }
     }
 
 
@@ -734,66 +975,43 @@ export default {
 
     const dataSource = ref([])
 
-    // const dataSource = ref([
-    //   {
-    //     id: 1,
-    //     label: '计算机科学',
-    //     date:'2天前',
-    //     children: [
-    //       {
-    //         id: 4,
-    //         label: '数据结构与算法分析.pdf',
-    //         date: '1天前',
-    //         children: [
-    //           { id: 9, label: '第一章笔记',date: '1天前' },
-    //           { id: 10, label: '第二章笔记',date: '1天前' }
-    //         ]
-    //       },
-    //       {
-    //         id: 5,
-    //         label: '计算机网络.pdf',
-    //         date: '1天前',
-    //         children: [
-    //           { id: 11, label: '网络协议笔记',date: '1天前' }
-    //         ]
-    //       }
-    //     ]
-    //   },
-    //   {
-    //     id: 2,
-    //     label: '人工智能',
-    //     date: '1天前',
-    //     children: [
-    //       { id: 6, label: '深度学习.pdf',date: '1天前' },
-    //       { id: 7, label: '自然语言处理.pdf',date: '1天前' }
-    //     ]
-    //   },
-    //   {
-    //     id: 3,
-    //     label: '机器学习',
-    //     date: '1天前',
-    //     children: [
-    //       { id: 8, label: '机器学习实战.pdf',date: '1天前' },
-    //       { id: 12, label: '统计学习方法.pdf',date: '1天前' }
-    //     ]
-    //   }
-    // ])
 
-
+    const fetchTags = async (articleId) => {
+      try {
+        const res = await fetch(
+            `http://127.0.0.1:4523/m1/6178223-5870624-default/article/getArticleTags?article_id=${articleId}`
+        );
+        const data = await res.json();
+        return data.result || [];
+      } catch (error) {
+        console.error('获取标签失败:', error);
+        return [];
+      }
+    };
 
     //这个是新写的
 
     const findAllfolders = async () => {
       try {
+        id = 0
         console.log('拿一级目录');
-        const res = await fetch('http://127.0.0.1:4523/m1/6178223-5870624-default/article/getSelfFolders');
+        const url = new URL('http://127.0.0.1:4523/m1/6178223-5870624-default/article/getSelfFolders');
+        url.searchParams.append('page_number', currentPage.value);
+        url.searchParams.append('page_size', pageSize.value);
+
+        const res = await fetch(url);
         const data = await res.json();
+        console.log('this is folder-data')
+        console.log(data.result)
+        totalFolders.value = data.result.length
+        console.log(totalFolders)
 
         const transformedData = [];
         // 使用Promise.all并行处理一级目录
         await Promise.all(data.result.map(async folder => {
           const firstLevel = {
-            id: folder.folder_id,
+            id: id++,
+            true_id:folder.folder_id,
             label: folder.folder_name,
             depth: 0,
             children: []
@@ -806,8 +1024,10 @@ export default {
           // 并行处理二级目录
           firstLevel.children = await Promise.all(secondData.result.map(async article => {
             const secondLevel = {
-              id: article.article_id,
+              id: id++,
+              true_id:article.article_id,
               label: article.article_name,
+              tags: await fetchTags(article.article_id),
               depth: 1,
               children: []
             };
@@ -818,7 +1038,8 @@ export default {
 
             if (thirdData.result?.length) {
               secondLevel.children = thirdData.result.map(item => ({
-                id: item.article_id,
+                id: id++,
+                true_id:item.article_id,
                 label: item.article_name,
                 depth: 2
               }));
@@ -924,14 +1145,30 @@ export default {
       getIconForNode,
       handleNodeExpand,
       handleNodeCollapse,
-      defaultExpandedKeys,
       expandedKeys,
       // PDF上传相关
       showPdfUploadDialog,
       pdfUploadForm,
       handlePdfFileChange,
       confirmPdfUpload,
-      isLoading
+      isLoading,
+      currentPage,
+      pageSize,
+      totalFolders,
+      handlePageSizeChange,
+      handlePageChange,
+      truncateText,
+      toggleTagTooltip,
+      isTruncated,
+      showEditDialog,
+      currentEditNode,
+      newTag,
+      openEditDialog,
+      addTag,
+      removeTag,
+      onTagDragEnd,
+      saveEdit
+
     }
   }
 }
@@ -1485,4 +1722,125 @@ export default {
     transform: rotate(360deg);
   }
 }
+
+.pagination-container {
+  padding: 16px;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+
+  :deep(.el-pagination) {
+    padding: 0;
+
+    .btn-prev,
+    .btn-next,
+    .number {
+      min-width: 32px;
+      height: 32px;
+      line-height: 32px;
+      border-radius: 8px;
+      margin: 0 4px;
+    }
+
+    .active {
+      background: #059669 !important;
+      color: white;
+    }
+  }
+}
+
+.modern-node {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* 增加元素间距 */
+
+  .tag-container {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    flex-grow: 1;
+    max-width: 45%;
+    margin-right: auto; /* 将标签推到操作按钮左侧 */
+  }
+
+  .tag-item {
+    height: 24px;
+    line-height: 22px;
+    font-size: 12px;
+    padding: 0 6px;
+    border-radius: 4px;
+    background: #f0f2f5;
+    border-color: #e4e7ed;
+    color: #606266;
+  }
+
+}
+
+/* 调整响应式布局 */
+@media (max-width: 768px) {
+  .modern-node {
+    flex-wrap: wrap;
+
+    .tag-container {
+      order: 1;
+      width: 100%;
+      max-width: none;
+      margin: 4px 0;
+    }
+
+    .node-actions {
+      order: 2;
+    }
+  }
+}
+
+.tag-manager {
+  border: 1px solid #ebeef5;
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.tag-list {
+  min-height: 60px;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+.tag-item {
+  display: flex;
+  align-items: center;
+  margin: 4px 0;
+  padding: 4px;
+  transition: all 0.3s;
+
+  .drag-handle {
+    margin-right: 8px;
+    cursor: move;
+    color: #909399;
+    &:hover {
+      color: #409eff;
+    }
+  }
+
+  &:hover {
+    background: #f5f7fa;
+  }
+}
+
+.add-tag {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.tag-list-enter-active,
+.tag-list-leave-active {
+  transition: all 0.3s;
+}
+.tag-list-enter-from,
+.tag-list-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
 </style>
