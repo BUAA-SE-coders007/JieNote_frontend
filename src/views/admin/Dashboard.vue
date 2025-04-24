@@ -165,14 +165,14 @@
     <div class="flex-1 overflow-y-auto bg-gray-100">
       <div class="container-fluid px-4 py-4">
         <div class="bg-white rounded-lg shadow p-4">
-          <div class="tree-container">
-            <div v-if="isLoading" class="loading-wrapper">
-              <div class="loading-content">
-                <el-icon class="is-loading"><Loading /></el-icon>
-                <span class="loading-text">正在加载知识库结构...</span>
-              </div>
+          <div v-if="isLoading" class="loading-wrapper">
+            <div class="loading-content">
+              <el-icon class="is-loading"><Loading /></el-icon>
+              <span class="loading-text">正在加载知识库结构...</span>
             </div>
-          <el-tree
+          </div>
+          <div v-if="!isLoading" class="tree-container">
+           <el-tree
               @node-expand="handleNodeExpand"
               @node-collapse="handleNodeCollapse"
               class="modern-tree"
@@ -184,10 +184,32 @@
               :default-expanded-keys="[...expandedKeys]"
               :expand-on-click-node="false"
               ref="treeRef"
-          >
+           >
             <template #default="{ node, data }">
               <div class="modern-node">
                 <span class="node-label">{{ getIconForNode(data) }} {{ data.label }}</span>
+                <div class="tag-container" v-if="data.depth === 1">
+                  <el-tooltip
+                      v-for="(tag, index) in data.tags.slice(0,3)"
+                      :key="index"
+                      placement="top"
+                      :disabled="!isTruncated(tag.tag_content)"
+                      manual
+                      v-model="tag.showFullText"
+                  >
+                    <template #content>
+                      <div class="full-tag-content">{{ tag.tag_content }}</div>
+                    </template>
+                    <el-tag
+                        size="small"
+                        type="info"
+                        class="tag-item"
+                        @click="toggleTagTooltip(tag)"
+                    >
+                      {{ truncateText(tag.tag_content) }}
+                    </el-tag>
+                  </el-tooltip>
+                </div>
                 <div class="node-actions">
                   <!-- 只在前两级展示添加按钮 -->
                   <el-tooltip content="编辑信息" placement="top" :enterable="false" :duration="50">
@@ -250,10 +272,38 @@
                 </div>
               </div>
             </template>
-          </el-tree>
+           </el-tree>
           </div>
         </div>
       </div>
+    </div>
+    <div v-if="!isLoading" class="pagination-container mt-4 flex justify-between items-center">
+      <div class="page-size-selector">
+        <span class="text-sm text-gray-600 mr-2">每页显示：</span>
+        <el-select
+            v-model="pageSize"
+            @change="handlePageSizeChange"
+            size="small"
+            style="width: 100px"
+        >
+          <el-option
+              v-for="size in [5, 10, 15, 20]"
+              :key="size"
+              :label="size"
+              :value="size"
+          />
+        </el-select>
+        <span class="text-sm text-gray-600 mr-2"> 文件夹</span>
+      </div>
+
+      <el-pagination
+          background
+          layout="prev, pager, next"
+          :page-size="pageSize"
+          :total="totalFolders"
+          :current-page="currentPage"
+          @current-change="handlePageChange"
+      />
     </div>
   </div>
 </template>
@@ -279,20 +329,21 @@ export default {
 
 
   setup() {
-    const defaultExpandedKeys = ref([])
+    const currentPage = ref(1)
+    const pageSize = ref(5)
+    const totalFolders = ref(10)
 
     const setInitialExpandedKeys = () => {
       // 获取一级分类的ID
       const firstLevelIds = dataSource.value.map(item => item.id)
-
-      // 设置默认展开的键（只展开一级分类）
-      defaultExpandedKeys.value = firstLevelIds
+      console.log('this is expand-id')
 
       // 同步到 expandedKeys，用于 icon 判断
       expandedKeys.value = new Set(firstLevelIds)
+      console.log(expandedKeys)
     }
     const expandedKeys = ref(new Set())
-    let id = 1000
+    let id = 0
     const isLoading = ref(true)
     const showCheckbox = ref(false)
     const showGraph = ref(false)
@@ -361,6 +412,20 @@ export default {
       }
     })
 
+    const truncateText = (text) => {
+      return text.length > 10 ? text.slice(0, 10) + '...' : text
+    }
+
+    const isTruncated = (text) => {
+      return text.length > 10
+    }
+
+    const toggleTagTooltip = (tag) => {
+      if (isTruncated(tag.tag_content)) {
+        tag.showFullText = !tag.showFullText
+      }
+    }
+
 
 
 
@@ -406,6 +471,38 @@ export default {
     }
     const handleNodeCollapse = (data) => {
       expandedKeys.value.delete(data.id)
+    }
+
+    const handlePageChange = async (newPage) => {
+      currentPage.value = newPage
+      isLoading.value = true
+      try {
+        await findAllfolders()
+        // 数据加载完成后设置默认展开
+        setInitialExpandedKeys()
+        console.log('this is first')
+        console.log(expandedKeys)
+      } catch (error) {
+        ElMessage.error('数据加载失败: ' + error.message)
+      } finally {
+        isLoading.value = false
+      }
+    }
+
+// 处理每页数量变化
+    const handlePageSizeChange = async (newSize) => {
+      pageSize.value = newSize
+      currentPage.value = 1 // 重置到第一页
+      isLoading.value = true
+      try {
+        await findAllfolders()
+        // 数据加载完成后设置默认展开
+        setInitialExpandedKeys()
+      } catch (error) {
+        ElMessage.error('数据加载失败: ' + error.message)
+      } finally {
+        isLoading.value = false
+      }
     }
 
 
@@ -734,66 +831,43 @@ export default {
 
     const dataSource = ref([])
 
-    // const dataSource = ref([
-    //   {
-    //     id: 1,
-    //     label: '计算机科学',
-    //     date:'2天前',
-    //     children: [
-    //       {
-    //         id: 4,
-    //         label: '数据结构与算法分析.pdf',
-    //         date: '1天前',
-    //         children: [
-    //           { id: 9, label: '第一章笔记',date: '1天前' },
-    //           { id: 10, label: '第二章笔记',date: '1天前' }
-    //         ]
-    //       },
-    //       {
-    //         id: 5,
-    //         label: '计算机网络.pdf',
-    //         date: '1天前',
-    //         children: [
-    //           { id: 11, label: '网络协议笔记',date: '1天前' }
-    //         ]
-    //       }
-    //     ]
-    //   },
-    //   {
-    //     id: 2,
-    //     label: '人工智能',
-    //     date: '1天前',
-    //     children: [
-    //       { id: 6, label: '深度学习.pdf',date: '1天前' },
-    //       { id: 7, label: '自然语言处理.pdf',date: '1天前' }
-    //     ]
-    //   },
-    //   {
-    //     id: 3,
-    //     label: '机器学习',
-    //     date: '1天前',
-    //     children: [
-    //       { id: 8, label: '机器学习实战.pdf',date: '1天前' },
-    //       { id: 12, label: '统计学习方法.pdf',date: '1天前' }
-    //     ]
-    //   }
-    // ])
 
-
+    const fetchTags = async (articleId) => {
+      try {
+        const res = await fetch(
+            `http://127.0.0.1:4523/m1/6178223-5870624-default/article/getArticleTags?article_id=${articleId}`
+        );
+        const data = await res.json();
+        return data.result || [];
+      } catch (error) {
+        console.error('获取标签失败:', error);
+        return [];
+      }
+    };
 
     //这个是新写的
 
     const findAllfolders = async () => {
       try {
+        id = 0
         console.log('拿一级目录');
-        const res = await fetch('http://127.0.0.1:4523/m1/6178223-5870624-default/article/getSelfFolders');
+        const url = new URL('http://127.0.0.1:4523/m1/6178223-5870624-default/article/getSelfFolders');
+        url.searchParams.append('page_number', currentPage.value);
+        url.searchParams.append('page_size', pageSize.value);
+
+        const res = await fetch(url);
         const data = await res.json();
+        console.log('this is folder-data')
+        console.log(data.result)
+        totalFolders.value = data.result.length
+        console.log(totalFolders)
 
         const transformedData = [];
         // 使用Promise.all并行处理一级目录
         await Promise.all(data.result.map(async folder => {
           const firstLevel = {
-            id: folder.folder_id,
+            id: id++,
+            true_id:folder.folder_id,
             label: folder.folder_name,
             depth: 0,
             children: []
@@ -806,8 +880,10 @@ export default {
           // 并行处理二级目录
           firstLevel.children = await Promise.all(secondData.result.map(async article => {
             const secondLevel = {
-              id: article.article_id,
+              id: id++,
+              true_id:article.article_id,
               label: article.article_name,
+              tags: await fetchTags(article.article_id),
               depth: 1,
               children: []
             };
@@ -818,7 +894,8 @@ export default {
 
             if (thirdData.result?.length) {
               secondLevel.children = thirdData.result.map(item => ({
-                id: item.article_id,
+                id: id++,
+                true_id:item.article_id,
                 label: item.article_name,
                 depth: 2
               }));
@@ -924,14 +1001,22 @@ export default {
       getIconForNode,
       handleNodeExpand,
       handleNodeCollapse,
-      defaultExpandedKeys,
       expandedKeys,
       // PDF上传相关
       showPdfUploadDialog,
       pdfUploadForm,
       handlePdfFileChange,
       confirmPdfUpload,
-      isLoading
+      isLoading,
+      currentPage,
+      pageSize,
+      totalFolders,
+      handlePageSizeChange,
+      handlePageChange,
+      truncateText,
+      toggleTagTooltip,
+      isTruncated
+
     }
   }
 }
@@ -1485,4 +1570,76 @@ export default {
     transform: rotate(360deg);
   }
 }
+
+.pagination-container {
+  padding: 16px;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+
+  :deep(.el-pagination) {
+    padding: 0;
+
+    .btn-prev,
+    .btn-next,
+    .number {
+      min-width: 32px;
+      height: 32px;
+      line-height: 32px;
+      border-radius: 8px;
+      margin: 0 4px;
+    }
+
+    .active {
+      background: #059669 !important;
+      color: white;
+    }
+  }
+}
+
+.modern-node {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* 增加元素间距 */
+
+  .tag-container {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    flex-grow: 1;
+    max-width: 45%;
+    margin-right: auto; /* 将标签推到操作按钮左侧 */
+  }
+
+  .tag-item {
+    height: 24px;
+    line-height: 22px;
+    font-size: 12px;
+    padding: 0 6px;
+    border-radius: 4px;
+    background: #f0f2f5;
+    border-color: #e4e7ed;
+    color: #606266;
+  }
+
+}
+
+/* 调整响应式布局 */
+@media (max-width: 768px) {
+  .modern-node {
+    flex-wrap: wrap;
+
+    .tag-container {
+      order: 1;
+      width: 100%;
+      max-width: none;
+      margin: 4px 0;
+    }
+
+    .node-actions {
+      order: 2;
+    }
+  }
+}
+
+
 </style>
