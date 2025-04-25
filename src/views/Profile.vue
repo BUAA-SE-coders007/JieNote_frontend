@@ -46,8 +46,8 @@
                 >
                   <div class="relative">
                     <img
-                      alt="..."
-                      :src="team2"
+                      alt="Avatar"
+                      :src="user.avatar || team2"
                       class="shadow-xl rounded-full h-auto align-middle border-none absolute -m-16 -ml-20 lg:-ml-16 max-w-150-px"
                     />
                   </div>
@@ -56,9 +56,12 @@
                   class="w-full lg:w-4/12 px-4 lg:order-3 lg:text-right lg:self-center"
                 >
                   <div class="py-6 px-3 mt-32 sm:mt-0">
-                    <router-link to="/admin/settings" class="text-blueGray-800 text-xl font-bold hover:underline">
+                    <button
+                      @click="showSettings = true"
+                      class="text-blueGray-800 text-xl font-bold hover:underline"
+                    >
                       设置
-                    </router-link>
+                    </button>
                   </div>
                 </div>
                 <div class="w-full lg:w-4/12 px-4 lg:order-1">
@@ -94,7 +97,7 @@
                 <h3
                   class="text-4xl font-semibold leading-normal mb-2 text-blueGray-700 mb-2"
                 >
-                  姜娜·斯通斯
+                  {{ user.username || `user_${user.id}` }}
                 </h3>
                 <div
                   class="text-sm leading-normal mt-0 mb-2 text-blueGray-400 font-bold uppercase"
@@ -102,41 +105,54 @@
                   <i
                     class="fas fa-map-marker-alt mr-2 text-lg text-blueGray-400"
                   ></i>
-                  洛杉矶，加利福尼亚
-                </div>
-                <div class="mb-2 text-blueGray-600 mt-10">
-                  <i
-                    class="fas fa-briefcase mr-2 text-lg text-blueGray-400"
-                  ></i>
-                  解决方案经理 - 创意团队官员
+                  {{ user.address || '未知' }}
                 </div>
                 <div class="mb-2 text-blueGray-600">
                   <i
                     class="fas fa-university mr-2 text-lg text-blueGray-400"
                   ></i>
-                  计算机科学大学
+                  {{ user.university || '未知' }}
                 </div>
               </div>
               <div class="mt-10 py-10 border-t border-blueGray-200 text-center">
                 <div class="flex flex-wrap justify-center">
                   <div class="w-full lg:w-9/12 px-4">
                     <p class="mb-4 text-lg leading-relaxed text-blueGray-700">
-                      一位具有相当范围的艺术家，姜娜是墨尔本出生、布鲁克林居住的尼克·墨菲的名字，
-                      他自己创作、表演和录制所有音乐，赋予其温暖、亲密的感觉和坚实的律动结构。
+                      {{ user.introduction || '这里什么也没有' }}
                     </p>
-                    <a
-                      href="javascript:void(0)"
-                      class="font-normal text-emerald-500"
-                    >
-                      显示更多
-                    </a>
                   </div>
                 </div>
               </div>
+              <!-- 新增折线图部分 -->
+              <div class="mt-10 py-10 border-t border-blueGray-200">
+                <div class="flex flex-wrap">
+                  <div class="w-full lg:w-6/12 px-4">
+                    <bar-chart
+                      :chart-data="literatureData"
+                      :gradient-colors="['rgba(76, 175, 80, 0.4)', 'rgba(76, 175, 80, 0)']"
+                    />
+                  </div>
+                  <div class="w-full lg:w-6/12 px-4">
+                    <bar-chart
+                      :chart-data="notesData"
+                      :gradient-colors="['rgba(33, 150, 243, 0.4)', 'rgba(33, 150, 243, 0)']"
+                    />
+                  </div>
+                </div>
+              </div>
+              <!-- 折线图部分结束 -->
             </div>
           </div>
         </div>
       </section>
+      <!-- 动态加载 CardSettings -->
+      <transition name="fade">
+        <div v-if="showSettings" class="modal-overlay">
+          <div class="modal-content half-size">
+            <card-settings @close="showSettings = false" />
+          </div>
+        </div>
+      </transition>
     </main>
     <footer-component />
   </div>
@@ -145,21 +161,58 @@
 <script>
 import Navbar from "@/components/Navbars/AuthNavbar.vue";
 import FooterComponent from "@/components/Footers/Footer.vue";
+import BarChart from "@/components/Cards/BarChart.vue";
+import CardSettings from "@/components/Cards/CardSettings.vue";
 import team2 from "@/assets/img/team-2-800x800.jpg";
 import axios from "axios";
 
 export default {
   data() {
     return {
-      team2,
+      team2, // 将 team2 定义在 data 中
+      user: {
+        id: null,
+        username: "",
+        avatar: "",
+        address: "",
+        university: "",
+        introduction: "",
+      },
       articleCount: 0, // 文献数量
       noteCount: 0, // 笔记数量
       organizationCount: 0, // 组织数量
+      showSettings: false, // 控制 CardSettings 显示
+      literatureData: {
+        labels: ["6天前", "5天前", "4天前", "3天前", "2天前", "昨天", "今天"],
+        datasets: [
+          {
+            label: "文献新增数量",
+            borderColor: "#4CAF50", // 绿色边框
+            backgroundColor: "rgba(76, 175, 80, 0.2)", // 绿色背景
+            data: [5, 8, 6, 10, 12, 9, 15], // 假数据
+            fill: true,
+          },
+        ],
+      },
+      notesData: {
+        labels: ["6天前", "5天前", "4天前", "3天前", "2天前", "昨天", "今天"],
+        datasets: [
+          {
+            label: "笔记新增数量",
+            borderColor: "#2196F3", // 蓝色边框
+            backgroundColor: "rgba(33, 150, 243, 0.2)", // 蓝色背景
+            data: [3, 5, 7, 8, 6, 10, 12], // 假数据
+            fill: true,
+          },
+        ],
+      },
     };
   },
   components: {
     Navbar,
     FooterComponent,
+    BarChart,
+    CardSettings,
   },
   methods: {
     async fetchData() {
@@ -185,13 +238,78 @@ export default {
         console.error("获取数据失败：", error);
       }
     },
-    goToSetting() {
-      // 使用 $router.push 跳转到设置页面
-      this.$router.push("/admin/settings");
+    async fetchUser() {
+      try {
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+          console.error("Token 不存在，请先登录！");
+          return;
+        }
+
+        const response = await axios.get("http://localhost:8000/user", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const userData = response.data;
+        this.user = {
+          id: userData.id,
+          username: userData.username || `user_${userData.id}`,
+          avatar: userData.avatar
+            ? `http://localhost:8000${userData.avatar.substring(4)}`
+            : team2,
+          address: userData.address || "未知",
+          university: userData.university || "未知",
+          introduction: userData.introduction || "这里什么也没有",
+        };
+      } catch (error) {
+        console.error("获取用户信息失败：", error);
+      }
     },
   },
   mounted() {
     this.fetchData();
+    this.fetchUser();
   },
 };
 </script>
+
+<style>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s;
+}
+.fade-enter,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 600px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+}
+
+.half-size {
+  width: 50%;
+  height: 50%;
+}
+</style>
