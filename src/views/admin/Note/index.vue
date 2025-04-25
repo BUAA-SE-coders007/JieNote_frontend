@@ -1,55 +1,83 @@
 <template>
   <div>
-    <NoteComponent />
+    <CustomMdEditor
+      v-model="noteContent"
+      :noteId="$route.params.note_id"
+      :autoSave="true"
+      :autoFocus="true"
+      :height="600"
+      :hideToolbar="true"
+      @save="updateNote"
+    />
   </div>
 </template>
 
 <script>
-import NoteComponent from "@/components/Note/NoteComponent.vue";
+import { ref, onMounted } from "vue";
+import axios from "axios";
+import CustomMdEditor from "@/components/Editor/MdEditor.vue";
+import defaultText from "@/components/Editor/config/defaultText";
 
 export default {
-  name: "NotePage",
   components: {
-    NoteComponent,
+    CustomMdEditor
+  },
+  setup() {
+    const noteContent = ref("");
+    const isMobile = ref(false);
+    
+    const fetchNote = async (noteId) => {
+      try {
+        const response = await axios.get(`http://localhost:8000/notes/${noteId}`);
+        noteContent.value = response.data.content;
+      } catch (error) {
+        console.error("Error fetching note:", error);
+      }
+    };
+
+    const updateNote = async (content) => {
+      try {
+        const noteId = this.$route.params.note_id;
+        await axios.put(`http://localhost:8000/notes/${noteId}`, {
+          content,
+        });
+        this.$message.success("笔记已更新");
+      } catch (e) {
+        this.$message.error("更新失败");
+        console.error(e);
+      }
+    };
+
+    onMounted(() => {
+      // 检测是否为移动设备
+      isMobile.value = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
+      
+      // 获取路由参数中的笔记ID
+      const noteId = window.location.pathname.split("/").pop();
+      if (noteId) {
+        fetchNote(noteId);
+      } else {
+        // 如果没有笔记ID，则使用默认文本
+        noteContent.value = defaultText;
+      }
+      
+      // 设置默认文本
+      if (!noteContent.value.trim()) {
+        noteContent.value = defaultText;
+      }
+    });
+
+    return {
+      noteContent,
+      isMobile,
+      updateNote
+    };
   },
 };
 </script>
 
 <style scoped>
-/* 覆盖 Tailwind 对 Vditor 的影响 */
-:deep(.vditor),
-:deep(.vditor-toolbar),
-:deep(.vditor-toolbar__item),
-:deep(.vditor-tooltipped),
-:deep(.vditor-toolbar__item > svg),
-:deep(.vditor-tooltipped > svg) {
-  all: unset;
-  box-sizing: content-box !important;
-  line-height: 1 !important;
-}
-
-:deep(.vditor-toolbar) {
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
-  align-items: center !important;
-  /* padding-left: 0 !important; */
-  overflow-x: auto !important;
-  background: #f6f8fa !important;
-  border-bottom: 1px solid #d1d5da !important;
-}
-
-:deep(.vditor-toolbar__item),
-:deep(.vditor-tooltipped) {
-  min-width: 28px !important;
-  min-height: 28px !important;
-  /* padding: 0 2px !important; */
-  white-space: nowrap !important;
-}
-
-:deep(.vditor-toolbar__item > svg),
-:deep(.vditor-tooltipped > svg) {
-  width: 16px !important;
-  height: 16px !important;
-}
+/* 添加页面样式 */
 </style>

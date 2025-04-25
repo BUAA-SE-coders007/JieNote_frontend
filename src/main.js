@@ -1,6 +1,7 @@
 import { createApp } from "vue";
 import { createWebHistory, createRouter } from "vue-router";
 
+import NoteLayout from '@/layouts/NoteLayout.vue';
 // styles
 
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -16,8 +17,7 @@ import 'element-plus/dist/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
 import Admin from "@/layouts/Admin.vue";
-import Auth from "@/layouts/Auth.vue";
-import NoteLayout from "@/layouts/NoteLayout.vue";
+import Auth from '@/layouts/Auth.vue';
 
 // views for Admin layout
 

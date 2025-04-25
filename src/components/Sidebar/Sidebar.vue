@@ -113,6 +113,7 @@ export default {
       collapseShow: "hidden",
       navItems: [
         { label: "主页", to: "/admin/maps", icon: "fas fa-map-marked" },
+        { label: "笔记", to: "/admin/note", icon: "fas fa-sticky-note" },
         { label: "文献管理", to: "/admin/dashboard", icon: "fas fa-tv" },
         { label: "组织协作", to: "/admin/tables", icon: "fas fa-table" },
         { label: "个人主页", to: "/profile", icon: "fas fa-user-circle" },
