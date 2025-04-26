@@ -217,7 +217,7 @@
                         type="warning"
                         size="small"
                         round
-                        @click.stop="append(node, data)"
+                        @click.stop="openEditDialog(node, data)"
                         class="action-btn edit-btn"
                     >
                       <el-icon><Edit /></el-icon>
@@ -305,14 +305,79 @@
           @current-change="handlePageChange"
       />
     </div>
+    <el-dialog
+        v-model="showEditDialog"
+        :title="`编辑 ${currentEditNode?.label}`"
+        width="500px"
+        :close-on-click-modal="false"
+    >
+      <el-form label-width="80px">
+        <!-- 名称编辑 -->
+        <el-form-item label="名称">
+          <el-input v-model="currentEditNode.label" />
+        </el-form-item>
+
+        <!-- 标签管理（仅depth=1显示） -->
+        <el-form-item v-if="currentEditNode?.depth === 1" label="标签管理">
+          <div class="tag-manager">
+            <div class="tag-list">
+              <transition-group name="tag-list">
+                <draggable
+                    v-model="currentEditNode.tags"
+                    item-key="tag_id"
+                    handle=".drag-handle"
+                    @end="onTagDragEnd"
+                >
+                  <template #item="{element, index}">
+                    <div class="tag-item">
+                      <el-icon class="drag-handle"><Rank /></el-icon>
+                      <el-tag
+                          closable
+                          @close="removeTag(index)"
+                      >
+                        {{ element.tag_content }}
+                      </el-tag>
+                    </div>
+                  </template>
+                </draggable>
+              </transition-group>
+            </div>
+
+            <!-- 添加新标签 -->
+            <div class="add-tag">
+              <el-input
+                  v-model="newTag"
+                  placeholder="输入新标签"
+                  size="small"
+                  style="width: 120px"
+                  @keyup.enter="addTag"
+              />
+              <el-button
+                  type="primary"
+                  size="small"
+                  @click="addTag"
+              >
+                添加
+              </el-button>
+            </div>
+          </div>
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <el-button @click="showEditDialog = false">取消</el-button>
+        <el-button type="primary" @click="saveEdit">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import { ref,nextTick,onMounted} from 'vue'
-import { Edit, DocumentAdd, Delete,Management  } from '@element-plus/icons-vue'
+import { Edit, DocumentAdd, Delete,Management,Rank  } from '@element-plus/icons-vue'
 import KnowledgeGraph from '/src/components/Tree/KnowledgeGraph.vue'
 import JSZip from 'jszip'
+import draggable from 'vuedraggable'
 import { ElMessage } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
 
@@ -324,7 +389,9 @@ export default {
     Delete,
     KnowledgeGraph,
     Management,
-    Loading
+    Loading,
+    draggable,
+    Rank
   },
 
 
@@ -363,6 +430,83 @@ export default {
       parentNode: null,
       parentData: null
     })
+
+
+    const showEditDialog = ref(false)
+    const currentEditNode = ref(null)
+    const newTag = ref('')
+
+    // 打开编辑弹窗
+    const openEditDialog = (node, data) => {
+      currentEditNode.value = {
+        ...data,
+        tags: [...(data.tags || [])] // 深度拷贝标签数组
+      }
+      showEditDialog.value = true
+    }
+
+    // 添加标签
+    const addTag = () => {
+      if (newTag.value.trim()) {
+        currentEditNode.value.tags.push({
+          tag_id: Date.now(), // 临时ID
+          tag_content: newTag.value.trim()
+        })
+        newTag.value = ''
+      }
+    }
+
+    // 删除标签
+    const removeTag = (index) => {
+      currentEditNode.value.tags.splice(index, 1)
+    }
+
+    // 标签拖拽结束
+    const onTagDragEnd = () => {
+      console.log('标签顺序已更新')
+    }
+
+    // 保存修改
+    const saveEdit = async () => {
+      try {
+        // 更新节点名称
+        const nodeData = {
+          id: currentEditNode.value.true_id,
+          name: currentEditNode.value.label
+        }
+
+        // 根据节点类型调用不同API
+        const apiUrl = currentEditNode.value.depth === 0
+            ? '/api/updateFolder'
+            : '/api/updateArticle'
+
+        // 更新标签
+        if (currentEditNode.value.depth === 1) {
+          await updateTags(currentEditNode.value.true_id, currentEditNode.value.tags)
+        }
+
+        // 调用保存接口
+        await fetch(apiUrl, {
+          method: 'PUT',
+          body: JSON.stringify(nodeData)
+        })
+
+        // 刷新数据
+        await findAllfolders()
+        ElMessage.success('保存成功')
+        showEditDialog.value = false
+      } catch (error) {
+        ElMessage.error('保存失败: ' + error.message)
+      }
+    }
+
+    // 更新标签到后端
+    const updateTags = async (articleId, tags) => {
+      await fetch(`/api/updateTags?article_id=${articleId}`, {
+        method: 'POST',
+        body: JSON.stringify(tags.map(t => t.tag_content))
+      })
+    }
 
     const toggleCheckbox = () => {
       showCheckbox.value = !showCheckbox.value
@@ -727,6 +871,7 @@ export default {
       const newChild = {
         id: id++,
         label: `新节点 ${id}`,
+        depth: 2,
         children: []
       }
       if (!data.children) {
@@ -790,6 +935,7 @@ export default {
       const newCategory = {
         id: id++,
         label: newCategoryForm.value.name,
+        depth: 0,
         children: []
       }
       dataSource.value.push(newCategory)
@@ -950,8 +1096,10 @@ export default {
 
         // 创建新节点
         const newChild = {
-          id: pdfUploadForm.value.parentNode.id || id++,
+          id: id++,
           label: `${fileName}.pdf`,
+          depth: 1,
+          tags:[],
           children: []
         }
 
@@ -1015,8 +1163,15 @@ export default {
       handlePageChange,
       truncateText,
       toggleTagTooltip,
-      isTruncated
-
+      isTruncated,
+      showEditDialog,
+      currentEditNode,
+      newTag,
+      openEditDialog,
+      addTag,
+      removeTag,
+      onTagDragEnd,
+      saveEdit
     }
   }
 }
@@ -1641,5 +1796,54 @@ export default {
   }
 }
 
+.tag-manager {
+  border: 1px solid #ebeef5;
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.tag-list {
+  min-height: 60px;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+.tag-item {
+  display: flex;
+  align-items: center;
+  margin: 4px 0;
+  padding: 4px;
+  transition: all 0.3s;
+
+  .drag-handle {
+    margin-right: 8px;
+    cursor: move;
+    color: #909399;
+    &:hover {
+      color: #409eff;
+    }
+  }
+
+  &:hover {
+    background: #f5f7fa;
+  }
+}
+
+.add-tag {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.tag-list-enter-active,
+.tag-list-leave-active {
+  transition: all 0.3s;
+}
+.tag-list-enter-from,
+.tag-list-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
+}
 
 </style>
