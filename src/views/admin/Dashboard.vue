@@ -115,6 +115,41 @@
       </template>
     </el-dialog>
 
+    <!-- 新建笔记弹窗 -->
+    <el-dialog
+        v-model="showNewNoteDialog"
+        title="新建笔记"
+        width="30%"
+        :close-on-click-modal="false"
+        custom-class="new-note-modal"
+        :destroy-on-close="true"
+    >
+      <el-form :model="newNoteForm" label-width="80px">
+        <el-form-item label="笔记名称">
+          <el-input
+              v-model="newNoteForm.name"
+              placeholder="请输入笔记名称"
+              class="note-input"
+              :maxlength="20"
+              show-word-limit
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button
+              @click="showNewNoteDialog = false"
+              class="modal-cancel-btn"
+          >取消</el-button>
+          <el-button
+              type="primary"
+              @click="confirmNewNote"
+              class="modal-confirm-btn"
+          >确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
     <!-- PDF上传弹窗 -->
     <el-dialog
         v-model="showPdfUploadDialog"
@@ -378,7 +413,7 @@ import { Edit, DocumentAdd, Delete,Management,Rank  } from '@element-plus/icons-
 import KnowledgeGraph from '/src/components/Tree/KnowledgeGraph.vue'
 import JSZip from 'jszip'
 import draggable from 'vuedraggable'
-import { ElMessage } from 'element-plus'
+import {ElMessage, ElMessageBox} from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
 
 export default {
@@ -396,6 +431,16 @@ export default {
 
 
   setup() {
+
+    const showNewNoteDialog = ref(false)
+    const newNoteForm = ref({
+      name: '',
+      parentNode: null,
+      parentData: null
+    })
+
+    const defaultExpandedKeys = ref([])
+
     const currentPage = ref(1)
     const pageSize = ref(5)
     const totalFolders = ref(10)
@@ -650,36 +695,6 @@ export default {
     }
 
 
-    // 递归查找节点的深度（通过 node.id）
-    // const getNodeDepth = (node, tree, depth = 0) => {
-    //   // 如果树为空，返回-1
-    //   console.log(`Node: ${node.label}, ID: ${node.id}, Depth: ${depth}`)
-    //   console.log(tree)
-    //   if (!tree || tree.length === 0) {
-    //     return -1
-    //   }
-    //
-    //   // 遍历当前层级的节点
-    //   for (const item of tree) {
-    //     // 如果找到目标节点，返回当前深度
-    //     if (item.id === node.id) {
-    //       return depth
-    //     }
-    //
-    //     // 如果当前节点有子节点，递归查找
-    //     if (item.children && item.children.length > 0) {
-    //       const childDepth = getNodeDepth(node, item.children, depth + 1)
-    //       // 如果在子节点中找到，返回子节点的深度
-    //       if (childDepth >= 0) {
-    //         return childDepth
-    //       }
-    //     }
-    //   }
-    //
-    //   // 如果在当前层级及其子节点中都没有找到，返回-1
-    //   return -1
-    // }
-
 
 
 
@@ -867,6 +882,18 @@ export default {
         return
       }
 
+      if (node.level === 2) {
+        // 如果是二级分类，显示新建笔记弹窗
+        newNoteForm.value = {
+          name: '',
+          parentNode: node,
+          parentData: data
+        }
+        expandedKeys.value.add(data.id)
+        showNewNoteDialog.value = true
+        return
+      }
+
       // 如果不是一级分类，则按照原来的逻辑添加新节点
       const newChild = {
         id: id++,
@@ -883,6 +910,18 @@ export default {
     }
 
     const remove = async (node, data) => {
+      // 显示确认弹窗
+      await ElMessageBox.confirm(
+          `确定要删除 "${data.label}" 吗？此操作不可恢复。`,
+          '删除确认',
+          {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning',
+          }
+      )
+
+      // 用户点击确定后执行删除操作
       const parent = node.parent
       const children = parent.data.children || parent.data
       const index = children.findIndex((d) => d.id === data.id)
@@ -901,10 +940,15 @@ export default {
             message: '删除文件夹失败',
             type: 'error'
           })
+        } else {
+          ElMessage({
+            message: '删除成功',
+            type: 'success'
+          })
         }
         console.log(res);
-      } else {
-        // 否则是二级分类
+      } else if (node.level === 2) {
+        // 二级分类
         const res = await fetch(`http://127.0.0.1:4523/m1/6178223-5870624-default/article/selfArticleToRecycleBin?article_id=${node.id}`, {
           method: 'DELETE'
         })
@@ -913,8 +957,34 @@ export default {
             message: '删除文件失败',
             type: 'error'
           })
+        } else {
+          ElMessage({
+            message: '删除成功',
+            type: 'success'
+          })
         }
         console.log(res);
+      } else {
+        //三级分类
+        //这里还没写好，暂时先用二级分类的
+        //http://127.0.0.1:4523/m2/6178223-5870624-default/283268256
+        const res = await fetch(`http://127.0.0.1:4523/m1/6178223-5870624-default/article/selfArticleToRecycleBin?article_id=${node.id}`, {
+          method: 'DELETE'
+        })
+        if (!res.ok) {
+          ElMessage({
+            message: '删除文件失败',
+            type: 'error'
+          })
+        } else {
+          console.log('lklklk')
+          ElMessage({
+            message: '删除成功',
+            type: 'success'
+          })
+        }
+        console.log(res);
+
       }
     }
 
@@ -964,6 +1034,52 @@ export default {
         message: '新建分类成功',
         type: 'success'
       })
+    }
+
+    const confirmNewNote = async () => {
+      if (!newNoteForm.value.name.trim()) {
+        ElMessage({
+          message: '请输入笔记名称',
+          type: 'warning'
+        })
+        return
+      }
+
+      try {
+        // 确保笔记名称以.md结尾
+        let noteName = newNoteForm.value.name.trim()
+        if (!noteName.endsWith('.md')) {
+          noteName += '.md'
+        }
+
+        // 创建新节点
+        const newChild = {
+          id: id++,
+          label: noteName,
+          children: []
+        }
+
+        // 添加到父节点
+        if (!newNoteForm.value.parentData.children) {
+          newNoteForm.value.parentData.children = []
+        }
+        newNoteForm.value.parentData.children.push(newChild)
+        dataSource.value = [...dataSource.value]
+
+        // 关闭弹窗
+        showNewNoteDialog.value = false
+
+        ElMessage({
+          message: '笔记创建成功',
+          type: 'success'
+        })
+      } catch (error) {
+        console.error('创建笔记失败:', error)
+        ElMessage({
+          message: '创建笔记失败: ' + error.message,
+          type: 'error'
+        })
+      }
     }
 
     const handleSearch = () => {
@@ -1096,7 +1212,7 @@ export default {
 
         // 创建新节点
         const newChild = {
-          id: id++,
+          id: pdfUploadForm.value.parentNode.id || id++,
           label: `${fileName}.pdf`,
           depth: 1,
           tags:[],
@@ -1132,6 +1248,8 @@ export default {
       showGraph,
       showNewCategoryDialog,
       newCategoryForm,
+      showNewNoteDialog,
+      newNoteForm,
       toggleCheckbox,
       append,
       remove,
@@ -1141,6 +1259,7 @@ export default {
       handleExport,
       createNewCategory,
       confirmNewCategory,
+      confirmNewNote,
       showSearchInput,
       searchQuery,
       graphTreeData,
@@ -1149,6 +1268,7 @@ export default {
       getIconForNode,
       handleNodeExpand,
       handleNodeCollapse,
+      defaultExpandedKeys,
       expandedKeys,
       // PDF上传相关
       showPdfUploadDialog,
