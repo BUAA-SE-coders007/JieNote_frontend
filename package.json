@@ -29,7 +29,8 @@
     "jszip": "^3.10.1",
     "tailwindcss": "2.0.4",
     "vditor": "^3.11.0",
-    "vue": "3.2.47",
+    "md-editor-v3": "^5.5.0",
+    "vue": "^3.2.47",
     "vue-router": "4.0.5"
   },
   "devDependencies": {
