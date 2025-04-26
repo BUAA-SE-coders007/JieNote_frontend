@@ -23,9 +23,13 @@
     "element-plus": "^2.9.7",
     "gulp": "4.0.2",
     "gulp-append-prepend": "1.0.8",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^5.1.91",
     "tailwindcss": "2.0.4",
     "vue": "3.2.47",
-    "vue-router": "4.0.5"
+    "vue-pdf": "^4.3.0",
+    "vue-router": "4.0.5",
+    "vue3-pdf": "^4.2.6"
   },
   "devDependencies": {
     "@babel/core": "^7.13.10",

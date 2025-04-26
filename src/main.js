@@ -33,9 +33,16 @@ import Landing from "@/views/Landing.vue";
 import Profile from "@/views/Profile.vue";
 import Index from "@/views/Index.vue";
 import ProjectIntro from "@/views/ProjectIntro.vue";
+import PdfViewerPage from "@/views/PdfViewerPage.vue";
+
 // routes
 
 const routes = [
+  {
+    path: "/pdf-viewer",
+    name: "PdfViewerPage",
+    component: PdfViewerPage,
+  },
   {
     path: "/project-intro",
     name: "ProjectIntro",
