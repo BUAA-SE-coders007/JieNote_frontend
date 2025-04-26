@@ -1172,7 +1172,6 @@ export default {
       removeTag,
       onTagDragEnd,
       saveEdit
-      isTruncated
     }
   }
 }
