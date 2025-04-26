@@ -47,6 +47,7 @@
     "eslint-plugin-vue": "7.7.0",
     "postcss": "8.4.39",
     "sass": "^1.86.3",
+    "code-inspector-plugin": "^0.20.10",
     "sass-loader": "^16.0.5",
     "vue-template-compiler": "2.6.12"
   },
@@ -59,14 +60,14 @@
       "plugin:vue/essential",
       "eslint:recommended"
     ],
-    "rules": {},
+    "rules": { },
     "parserOptions": {
       "parser": "@babel/eslint-parser"
     }
   },
   "postcss": {
     "plugins": {
-      "autoprefixer": {}
+      "autoprefixer": { }
     }
   },
   "browserslist": [
