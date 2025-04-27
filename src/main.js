@@ -37,10 +37,15 @@ import Register from "@/views/auth/Register.vue";
 import Landing from "@/views/Landing.vue";
 import Profile from "@/views/Profile.vue";
 import Index from "@/views/Index.vue";
-
+import ProjectIntro from "@/views/ProjectIntro.vue";
 // routes
 
 const routes = [
+  {
+    path: "/project-intro",
+    name: "ProjectIntro",
+    component: ProjectIntro,
+  },
   {
     path: "/admin",
     redirect: "/admin/dashboard",
