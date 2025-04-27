@@ -131,7 +131,6 @@ export default {
     };
   },
   methods: {
-    // 发送验证码
     async sendVerificationCode() {
       if (!this.email) {
         alert("请先输入邮箱地址！");
@@ -143,9 +142,7 @@ export default {
       }
       try {
         // 调用发送验证码的接口
-        await axios.post("http://127.0.0.1:8000/public/send_code", {
-          email: this.email,
-        });
+        await axios.post("http://127.0.0.1:4523/m2/6178223-5870624-default/283173112", { email: this.email });//http://localhost:8000/public/send_code
         alert(`验证码已发送至邮箱：${this.email}`);
         this.startCountdown(); // 开始倒计时
       } catch (error) {
@@ -153,7 +150,6 @@ export default {
         console.error(error);
       }
     },
-    // 开始倒计时
     startCountdown() {
       this.isSendingCode = true;
       this.countdown = 300; // 5分钟倒计时
@@ -166,28 +162,19 @@ export default {
         }
       }, 1000);
     },
-    // 注册
     async handleRegister() {
-      if (
-        !this.username ||
-        !this.email ||
-        !this.password ||
-        !this.verificationCode
-      ) {
+      if (!this.username || !this.email || !this.password || !this.verificationCode) {
         alert("请填写所有字段！");
         return;
       }
       try {
         // 调用注册接口
-        const response = await axios.post(
-          "http://127.0.0.1:8000/public/register",
-          {
-            email: this.email,
-            username: this.username,
-            password: this.password,
-            code: this.verificationCode,
-          }
-        );
+        const response = await axios.post("http://127.0.0.1:4523/m2/6178223-5870624-default/283134772", { //http://localhost:8000/public/register
+          email: this.email,
+          username: this.username,
+          password: this.password,
+          code: this.verificationCode,
+        });
         alert("注册成功！");
         console.log(response.data);
         this.$router.push("/auth/login"); // 跳转到登录页面
