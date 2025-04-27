@@ -1,0 +1,20 @@
+// v0.7.5-rc2
+module.exports = {
+  tabWidth: 2,
+  endOfLine: "auto",
+  tailwindConfig: "tailwind.config.js",
+  singleQuote: true,
+  // printWidth: 100,
+  // useTabs: false,
+  // semi: true,
+  // trailingComma: 'all',
+  // arrowParens: 'always',
+  // embeddedLanguageFormatting: 'auto',
+  // insertPragma: false,
+  // proseWrap: 'preserve',
+  // quoteProps: 'as-needed',
+  // requirePragma: false,
+  // rangeStart: 0,
+  // jsxSingleQuote: false,
+  // plugins: ['prettier-plugin-tailwindcss'],
+};
