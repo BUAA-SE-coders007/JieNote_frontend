@@ -533,6 +533,7 @@ export default {
           return {
             id: node.id,
             label: node.label,
+            depth:node.depth,
             children: children.length ? children : undefined
           }
         }

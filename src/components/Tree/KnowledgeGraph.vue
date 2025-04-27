@@ -34,10 +34,10 @@ const getNodeVisuals = (type) => {
   }
 }
 
-const guessType = (label) => {
-  if (!label) return 'folder'
-  if (label.includes('.pdf')) return 'pdf'
-  if (label.includes('笔记') || label.includes('章')) return 'note'
+const guessType = (depth) => {
+  if (depth === 0) return 'folder'
+  if (depth === 1) return 'pdf'
+  if (depth === 2) return 'note'
   return 'folder'
 }
 
@@ -55,7 +55,7 @@ const dataConverter = {
       idSet.add(node.id)
 
       const label = node.label || `Node ${node.id}`
-      const type = node.type || guessType(label)
+      const type = guessType(node.depth)
       const { icon, fill } = getNodeVisuals(type)
 
       nodes.push({
