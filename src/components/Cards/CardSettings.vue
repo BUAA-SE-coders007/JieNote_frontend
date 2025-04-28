@@ -200,6 +200,7 @@ export default {
       this.avatar = event.target.files[0]; // 获取上传的文件
     },
     async submitSettings() {
+      this.$emit("close");
       try {
         const token = localStorage.getItem("authToken");
         if (!token) {
@@ -227,12 +228,12 @@ export default {
         });
 
         console.log("设置更新成功：", response.data);
-        this.$emit("close"); // 关闭设置页面
       } catch (error) {
         console.error("更新设置失败：", error);
       }
     },
     async changePassword() {
+      this.showChangePassword = false;
       try {
         const token = localStorage.getItem("authToken");
         if (!token) {
@@ -255,7 +256,6 @@ export default {
         );
 
         console.log("密码修改成功：", response.data);
-        this.showChangePassword = false; // 关闭修改密码窗口
       } catch (error) {
         console.error("修改密码失败：", error);
       }
