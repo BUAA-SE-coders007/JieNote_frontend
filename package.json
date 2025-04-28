@@ -14,17 +14,24 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.6.0",
+    "@iconify/vue": "^4.3.0",
     "@popperjs/core": "2.9.1",
     "@tailwindcss/forms": "0.2.1",
     "@vue/compiler-sfc": "3.2.47",
     "axios": "^1.8.4",
     "chart.js": "2.9.4",
     "core-js": "3.9.1",
+    "editor.md": "^1.5.0",
     "element-plus": "^2.9.7",
+    "gojs": "^3.0.21",
     "gulp": "4.0.2",
     "gulp-append-prepend": "1.0.8",
+    "jszip": "^3.10.1",
     "tailwindcss": "2.0.4",
-    "vue": "3.2.47",
+    "vditor": "^3.11.0",
+    "vuedraggable": "^4.1.0",
+    "md-editor-v3": "^5.5.0",
+    "vue": "^3.2.47",
     "vue-router": "4.0.5"
   },
   "devDependencies": {
@@ -40,6 +47,7 @@
     "eslint-plugin-vue": "7.7.0",
     "postcss": "8.4.39",
     "sass": "^1.86.3",
+    "code-inspector-plugin": "^0.20.10",
     "sass-loader": "^16.0.5",
     "vue-template-compiler": "2.6.12"
   },
@@ -52,14 +60,14 @@
       "plugin:vue/essential",
       "eslint:recommended"
     ],
-    "rules": {},
+    "rules": { },
     "parserOptions": {
       "parser": "@babel/eslint-parser"
     }
   },
   "postcss": {
     "plugins": {
-      "autoprefixer": {}
+      "autoprefixer": { }
     }
   },
   "browserslist": [

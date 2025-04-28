@@ -1,6 +1,7 @@
 import { createApp } from "vue";
 import { createWebHistory, createRouter } from "vue-router";
 
+import NoteLayout from '@/layouts/NoteLayout.vue';
 // styles
 
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -11,9 +12,12 @@ import "@/assets/styles/tailwind.css";
 import App from "@/App.vue";
 
 // layouts
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
+import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
 import Admin from "@/layouts/Admin.vue";
-import Auth from "@/layouts/Auth.vue";
+import Auth from '@/layouts/Auth.vue';
 
 // views for Admin layout
 
@@ -21,6 +25,7 @@ import Dashboard from "@/views/admin/Dashboard.vue";
 import Settings from "@/views/admin/Settings.vue";
 import Tables from "@/views/admin/Tables.vue";
 import Maps from "@/views/admin/Maps.vue";
+import Note from "@/views/admin/Note";
 
 // views for Auth layout
 
@@ -32,20 +37,19 @@ import Register from "@/views/auth/Register.vue";
 import Landing from "@/views/Landing.vue";
 import Profile from "@/views/Profile.vue";
 import Index from "@/views/Index.vue";
-import ProjectIntro from "@/views/ProjectIntro.vue";
+
 // routes
 
 const routes = [
-  {
-    path: "/project-intro",
-    name: "ProjectIntro",
-    component: ProjectIntro,
-  },
   {
     path: "/admin",
     redirect: "/admin/dashboard",
     component: Admin,
     children: [
+      {
+        path: "/admin/note",
+        component: Note,
+      },
       {
         path: "/admin/dashboard",
         component: Dashboard,
@@ -80,6 +84,16 @@ const routes = [
     ],
   },
   {
+    path: "/note",
+    component: NoteLayout,
+    children: [
+      {
+        path: "",
+        component: Note,
+      },
+    ],
+  },
+  {
     path: "/landing",
     component: Landing,
   },
@@ -99,4 +113,10 @@ const router = createRouter({
   routes,
 });
 
-createApp(App).use(router).mount("#app");
+const app = createApp(App)
+app.use(ElementPlus)
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+  app.component(key, component)
+}
+app.use(router).mount("#app");
+
