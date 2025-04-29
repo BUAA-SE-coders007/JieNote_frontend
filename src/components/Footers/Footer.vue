@@ -22,29 +22,11 @@
     <div class="container mx-auto px-4">
       <div class="flex flex-wrap text-center lg:text-left">
         <div class="w-full lg:w-6/12 px-4">
-          <h4 class="text-3xl font-semibold">Let's keep in touch!</h4>
+          <h4 class="text-3xl font-semibold">积极与我们保持联系!</h4>
           <h5 class="text-lg mt-0 mb-2 text-blueGray-600">
-            Find us on any of these platforms, we respond 1-2 business days.
+            您可以通过github找到我们，我们会在1~2个工作日内回复.
           </h5>
           <div class="mt-6 lg:mb-0 mb-6">
-            <button
-              class="bg-white text-lightBlue-400 shadow-lg font-normal h-10 w-10 items-center justify-center align-center rounded-full outline-none focus:outline-none mr-2"
-              type="button"
-            >
-              <i class="fab fa-twitter"></i>
-            </button>
-            <button
-              class="bg-white text-lightBlue-600 shadow-lg font-normal h-10 w-10 items-center justify-center align-center rounded-full outline-none focus:outline-none mr-2"
-              type="button"
-            >
-              <i class="fab fa-facebook-square"></i>
-            </button>
-            <button
-              class="bg-white text-pink-400 shadow-lg font-normal h-10 w-10 items-center justify-center align-center rounded-full outline-none focus:outline-none mr-2"
-              type="button"
-            >
-              <i class="fab fa-dribbble"></i>
-            </button>
             <button
               class="bg-white text-blueGray-800 shadow-lg font-normal h-10 w-10 items-center justify-center align-center rounded-full outline-none focus:outline-none mr-2"
               type="button"
@@ -59,80 +41,31 @@
               <span
                 class="block uppercase text-blueGray-500 text-sm font-semibold mb-2"
               >
-                Useful Links
+                团队相关
               </span>
               <ul class="list-unstyled">
                 <li>
                   <a
                     class="text-blueGray-600 hover:text-blueGray-800 font-semibold block pb-2 text-sm"
-                    href="https://www.creative-tim.com/presentation?ref=vn-footer"
+                    href="https://www.cnblogs.com/coders007/p/18760102"
                   >
-                    About Us
+                    关于我们
                   </a>
                 </li>
                 <li>
                   <a
                     class="text-blueGray-600 hover:text-blueGray-800 font-semibold block pb-2 text-sm"
-                    href="https://blog.creative-tim.com?ref=vn-footer"
+                    href="https://www.cnblogs.com/coders007/p/18804756"
                   >
-                    Blog
+                    项目介绍
                   </a>
                 </li>
                 <li>
                   <a
                     class="text-blueGray-600 hover:text-blueGray-800 font-semibold block pb-2 text-sm"
-                    href="https://www.github.com/creativetimofficial?ref=vn-footer"
+                    href="https://github.com/BUAA-SE-coders007"
                   >
                     Github
-                  </a>
-                </li>
-                <li>
-                  <a
-                    class="text-blueGray-600 hover:text-blueGray-800 font-semibold block pb-2 text-sm"
-                    href="https://www.creative-tim.com/bootstrap-themes/free?ref=vn-footer"
-                  >
-                    Free Products
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div class="w-full lg:w-4/12 px-4">
-              <span
-                class="block uppercase text-blueGray-500 text-sm font-semibold mb-2"
-              >
-                Other Resources
-              </span>
-              <ul class="list-unstyled">
-                <li>
-                  <a
-                    class="text-blueGray-600 hover:text-blueGray-800 font-semibold block pb-2 text-sm"
-                    href="https://github.com/creativetimofficial/vue-notus/blob/main/LICENSE.md?ref=vn-footer"
-                  >
-                    MIT License
-                  </a>
-                </li>
-                <li>
-                  <a
-                    class="text-blueGray-600 hover:text-blueGray-800 font-semibold block pb-2 text-sm"
-                    href="https://creative-tim.com/terms?ref=vn-footer"
-                  >
-                    Terms & Conditions
-                  </a>
-                </li>
-                <li>
-                  <a
-                    class="text-blueGray-600 hover:text-blueGray-800 font-semibold block pb-2 text-sm"
-                    href="https://creative-tim.com/privacy?ref=vn-footer"
-                  >
-                    Privacy Policy
-                  </a>
-                </li>
-                <li>
-                  <a
-                    class="text-blueGray-600 hover:text-blueGray-800 font-semibold block pb-2 text-sm"
-                    href="https://creative-tim.com/contact-us?ref=vn-footer"
-                  >
-                    Contact Us
                   </a>
                 </li>
               </ul>
@@ -146,7 +79,7 @@
       >
         <div class="w-full md:w-4/12 px-4 mx-auto text-center">
           <div class="text-sm text-blueGray-500 font-semibold py-1">
-            Copyright © {{ date }} Vue Notus by
+            JieNote的模板来自
             <a
               href="https://www.creative-tim.com?ref=vn-footer"
               class="text-blueGray-500 hover:text-blueGray-800"
