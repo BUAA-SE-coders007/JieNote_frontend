@@ -444,13 +444,13 @@ export default {
           data: [12, 15, 18, 23, 27, 32, 41],
           tension: 0.3
         },
-          {
-            label: "笔记数量",
-            borderColor: '#3B82F6',
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-            data: [8, 12, 15, 20, 25, 34, 45],
-            tension: 0.3
-          }
+        {
+          label: "笔记数量",
+          borderColor: '#3B82F6',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          data: [8, 12, 15, 20, 25, 34, 45],
+          tension: 0.3
+        }
         ]
       }
     };
