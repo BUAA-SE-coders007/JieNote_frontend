@@ -60,7 +60,11 @@
           </div>
         </div>
         <div class="flex flex-wrap mt-6 relative">
-          <div class="w-1/2"></div> <!-- 移除忘记密码内容 -->
+          <div class="w-1/2">
+            <a href="javascript:void(0)" class="text-blueGray-200">
+              <small>忘记密码？</small>
+            </a>
+          </div>
           <div class="w-1/2 text-right">
             <router-link to="/auth/register" class="text-blueGray-200">
               <small>没有账户？点击注册</small>
@@ -80,7 +84,6 @@ export default {
     return {
       email: "",
       password: "",
-      refreshInterval: null, // 定时器 ID
     };
   },
   methods: {
@@ -91,23 +94,14 @@ export default {
       }
       try {
         // 调用登录接口
-        const response = await axios.post("http://127.0.0.1:8000/public/login", {
+        const response = await axios.post("http://127.0.0.1:4523/m2/6178223-5870624-default/283134744", { //http://localhost:8000/public/login
           email: this.email,
           password: this.password,
         });
-
         if (response.status === 200) {
           alert("登录成功！");
-          const { access_token, refresh_token } = response.data;
-
-          // 存储 Token 到 localStorage
-          localStorage.setItem("authToken", access_token);
-          localStorage.setItem("refreshToken", refresh_token);
-
-          // 设置定时刷新 Token
-          this.startTokenRefresh();
-
-          // 跳转到主页
+          console.log(response.data);
+          // 登录成功后跳转到主页
           this.$router.push("/");
         }
       } catch (error) {
@@ -115,53 +109,6 @@ export default {
         console.error(error);
       }
     },
-    async refreshToken() {
-      try {
-        const refreshToken = localStorage.getItem("refreshToken");
-        if (!refreshToken) {
-          console.error("Refresh Token 不存在，请重新登录！");
-          this.redirectToLogin();
-          return;
-        }
-
-        // 调用刷新 Token 的接口
-        const response = await axios.post(
-          "http://127.0.0.1:8000/public/refresh",
-          { refresh_token: refreshToken } // 传入 refresh_token
-        );
-
-        if (response.status === 200) {
-          const { access_token, refresh_token } = response.data;
-
-          console.log("Token 已刷新:", access_token);
-
-          // 更新 localStorage 中的 Token
-          localStorage.setItem("authToken", access_token);
-          localStorage.setItem("refreshToken", refresh_token);
-        }
-      } catch (error) {
-        console.error("刷新 Token 失败，请重新登录！");
-        this.redirectToLogin();
-      }
-    },
-    startTokenRefresh() {
-      // 每 5 分钟刷新一次 Token
-      this.refreshInterval = setInterval(() => {
-        this.refreshToken();
-      }, 5 * 60 * 1000);
-    },
-    redirectToLogin() {
-      // 清除 Token 并跳转到登录页面
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("refreshToken");
-      this.$router.push("/auth/login");
-    },
-  },
-  beforeDestroy() {
-    // 清除定时器
-    if (this.refreshInterval) {
-      clearInterval(this.refreshInterval);
-    }
   },
 };
 </script>
