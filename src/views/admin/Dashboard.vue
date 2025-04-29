@@ -1058,6 +1058,7 @@ export default {
         const newChild = {
           id: id++,
           label: noteName,
+          depth:2,
           children: []
         }
 
