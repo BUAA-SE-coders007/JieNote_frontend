@@ -46,7 +46,7 @@
               </a>
             </li>
             <li class="nav-item">
-              <a class="px-3 py-2 flex items-center text-xs uppercase font-bold leading-snug text-white hover:opacity-75" href="#pablo">
+              <a class="px-3 py-2 flex items-center text-xs uppercase font-bold leading-snug text-white hover:opacity-75" href="#pablo" @click="refreshToken">
                 <i class="fas fa-user text-lg leading-lg text-white opacity-75"></i><span class="ml-2">用户</span>
               </a>
             </li>
@@ -207,107 +207,107 @@
             </div>
           </div>
           <div v-if="!isLoading" class="tree-container">
-           <el-tree
-              @node-expand="handleNodeExpand"
-              @node-collapse="handleNodeCollapse"
-              class="modern-tree"
-              :data="dataSource"
-              :check-strictly="true"
-              draggable
-              :show-checkbox="showCheckbox"
-              node-key="id"
-              :default-expanded-keys="[...expandedKeys]"
-              :expand-on-click-node="false"
-              ref="treeRef"
-           >
-            <template #default="{ node, data }">
-              <div class="modern-node">
-                <span class="node-label">{{ getIconForNode(data) }} {{ data.label }}</span>
-                <div class="tag-container" v-if="data.depth === 1">
-                  <el-tooltip
-                      v-for="(tag, index) in data.tags.slice(0,3)"
-                      :key="index"
-                      placement="top"
-                      :disabled="!isTruncated(tag.tag_content)"
-                      manual
-                      v-model="tag.showFullText"
-                  >
-                    <template #content>
-                      <div class="full-tag-content">{{ tag.tag_content }}</div>
-                    </template>
-                    <el-tag
-                        size="small"
-                        type="info"
-                        class="tag-item"
-                        @click="toggleTagTooltip(tag)"
+            <el-tree
+                @node-expand="handleNodeExpand"
+                @node-collapse="handleNodeCollapse"
+                class="modern-tree"
+                :data="dataSource"
+                :check-strictly="true"
+                draggable
+                :show-checkbox="showCheckbox"
+                node-key="id"
+                :default-expanded-keys="[...expandedKeys]"
+                :expand-on-click-node="false"
+                ref="treeRef"
+            >
+              <template #default="{ node, data }">
+                <div class="modern-node">
+                  <span class="node-label">{{ getIconForNode(data) }} {{ data.label }}</span>
+                  <div class="tag-container" v-if="data.depth === 1">
+                    <el-tooltip
+                        v-for="(tag, index) in data.tags.slice(0,3)"
+                        :key="index"
+                        placement="top"
+                        :disabled="!isTruncated(tag.tag_content)"
+                        manual
+                        v-model="tag.showFullText"
                     >
-                      {{ truncateText(tag.tag_content) }}
-                    </el-tag>
-                  </el-tooltip>
-                </div>
-                <div class="node-actions">
-                  <!-- 只在前两级展示添加按钮 -->
-                  <el-tooltip content="编辑信息" placement="top" :enterable="false" :duration="50">
-                    <el-button
-                        type="warning"
-                        size="small"
-                        round
-                        @click.stop="openEditDialog(node, data)"
-                        class="action-btn edit-btn"
-                    >
-                      <el-icon><Edit /></el-icon>
-                    </el-button>
-                  </el-tooltip>
-                  <el-tooltip v-if="node.level <2" content="添加文献" placement="top" :enterable="false" :duration="50">
-                    <el-button
-                        type="primary"
-                        size="small"
-                        round
-                        @click.stop="append(node, data)"
-                        class="action-btn add-btn"
-                    >
-                      <el-icon><DocumentAdd /></el-icon>
-                    </el-button>
-                  </el-tooltip>
+                      <template #content>
+                        <div class="full-tag-content">{{ tag.tag_content }}</div>
+                      </template>
+                      <el-tag
+                          size="small"
+                          type="info"
+                          class="tag-item"
+                          @click="toggleTagTooltip(tag)"
+                      >
+                        {{ truncateText(tag.tag_content) }}
+                      </el-tag>
+                    </el-tooltip>
+                  </div>
+                  <div class="node-actions">
+                    <!-- 只在前两级展示添加按钮 -->
+                    <el-tooltip content="编辑信息" placement="top" :enterable="false" :duration="50">
+                      <el-button
+                          type="warning"
+                          size="small"
+                          round
+                          @click.stop="openEditDialog(node, data)"
+                          class="action-btn edit-btn"
+                      >
+                        <el-icon><Edit /></el-icon>
+                      </el-button>
+                    </el-tooltip>
+                    <el-tooltip v-if="node.level <2" content="添加文献" placement="top" :enterable="false" :duration="50">
+                      <el-button
+                          type="primary"
+                          size="small"
+                          round
+                          @click.stop="append(node, data)"
+                          class="action-btn add-btn"
+                      >
+                        <el-icon><DocumentAdd /></el-icon>
+                      </el-button>
+                    </el-tooltip>
 
-                  <el-tooltip v-if="node.level === 2" content="添加笔记" placement="top" :enterable="false" :duration="50">
-                    <el-button
-                        type="primary"
-                        size="small"
-                        round
-                        @click.stop="append(node, data)"
-                        class="action-btn add-btn"
-                    >
-                      <el-icon><DocumentAdd /></el-icon>
-                    </el-button>
-                  </el-tooltip>
+                    <el-tooltip v-if="node.level === 2" content="添加笔记" placement="top" :enterable="false" :duration="50">
+                      <el-button
+                          type="primary"
+                          size="small"
+                          round
+                          @click.stop="append(node, data)"
+                          class="action-btn add-btn"
+                      >
+                        <el-icon><DocumentAdd /></el-icon>
+                      </el-button>
+                    </el-tooltip>
 
-                  <el-tooltip content="删除" placement="top" :enterable="false" :duration="50">
-                    <el-button
-                        type="danger"
-                        size="small"
-                        round
-                        @click.stop="remove(node, data)"
-                        class="action-btn delete-btn"
-                    >
-                      <el-icon><Delete /></el-icon>
-                    </el-button>
-                  </el-tooltip>
-                  <el-tooltip v-if="node.level > 1" content="阅读" placement="top" :enterable="false" :duration="50">
-                    <el-button
-                        type="success"
-                        size="small"
-                        round
-                        @click.stop="remove(node, data)"
-                        class="action-btn read-btn"
-                    >
-                      <el-icon><Management /></el-icon>
-                    </el-button>
-                  </el-tooltip>
+                    <el-tooltip content="删除" placement="top" :enterable="false" :duration="50">
+                      <el-button
+                          type="danger"
+                          size="small"
+                          round
+                          @click.stop="remove(node, data)"
+                          class="action-btn delete-btn"
+                      >
+                        <el-icon><Delete /></el-icon>
+                      </el-button>
+                    </el-tooltip>
+                    <el-tooltip v-if="node.level > 1" content="阅读" placement="top" :enterable="false" :duration="50">
+                      <el-button
+                          type="success"
+                          size="small"
+                          round
+                          @click.stop="remove(node, data)"
+                          class="action-btn read-btn"
+                      >
+                        <el-icon><Management /></el-icon>
+                      </el-button>
+                    </el-tooltip>
+                  </div>
                 </div>
-              </div>
-            </template>
-           </el-tree>
+              </template>
+            </el-tree>
           </div>
         </div>
       </div>
@@ -364,7 +364,7 @@
                     @end="onTagDragEnd"
                 >
                   <template #item="{element, index}">
-                    <div class="tag-item">
+                    <div class="tag-item" :key="element.tag_id || index">
                       <el-icon class="drag-handle"><Rank /></el-icon>
                       <el-tag
                           closable
@@ -491,52 +491,158 @@ export default {
     }
 
     // 添加标签
-    const addTag = () => {
+    const addTag = async () => {
       if (newTag.value.trim()) {
         currentEditNode.value.tags.push({
           tag_id: Date.now(), // 临时ID
           tag_content: newTag.value.trim()
         })
+        //向后端发送请求
+        const tagdata =  {
+          article_id: currentEditNode.value.true_id,
+          content: newTag.value.trim()
+        }
+        const res = await fetch(`http://43.143.228.56:8000/article/createTag`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          },
+          body: JSON.stringify(tagdata)
+        })
+
+        if (res.ok) {
+          ElMessage.success('标签添加成功')
+        } else {
+          ElMessage.error('标签添加失败')
+        }
         newTag.value = ''
       }
     }
 
     // 删除标签
-    const removeTag = (index) => {
-      currentEditNode.value.tags.splice(index, 1)
+    const removeTag = async (index) => {
+      //向后端发送请求
+      const res = await fetch(`http://43.143.228.56:8000/article/deleteTag?tag_id=${currentEditNode.value.tags[index].tag_id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
+        },
+      })
+      if (res.ok) {
+        currentEditNode.value.tags.splice(index, 1)
+        ElMessage.success('标签删除成功')
+      } else {
+        ElMessage.error('标签删除失败')
+      }
     }
 
     // 标签拖拽结束
-    const onTagDragEnd = () => {
-      console.log('标签顺序已更新')
+    const onTagDragEnd = async () => {
+      //向后端发送请求
+      const tagdata =  {
+        article_id: currentEditNode.value.true_id,
+        tag_contents: currentEditNode.value.tags.map(tag => tag.tag_content)
+      }
+      console.log(tagdata.tag_contents)
+      const res = await fetch(`http://43.143.228.56:8000/article/allTagsOrder`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
+        },
+        body: JSON.stringify(tagdata)
+      })
+      if (res.ok) {
+        ElMessage.success('标签顺序已更新')
+      } else {
+        ElMessage.error('标签顺序更新失败')
+      }
     }
 
     // 保存修改
     const saveEdit = async () => {
       try {
-        // 更新节点名称
-        const nodeData = {
-          id: currentEditNode.value.true_id,
-          name: currentEditNode.value.label
+
+        if (currentEditNode.value.depth === 0) {
+          // 更新节点名称
+          const nodeData = {
+            folder_id: currentEditNode.value.true_id,
+            folder_name: currentEditNode.value.label
+          }
+          console.log('this is zheli')
+          console.log(nodeData)
+          const res = await fetch(`http://43.143.228.56:8000/article/changeFolderName`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + localStorage.getItem('token')
+            },
+            body: JSON.stringify(nodeData)
+          })
+          console.log(res)
+          if (res.ok) {
+            ElMessage.success('节点名称更新成功')
+          } else {
+            ElMessage.error('节点名称更新失败')
+          }
+        } else if (currentEditNode.value.depth === 1) {
+          // 更新节点名称
+          const nodeData = {
+            article_id: currentEditNode.value.true_id,
+            article_name: currentEditNode.value.label
+          }
+          const res = await fetch(`http://43.143.228.56:8000/article/changeArticleName`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + localStorage.getItem('token')
+            },
+            body: JSON.stringify(nodeData)
+          })
+          if (res.ok) {
+            ElMessage.success('节点名称更新成功')
+          } else {
+            ElMessage.error('节点名称更新失败')
+          }
+          //await updateTags(currentEditNode.value.tags)
+        } else if (currentEditNode.value.depth === 2) {
+          // 更新节点名称
+          let noteName = currentEditNode.value.label
+          if (!noteName.endsWith('.md')) {
+            noteName += '.md'
+          }
+          const res = await fetch(`http://43.143.228.56:8000/notes/${currentEditNode.value.true_id}?title=${noteName}`, {
+            method: 'PUT',
+            headers: {
+              'Authorization': 'Bearer ' + localStorage.getItem('token')
+            },
+          })
+          console.log(res)
+          if (res.ok) {
+            ElMessage.success('节点名称更新成功')
+          } else {
+            ElMessage.error('节点名称更新失败')
+          }
         }
 
-        // 根据节点类型调用不同API
-        const apiUrl = currentEditNode.value.depth === 0
-            ? '/api/updateFolder'
-            : '/api/updateArticle'
+        // // 根据节点类型调用不同API
+        // const apiUrl = currentEditNode.value.depth === 0
+        //     ? '/api/updateFolder'
+        //     : '/api/updateArticle'
 
-        // 更新标签
-        if (currentEditNode.value.depth === 1) {
-          await updateTags(currentEditNode.value.true_id, currentEditNode.value.tags)
-        }
+        // // 更新标签
+        // if (currentEditNode.value.depth === 1) {
+        //   await updateTags(currentEditNode.value.true_id, currentEditNode.value.tags)
+        // }
 
-        // 调用保存接口
-        await fetch(apiUrl, {
-          method: 'PUT',
-          body: JSON.stringify(nodeData)
-        })
+        // // 调用保存接口
+        // await fetch(apiUrl, {
+        //   method: 'PUT',
+        //   body: JSON.stringify(nodeData)
+        // })
 
-        // 刷新数据
+        // 刷新数据，这个等会要保留
         await findAllfolders()
         ElMessage.success('保存成功')
         showEditDialog.value = false
@@ -545,13 +651,42 @@ export default {
       }
     }
 
-    // 更新标签到后端
-    const updateTags = async (articleId, tags) => {
-      await fetch(`/api/updateTags?article_id=${articleId}`, {
-        method: 'POST',
-        body: JSON.stringify(tags.map(t => t.tag_content))
-      })
-    }
+    // // 更新标签到后端
+    // const updateTags = async () => {
+    //   // const res = await fetch(`http://43.143.228.56:8000/article/allTagsOrder`, {
+    //   //   method: 'POST',
+    //   //   headers: {
+    //   //     'Content-Type': 'application/json',
+    //   //     'Authorization': 'Bearer ' + localStorage.getItem('token')
+    //   //   },
+    //   //   body: JSON.stringify(tags.map(t => t.tag_content))
+    //   // })
+    //   // if (res.ok) {
+    //   //   ElMessage.success('标签更新成功')
+    //   // } else {
+    //   //   ElMessage.error('标签更新失败')
+    //   // }
+    //
+    //   //向后端发送请求
+    //   const tagdata =  {
+    //     article_id: currentEditNode.value.true_id,
+    //     tag_contents: currentEditNode.value.tags.map(tag => tag.tag_content)
+    //   }
+    //   console.log(tagdata.tag_contents)
+    //   const res = await fetch(`http://43.143.228.56:8000/article/allTagsOrder`, {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //       'Authorization': 'Bearer ' + localStorage.getItem('token')
+    //     },
+    //     body: JSON.stringify(tagdata)
+    //   })
+    //   if (res.ok) {
+    //     //ElMessage.success('标签顺序已更新')
+    //   } else {
+    //     //ElMessage.error('标签顺序更新失败')
+    //   }
+    // }
 
     const toggleCheckbox = () => {
       showCheckbox.value = !showCheckbox.value
@@ -595,6 +730,8 @@ export default {
         await findAllfolders()
         // 数据加载完成后设置默认展开
         setInitialExpandedKeys()
+        //refreshToken() // 立即执行一次
+        //setInterval(refreshToken, 4 * 60 * 1000) // 每4分钟执行一次
       } catch (error) {
         ElMessage.error('数据加载失败: ' + error.message)
       } finally {
@@ -694,7 +831,6 @@ export default {
         isLoading.value = false
       }
     }
-
 
 
 
@@ -812,7 +948,10 @@ export default {
         const selectedTree = buildSelectedTree(dataSource.value)
 
         // 添加选中文件到 zip：只在第一级创建文件夹，所有文件直接放进去
-        const addFilesToZip = (nodes, zipRoot) => {
+        const addFilesToZip = async (nodes, zipRoot) => {
+          // 收集所有需要处理的文件
+          const filePromises = []
+
           nodes.forEach(level1Node => {
             const folder = zipRoot.folder(level1Node.label)
 
@@ -820,7 +959,39 @@ export default {
             level1Node.children?.forEach(level2Node => {
               if (selectedSet.has(String(level2Node.id))) {
                 const fileName = level2Node.label.endsWith('.pdf') ? level2Node.label : `${level2Node.label}.pdf`
-                folder.file(fileName, 'PDF文件内容')
+                // 将每个文件处理包装成 Promise
+                filePromises.push(
+                    (async () => {
+                      try {
+                        const res = await fetch(`http://43.143.228.56:8000/article/readArticle?article_id=${level2Node.true_id}`, {
+                          headers: {
+                            'Authorization': 'Bearer ' + localStorage.getItem('token')
+                          }
+                        });
+
+                        if (res.ok) {
+                          const blob = await res.blob();
+                          folder.file(fileName, blob);
+                          ElMessage({
+                            message: `成功获取文件: ${fileName}`,
+                            type: 'success'
+                          });
+                        } else {
+                          console.error(`获取文件失败: ${fileName}`, res.status);
+                          ElMessage({
+                            message: `获取文件失败: ${fileName}`,
+                            type: 'error'
+                          });
+                        }
+                      } catch (error) {
+                        console.error(`获取文件出错: ${fileName}`, error);
+                        ElMessage({
+                          message: `获取文件出错: ${fileName}`,
+                          type: 'error'
+                        });
+                      }
+                    })()
+                );
               }
 
               // 第三层为 Markdown
@@ -829,14 +1000,18 @@ export default {
                   const baseName = level3Node.label.replace(/\.md$/, '')
                   const referenceName = level2Node.label.replace(/\.(pdf|md)$/, '')
                   const finalName = `${baseName}-${referenceName}.md`
-                  folder.file(finalName, '# Markdown文件内容')
+                  folder.file(finalName, level3Node.content)
                 }
               })
             })
           })
+
+          // 等待所有文件处理完成
+          await Promise.all(filePromises)
         }
 
-        addFilesToZip(selectedTree, zip)
+        // 等待所有文件添加完成
+        await addFilesToZip(selectedTree, zip)
 
         const content = await zip.generateAsync({ type: 'blob' })
         const url = URL.createObjectURL(content)
@@ -855,20 +1030,6 @@ export default {
     }
 
 
-    // const append = (data) => {
-    //   const newChild = {
-    //     id: id++,
-    //     label: `新节点 ${id}`,
-    //     children: []
-    //   }
-    //   if (!data.children) {
-    //     data.children = []
-    //   }
-    //   data.children.push(newChild)
-    //   expandedKeys.value.add(data.id)
-    //   dataSource.value = [...dataSource.value]
-    //   console.log(dataSource.value)
-    // }
 
     const append = (node, data) => {
       if (node.parent.parent === null) {
@@ -934,8 +1095,11 @@ export default {
       // 判断节点类型
       if (parent.parent === null) {
         // 如果父节点的父节点是null，说明当前节点是一级分类
-        const res = await fetch(`http://127.0.0.1:4523/m1/6178223-5870624-default/article/selfFolderToRecycleBin?folder_id=${node.id}`, {
-          method: 'DELETE'
+        const res = await fetch(`http://43.143.228.56:8000/article/selfFolderToRecycleBin?folder_id=${node.data.true_id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }
         })
         if (!res.ok) {
           ElMessage({
@@ -951,8 +1115,11 @@ export default {
         console.log(res);
       } else if (node.level === 2) {
         // 二级分类
-        const res = await fetch(`http://127.0.0.1:4523/m1/6178223-5870624-default/article/selfArticleToRecycleBin?article_id=${node.id}`, {
-          method: 'DELETE'
+        const res = await fetch(`http://43.143.228.56:8000/article/selfArticleToRecycleBin?article_id=${node.data.true_id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }
         })
         if (!res.ok) {
           ElMessage({
@@ -968,11 +1135,15 @@ export default {
         console.log(res);
       } else {
         //三级分类
-        //这里还没写好，暂时先用二级分类的
-        //http://127.0.0.1:4523/m2/6178223-5870624-default/283268256
-        const res = await fetch(`http://127.0.0.1:4523/m1/6178223-5870624-default/article/selfArticleToRecycleBin?article_id=${node.id}`, {
-          method: 'DELETE'
+        const res = await fetch(`http://43.143.228.56:8000/notes/${node.data.true_id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }
         })
+
+        console.log('this is res')
+        console.log(res)
         if (!res.ok) {
           ElMessage({
             message: '删除文件失败',
@@ -1013,18 +1184,23 @@ export default {
       dataSource.value.push(newCategory)
       dataSource.value = [...dataSource.value]
       //新建文件夹的信息传回后端
-      //http://127.0.0.1:4523/m1/6178223-5870624-default/article/selfCreateFolder
       const newFolderData = {
         folder_name: newCategoryForm.value.name,
       }
-      const res = await fetch("http://127.0.0.1:4523/m1/6178223-5870624-default/article/selfCreateFolder", {
+
+      const res = await fetch("http://43.143.228.56:8000/article/selfCreateFolder", {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
         },
         body: JSON.stringify(newFolderData)
       })
+      console.log('新建文件夹信息')
       console.log(res);
+      const data = await res.json();
+      console.log(data);
+      console.log(res.json());
       if (!res.ok) {
         ElMessage({
           message: '新建分类失败',
@@ -1069,6 +1245,29 @@ export default {
         newNoteForm.value.parentData.children.push(newChild)
         dataSource.value = [...dataSource.value]
 
+
+
+        // 创建笔记的信息传回后端
+        const newNoteData = {
+          title: noteName,
+          article_id: newNoteForm.value.parentData.true_id,
+          content: "<p> 12 <p>",
+        }
+        const res = await fetch("http://43.143.228.56:8000/notes", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          },
+          body: JSON.stringify(newNoteData)
+        })
+        console.log('笔记信息')
+        console.log(newNoteData)
+        console.log('新建笔记信息')
+        console.log(res);
+        const data = await res.json();
+        console.log(data);
+        console.log(res.json());
         // 关闭弹窗
         showNewNoteDialog.value = false
 
@@ -1099,9 +1298,11 @@ export default {
 
     const fetchTags = async (articleId) => {
       try {
-        const res = await fetch(
-            `http://127.0.0.1:4523/m1/6178223-5870624-default/article/getArticleTags?article_id=${articleId}`
-        );
+        const res = await fetch(`http://43.143.228.56:8000/article/getArticleTags?article_id=${articleId}`,{
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }
+        });
         const data = await res.json();
         return data.result || [];
       } catch (error) {
@@ -1116,11 +1317,15 @@ export default {
       try {
         id = 0
         console.log('拿一级目录');
-        const url = new URL('http://127.0.0.1:4523/m1/6178223-5870624-default/article/getSelfFolders');
+        const url = new URL('http://43.143.228.56:8000/article/getSelfFolders', window.location.origin);
         url.searchParams.append('page_number', currentPage.value);
         url.searchParams.append('page_size', pageSize.value);
 
-        const res = await fetch(url);
+        const res = await fetch(url, {
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }
+        });
         const data = await res.json();
         console.log('this is folder-data')
         console.log(data.result)
@@ -1139,8 +1344,14 @@ export default {
           };
 
           // 获取二级目录
-          const secondRes = await fetch(`http://127.0.0.1:4523/m1/6178223-5870624-default/article/getArticlesInFolder?folder_id=${folder.folder_id}`);
+          const secondRes = await fetch(`http://43.143.228.56:8000/article/getArticlesInFolder?folder_id=${folder.folder_id}`, {
+            headers: {
+              'Authorization': 'Bearer ' + localStorage.getItem('token')
+            }
+          });
           const secondData = await secondRes.json();
+          console.log('this is second-data')
+          console.log(secondData.result)
 
           // 并行处理二级目录
           firstLevel.children = await Promise.all(secondData.result.map(async article => {
@@ -1154,15 +1365,24 @@ export default {
             };
 
             // 获取三级目录
-            const thirdRes = await fetch(`http://127.0.0.1:4523/m1/6178223-5870624-default/article/getArticlesInFolder?folder_id=${article.article_id}`);
+            const thirdRes = await fetch(`http://43.143.228.56:8000/notes?article_id=${article.article_id}`, {
+              type: 'GET',
+              headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+              }
+            });
             const thirdData = await thirdRes.json();
+            console.log('this is third-data')
+            console.log(thirdData)
+            console.log(thirdData.notes)
 
-            if (thirdData.result?.length) {
-              secondLevel.children = thirdData.result.map(item => ({
+            if (thirdData.notes?.length) {
+              secondLevel.children = thirdData.notes.map(item => ({
                 id: id++,
-                true_id:item.article_id,
-                label: item.article_name,
-                depth: 2
+                true_id:item.id,
+                label: item.title,
+                depth: 2,
+                content: item.content
               }));
             }
             return secondLevel;
@@ -1203,9 +1423,15 @@ export default {
         const formData = new FormData()
         formData.append('article', pdfUploadForm.value.file)
 
+        console.log('this is pdfUploadForm.value.parentNode')
+        console.log(pdfUploadForm.value.parentNode)
+
         // 发送文件到后端
-        const res = await fetch('http://127.0.0.1:4523/m1/6178223-5870624-default/article/uploadToSelfFolder?folder_id=${pdfUploadForm.value.parentNode.id}', {
+        const res = await fetch(`http://43.143.228.56:8000/article/uploadToSelfFolder?folder_id=${pdfUploadForm.value.parentNode.data.true_id}`, {
           method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          },
           body: formData
         })
 
@@ -1245,7 +1471,26 @@ export default {
       }
     }
 
+    const refreshToken = async () => {
+      const res = await fetch('http://43.143.228.56:8000/public/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: '22371147@buaa.edu.cn',
+          password: '123456'
+        })
+      })
+      const data = await res.json()
+      console.log('this is data')
+      console.log(data.access_token)
+      localStorage.setItem('token', data.access_token)
+    }
+
+
     return {
+      refreshToken,
       findAllfolders,
       showCheckbox,
       showGraph,
@@ -1943,6 +2188,7 @@ export default {
     margin-right: 8px;
     cursor: move;
     color: #909399;
+
     &:hover {
       color: #409eff;
     }
@@ -1963,6 +2209,7 @@ export default {
 .tag-list-leave-active {
   transition: all 0.3s;
 }
+
 .tag-list-enter-from,
 .tag-list-leave-to {
   opacity: 0;
