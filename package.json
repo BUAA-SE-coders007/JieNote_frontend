@@ -6,7 +6,8 @@
   "repository": "https://github.com/creativetimofficial/vue-notus",
   "license": "MIT",
   "scripts": {
-    "serve": "set NODE_OPTIONS=--openssl-legacy-provider && vue-cli-service serve",
+    "serve": "set NODE_OPTIONS=--openssl-legacy-provider && vue-cli-service serve --mode development",
+    "serve:mock": "set NODE_OPTIONS=--openssl-legacy-provider && vue-cli-service serve --mode mock",
     "build": "set NODE_OPTIONS=--openssl-legacy-provider && cross-env PUBLIC_URL=/ cross-env CI=false vue-cli-service build && gulp licenses",
     "lint": "vue-cli-service lint",
     "build:tailwind": "tailwind build src/assets/styles/index.css -o src/assets/styles/tailwind.css",

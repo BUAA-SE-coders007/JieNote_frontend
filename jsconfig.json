@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+      
+    },
+    "target": "es6",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "jsx": "preserve"
+  },
+  "exclude": ["node_modules", "dist"],
+  "include": ["src/**/*"]
+}
