@@ -38,6 +38,7 @@
         required: true, // 确保父组件必须传递 articleId
       },
     },
+    
     data() {
       return {
         pdfUrl: null, // PDF 文件的 URL
