@@ -29,6 +29,7 @@
     "gulp-append-prepend": "1.0.8",
     "jszip": "^3.10.1",
     "md-editor-v3": "^5.5.0",
+    "splitpanes": "^4.0.3",
     "tailwindcss": "2.0.4",
     "vditor": "^3.11.0",
     "vue": "^3.2.47",
