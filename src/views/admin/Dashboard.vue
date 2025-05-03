@@ -1270,6 +1270,7 @@ export default {
           article_id: newNoteForm.value.parentData.true_id,
           content: "<p> 12 <p>",
         }
+        showNewNoteDialog.value = false
         const res = await fetch("http://43.143.228.56:8000/notes", {
           method: 'POST',
           headers: {
@@ -1285,8 +1286,6 @@ export default {
         const data = await res.json();
         console.log(data);
         console.log(res.json());
-        // 关闭弹窗
-        showNewNoteDialog.value = false
 
         ElMessage({
           message: '笔记创建成功',
@@ -1526,7 +1525,7 @@ export default {
     let refreshInterval = null;
     const startTokenRefresh = () => {
       if (refreshInterval) clearInterval(refreshInterval); // 清除旧定时器
-      refreshInterval = setInterval(refreshToken, 5 * 60 * 1000);
+      refreshInterval = setInterval(refreshToken, 4.5 * 60 * 1000);
     };
 
     onUnmounted(() => {

@@ -155,7 +155,7 @@ export default {
       // 每 5 分钟刷新一次 Token
       this.refreshInterval = setInterval(() => {
         this.refreshToken();
-      }, 4 * 60 * 1000);
+      }, 4.5 * 60 * 1000);
     },
     redirectToLogin() {
       // 清除 Token 并跳转到登录页面
@@ -165,11 +165,22 @@ export default {
     },
   },
   beforeDestroy() {
-    // 清除定时器
+    // 确保彻底清除定时器
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);
+      this.refreshInterval = null; // 添加这行重置指针
+      console.log('定时器已销毁'); // 添加调试日志
     }
   },
+// 新增路由离开守卫（如果是 Vue Router 项目）
+  beforeRouteLeave(to, from, next) {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+      this.refreshInterval = null;
+      console.log('路由离开时清除定时器');
+    }
+    next();
+  }
 };
 </script>
 
