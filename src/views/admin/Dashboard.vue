@@ -45,11 +45,11 @@
                 <span class="ml-2">{{ showCheckbox ? "取消选择" : "批量选择" }}</span>
               </a>
             </li>
-            <li class="nav-item">
-              <a class="px-3 py-2 flex items-center text-xs uppercase font-bold leading-snug text-white hover:opacity-75" href="#pablo" @click="refreshToken">
-                <i class="fas fa-user text-lg leading-lg text-white opacity-75"></i><span class="ml-2">用户</span>
-              </a>
-            </li>
+<!--            <li class="nav-item">-->
+<!--              <a class="px-3 py-2 flex items-center text-xs uppercase font-bold leading-snug text-white hover:opacity-75" href="#pablo" @click="refreshToken">-->
+<!--                <i class="fas fa-user text-lg leading-lg text-white opacity-75"></i><span class="ml-2">用户</span>-->
+<!--              </a>-->
+<!--            </li>-->
           </ul>
         </div>
       </div>
@@ -415,6 +415,8 @@ import JSZip from 'jszip'
 import draggable from 'vuedraggable'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
+import axios from "axios";
+import { onUnmounted } from 'vue'
 
 export default {
   name: "dashboard-page",
@@ -727,6 +729,9 @@ export default {
 
     onMounted(async () => {
       try {
+        await refreshToken() // ⚡️ 立刻执行第一次刷新
+        // 启动定时刷新（后续每5分钟一次）
+        startTokenRefresh()
         await findAllfolders()
         // 数据加载完成后设置默认展开
         setInitialExpandedKeys()
@@ -1316,11 +1321,11 @@ export default {
     const findAllfolders = async () => {
       try {
         id = 0
+        console.log(localStorage.getItem('token'))
         console.log('拿一级目录');
         const url = new URL('http://43.143.228.56:8000/article/getSelfFolders', window.location.origin);
         url.searchParams.append('page_number', currentPage.value);
         url.searchParams.append('page_size', pageSize.value);
-
         const res = await fetch(url, {
           headers: {
             'Authorization': 'Bearer ' + localStorage.getItem('token')
@@ -1328,8 +1333,8 @@ export default {
         });
         const data = await res.json();
         console.log('this is folder-data')
-        console.log(data.result)
-        totalFolders.value = data.result.length
+        console.log(data)
+        totalFolders.value = data.total_num
         console.log(totalFolders)
 
         const transformedData = [];
@@ -1471,22 +1476,63 @@ export default {
       }
     }
 
+
+
     const refreshToken = async () => {
-      const res = await fetch('http://43.143.228.56:8000/public/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: '22371147@buaa.edu.cn',
-          password: '123456'
-        })
-      })
-      const data = await res.json()
-      console.log('this is data')
-      console.log(data.access_token)
-      localStorage.setItem('token', data.access_token)
+      try {
+        const refreshToken = localStorage.getItem("refreshToken");
+        console.log("123e4e23424e2")
+        console.log(typeof refreshToken)
+        if (!refreshToken) {
+          console.error("Refresh Token 不存在，请重新登录！");
+          redirectToLogin();
+          return;
+        }
+
+        // 调用刷新 Token 的接口
+        const response = await axios.post(
+            "http://43.143.228.56:8000/public/refresh",
+            { refresh_token: refreshToken } // 传入 refresh_token
+        );
+
+        console.log(response)
+
+        if (response.status === 200) {
+          const {access_token} = response.data;
+
+          console.log("Token 已刷新:", access_token);
+          console.log(response.data);
+
+          // 更新 localStorage 中的 Token
+          localStorage.setItem("token", access_token);
+        }
+      } catch (error) {
+        console.error("刷新 Token 失败，请重新刷新！");
+      }
     }
+
+    let refreshInterval = null;
+    const startTokenRefresh = () => {
+      if (refreshInterval) clearInterval(refreshInterval); // 清除旧定时器
+      refreshInterval = setInterval(refreshToken, 5 * 60 * 1000);
+    };
+
+    onUnmounted(() => {
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+        console.log('定时器已清除');
+      }
+    });
+
+
+// 跳转登录页（通用实现）
+    const redirectToLogin = () => {
+      // 清理认证信息
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+
+      this.$router.push("/auth/login");
+    };
 
 
     return {

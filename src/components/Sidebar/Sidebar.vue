@@ -79,13 +79,13 @@
         <!-- Navigation -->
         <ul class="md:flex-col md:min-w-full flex flex-col list-none">
           <li class="items-center" v-for="item in navItems" :key="item.to">
-            <router-link :to="item.to" v-slot="{ href, navigate, isActive }">
+            <router-link :to="item.to" v-slot="{ href, navigate}">
               <a
                   :href="href"
                   @click="navigate"
                   class="text-sm uppercase py-3 font-bold block"
                   :class="[
-                  isActive
+                  isItemActive(item)
                     ? 'text-emerald-500 hover:text-emerald-600'
                     : 'text-blueGray-700 hover:text-blueGray-500',
                 ]"
@@ -112,19 +112,27 @@ export default {
     return {
       collapseShow: "hidden",
       navItems: [
-        { label: "主页", to: "/admin/maps", icon: "fas fa-map-marked" },
+        { label: "文献库", to: "/admin/maps", icon: "fas fa-map-marked" },
         { label: "笔记", to: "/admin/note", icon: "fas fa-sticky-note" },
         { label: "文献管理", to: "/admin/dashboard", icon: "fas fa-tv" },
         { label: "组织协作", to: "/admin/tables", icon: "fas fa-table" },
         { label: "个人主页", to: "/profile", icon: "fas fa-user-circle" },
         { label: "关于我们", to: "/landing", icon: "fas fa-newspaper" },
-        { label: "设置", to: "/admin/settings", icon: "fas fa-tools" },
+        // { label: "设置", to: "/admin/settings", icon: "fas fa-tools" },
       ],
     };
   },
   methods: {
     toggleCollapseShow(classes) {
       this.collapseShow = classes;
+    },
+    isItemActive(item) {
+      const current = this.$route.path;
+      // 自定义规则：访问 /admin/settings 时，视为“/profile”激活
+      if (current === "/admin/settings" && item.to === "/profile") {
+        return true;
+      }
+      return current === item.to;
     },
   },
   components: {

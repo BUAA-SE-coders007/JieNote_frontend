@@ -1,6 +1,15 @@
 <template>
-  <div>
-    <navbar />
+  <div class="min-h-screen">
+    <!-- 加载状态 -->
+    <div
+        v-if="isLoading"
+        v-loading="true"
+        element-loading-text="正在加载用户数据..."
+        element-loading-background="rgba(255, 255, 255, 0.9)"
+        style="height: 100vh">
+    </div>
+    <div v-else>
+<!--    <navbar />-->
     <main class="profile-page">
       <section class="relative block h-500-px">
         <div
@@ -35,6 +44,13 @@
         </div>
       </section>
       <section class="relative py-16 bg-blueGray-200">
+        <div
+            v-if="isLoading"
+            v-loading="true"
+            element-loading-text="正在加载用户数据..."
+            element-loading-background="rgba(255, 255, 255, 0.9)"
+            style="height: 100vh">
+        </div>
         <div class="container mx-auto px-4">
           <div
             class="relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-xl rounded-lg -mt-64"
@@ -57,7 +73,7 @@
                 >
                   <div class="py-6 px-3 mt-32 sm:mt-0">
                     <button
-                      @click="showSettings = true"
+                        @click="goToSettings"
                       class="text-blueGray-800 text-xl font-bold hover:underline"
                     >
                       设置
@@ -145,30 +161,24 @@
           </div>
         </div>
       </section>
-      <!-- 动态加载 CardSettings -->
-      <transition name="fade">
-        <div v-if="showSettings" class="modal-overlay">
-          <div class="modal-content half-size">
-            <card-settings @close="showSettings = false" />
-          </div>
-        </div>
-      </transition>
     </main>
     <footer-component />
+   </div>
   </div>
 </template>
 
 <script>
-import Navbar from "@/components/Navbars/AuthNavbar.vue";
+// import Navbar from "@/components/Navbars/AuthNavbar.vue";
 import FooterComponent from "@/components/Footers/Footer.vue";
 import BarChart from "@/components/Cards/BarChart.vue";
-import CardSettings from "@/components/Cards/CardSettings.vue";
 import team2 from "@/assets/img/team-2-800x800.jpg";
 import axios from "axios";
+import {ElMessage} from 'element-plus'
 
 export default {
   data() {
     return {
+      isLoading: true, // 新增加载状态
       team2, // 将 team2 定义在 data 中
       user: {
         id: null,
@@ -181,7 +191,7 @@ export default {
       articleCount: 0, // 文献数量
       noteCount: 0, // 笔记数量
       organizationCount: 0, // 组织数量
-      showSettings: false, // 控制 CardSettings 显示
+      refreshInterval: null, // 定时器 ID
       literatureData: {
         labels: ["6天前", "5天前", "4天前", "3天前", "2天前", "昨天", "今天"],
         datasets: [
@@ -209,12 +219,15 @@ export default {
     };
   },
   components: {
-    Navbar,
+    // Navbar,
     FooterComponent,
-    BarChart,
-    CardSettings,
+    BarChart
   },
   methods: {
+    goToSettings() {
+      this.$router.push("/admin/settings");
+    },
+
     async fetchData() {
       try {
         const token = localStorage.getItem("authToken");
@@ -223,7 +236,7 @@ export default {
           return;
         }
 
-        const response = await axios.get("http://127.0.0.1:8000/notes", {
+        const response = await axios.get("http://43.143.228.56:8000/notes", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -234,6 +247,9 @@ export default {
           .size; // 文献数量
         this.noteCount = data.notes.length; // 笔记数量
         this.organizationCount = 5; // 假设组织数量为固定值
+        localStorage.setItem("article", this.articleCount);
+        localStorage.setItem("note", this.noteCount);
+        localStorage.setItem("organization", this.organizationCount);
       } catch (error) {
         console.error("获取数据失败：", error);
       }
@@ -246,32 +262,100 @@ export default {
           return;
         }
 
-        const response = await axios.get("http://localhost:8000/user", {
+        const response = await axios.get("http://43.143.228.56:8000/user", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
         const userData = response.data;
+        console.log(userData.avatar)
         this.user = {
           id: userData.id,
           username: userData.username || `user_${userData.id}`,
           avatar: userData.avatar
-            ? `http://localhost:8000${userData.avatar.substring(4)}`
+            ? `http://43.143.228.56:8000${userData.avatar}`
             : team2,
           address: userData.address || "未知",
           university: userData.university || "未知",
           introduction: userData.introduction || "这里什么也没有",
         };
+        console.log(this.user)
+        localStorage.setItem("user", JSON.stringify(this.user));
       } catch (error) {
         console.error("获取用户信息失败：", error);
       }
     },
+    async refreshToken() {
+      try {
+        const refreshToken = localStorage.getItem("refreshToken");
+        if (!refreshToken) {
+          console.error("Refresh Token 不存在，请重新登录！");
+          this.redirectToLogin();
+          return;
+        }
+
+        // 调用刷新 Token 的接口
+        const response = await axios.post(
+            "http://43.143.228.56:8000/public/refresh",
+            { refresh_token: refreshToken } // 传入 refresh_token
+        );
+
+        if (response.status === 200) {
+          const {access_token} = response.data;
+
+          console.log("Token 已刷新:", access_token);
+
+          // 更新 localStorage 中的 Token
+          localStorage.setItem("authToken", access_token);
+        }
+      } catch (error) {
+        console.error("刷新 Token 失败，请重试！");
+      }
+    },
+    startTokenRefresh() {
+      // 每 5 分钟刷新一次 Token
+      this.refreshInterval = setInterval(() => {
+        this.refreshToken();
+      }, 4 * 60 * 1000);
+    },
+    redirectToLogin() {
+      // 清除 Token 并跳转到登录页面
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("refreshToken");
+      this.$router.push("/auth/login");
+    },
   },
-  mounted() {
-    this.fetchData();
-    this.fetchUser();
+  async mounted() {
+    try {
+      // 先显示 loading
+      this.isLoading = true
+
+      // 并行执行所有初始化任务
+      await Promise.all([
+        this.refreshToken(),
+        this.fetchData(),
+        this.fetchUser()
+      ])
+
+      // 启动定时刷新
+      this.startTokenRefresh()
+
+    } catch (error) {
+      console.error("初始化失败:", error)
+      ElMessage.error("数据加载失败: " + (error.response?.data?.message || error.message))
+      this.redirectToLogin()
+    } finally {
+      // 无论成功失败都关闭 loading
+      this.isLoading = false
+    }
   },
+  beforeDestroy() {
+    // 清除定时器
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+    }
+  }
 };
 </script>
 
@@ -311,5 +395,19 @@ export default {
 .half-size {
   width: 50%;
   height: 50%;
+}
+
+.el-loading-spinner {
+  top: 40% !important;
+}
+
+.el-loading-spinner .path {
+  stroke: #4CAF50; /* 修改加载图标颜色 */
+}
+
+.el-loading-spinner .el-loading-text {
+  color: #4CAF50;
+  font-size: 18px;
+  margin-top: 12px;
 }
 </style>
