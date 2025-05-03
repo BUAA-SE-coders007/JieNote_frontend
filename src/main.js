@@ -97,14 +97,8 @@ const routes = [
     ],
   },
   {
-    path: "/note",
+    path: "/admin/notelayout",
     component: NoteLayout,
-    children: [
-      {
-        path: "",
-        component: Note,
-      },
-    ],
   },
   {
     path: "/",

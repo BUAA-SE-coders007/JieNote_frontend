@@ -77,11 +77,12 @@ export default {
   },
   mounted() {
     // 从路由的 query 中获取 article_id 参数
-    const articleId = 65;//this.$route.query.article_id;
+    const articleId = this.$route.query.article_id;
     if (articleId) {
-      this.fetchPdf(articleId); // 调用方法获取 PDF 文件
+      this.fetchPdf(articleId);
     } else {
-      console.error("未提供 article_id 参数！");
+      this.$message.error("未提供 article_id 参数！");
+      this.$router.push('/admin/dashboard');
     }
   },
 };
