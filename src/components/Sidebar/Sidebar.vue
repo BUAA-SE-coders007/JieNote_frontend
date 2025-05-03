@@ -97,6 +97,16 @@
               </a>
             </router-link>
           </li>
+          <li class="items-center">
+            <a
+                href="#"
+                @click.prevent="redirectToLogin"
+                class="text-sm uppercase py-3 font-bold block text-blueGray-700 hover:text-blueGray-500 cursor-pointer"
+            >
+              <i class="fas fa-sign-out-alt mr-2 text-base text-blueGray-300"></i>
+              退出登录
+            </a>
+          </li>
         </ul>
       </div>
     </div>
@@ -123,6 +133,12 @@ export default {
   methods: {
     toggleCollapseShow(classes) {
       this.collapseShow = classes;
+    },
+    redirectToLogin() {
+      // 清除 Token 并跳转到登录页面
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("refreshToken");
+      this.$router.push("/");
     },
     isItemActive(item) {
       const current = this.$route.path;

@@ -9,181 +9,184 @@
         style="height: 100vh">
     </div>
     <div v-else>
-<!--    <navbar />-->
-    <main class="profile-page">
-      <section class="relative block h-500-px">
-        <div
-          class="absolute top-0 w-full h-full bg-center bg-cover"
-          style="
+      <!--    <navbar />-->
+      <main class="profile-page">
+        <section class="relative block h-500-px">
+          <div
+              class="absolute top-0 w-full h-full bg-center bg-cover"
+              style="
             background-image: url('https://images.unsplash.com/photo-1499336315816-097655dcfbda?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2710&q=80');
           "
-        >
+          >
           <span
-            id="blackOverlay"
-            class="w-full h-full absolute opacity-50 bg-black"
+              id="blackOverlay"
+              class="w-full h-full absolute opacity-50 bg-black"
           ></span>
-        </div>
-        <div
-          class="top-auto bottom-0 left-0 right-0 w-full absolute pointer-events-none overflow-hidden h-70-px"
-          style="transform: translateZ(0);"
-        >
-          <svg
-            class="absolute bottom-0 overflow-hidden"
-            xmlns="http://www.w3.org/2000/svg"
-            preserveAspectRatio="none"
-            version="1.1"
-            viewBox="0 0 2560 100"
-            x="0"
-            y="0"
-          >
-            <polygon
-              class="text-blueGray-200 fill-current"
-              points="2560 0 2560 100 0 100"
-            ></polygon>
-          </svg>
-        </div>
-      </section>
-      <section class="relative py-16 bg-blueGray-200">
-        <div
-            v-if="isLoading"
-            v-loading="true"
-            element-loading-text="正在加载用户数据..."
-            element-loading-background="rgba(255, 255, 255, 0.9)"
-            style="height: 100vh">
-        </div>
-        <div class="container mx-auto px-4">
+          </div>
           <div
-            class="relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-xl rounded-lg -mt-64"
+              class="top-auto bottom-0 left-0 right-0 w-full absolute pointer-events-none overflow-hidden h-70-px"
+              style="transform: translateZ(0);"
           >
-            <div class="px-6">
-              <div class="flex flex-wrap justify-center">
-                <div
-                  class="w-full lg:w-3/12 px-4 lg:order-2 flex justify-center"
-                >
-                  <div class="relative">
-                    <img
-                      alt="Avatar"
-                      :src="user.avatar || team2"
-                      class="shadow-xl rounded-full h-auto align-middle border-none absolute -m-16 -ml-20 lg:-ml-16 max-w-150-px"
-                    />
+            <svg
+                class="absolute bottom-0 overflow-hidden"
+                xmlns="http://www.w3.org/2000/svg"
+                preserveAspectRatio="none"
+                version="1.1"
+                viewBox="0 0 2560 100"
+                x="0"
+                y="0"
+            >
+              <polygon
+                  class="text-blueGray-200 fill-current"
+                  points="2560 0 2560 100 0 100"
+              ></polygon>
+            </svg>
+          </div>
+        </section>
+        <section class="relative py-16 bg-blueGray-200">
+          <div
+              v-if="isLoading"
+              v-loading="true"
+              element-loading-text="正在加载用户数据..."
+              element-loading-background="rgba(255, 255, 255, 0.9)"
+              style="height: 100vh">
+          </div>
+          <div class="container mx-auto px-4">
+            <div
+                class="relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-xl rounded-lg -mt-64"
+            >
+              <div class="px-6">
+                <div class="flex flex-wrap justify-center">
+                  <div
+                      class="w-full lg:w-3/12 px-4 lg:order-2 flex justify-center"
+                  >
+                    <div class="relative">
+                      <img
+                          alt="Avatar"
+                          :src="user.avatar || team2"
+                          class="shadow-xl rounded-full h-auto align-middle border-none absolute -m-16 -ml-20 lg:-ml-16 max-w-150-px"
+                      />
+                    </div>
                   </div>
-                </div>
-                <div
-                  class="flex w-full lg:w-4/12 px-4 lg:order-3 lg:text-right lg:self-center justify-end"
-                 >
-                  <div class="py-6 px-3 mt-32 sm:mt-0">
+                  <div
+                      class="flex w-full lg:w-4/12 px-4 lg:order-3 lg:text-right lg:self-center justify-end"
+                  >
+                    <div class="py-6 px-3 mt-32 sm:mt-0">
                     <span
                         @click="goToSettings"
                         class="cursor-pointer text-blueGray-600 text-base hover:text-blueGray-800 transition-colors font-bold"
                     >
                      编辑主页
                    </span>
-                  </div>
-                  <div class="py-6 px-3 mt-32 sm:mt-0">
+                    </div>
+                    <div class="py-6 px-3 mt-32 sm:mt-0">
                     <span
                         @click="showPasswordDialog = true"
                         class="cursor-pointer text-blueGray-600 text-base hover:text-blueGray-800 transition-colors font-bold"
                     >
                      修改密码
                    </span>
+                    </div>
                   </div>
-                </div>
-                <div class="w-full lg:w-4/12 px-4 lg:order-1">
-                  <div class="flex justify-center py-4 lg:pt-4 pt-8">
-                    <div class="mr-4 p-3 text-center">
+                  <div class="w-full lg:w-4/12 px-4 lg:order-1">
+                    <div class="flex justify-center py-4 lg:pt-4 pt-8">
+                      <div class="mr-4 p-3 text-center">
                       <span
-                        class="text-xl font-bold block uppercase tracking-wide text-blueGray-600"
+                          class="text-xl font-bold block uppercase tracking-wide text-blueGray-600"
                       >
                         {{ articleCount }}
                       </span>
-                      <span class="text-sm text-blueGray-400">文献</span>
-                    </div>
-                    <div class="mr-4 p-3 text-center">
+                        <span class="text-sm text-blueGray-400">文献</span>
+                      </div>
+                      <div class="mr-4 p-3 text-center">
                       <span
-                        class="text-xl font-bold block uppercase tracking-wide text-blueGray-600"
+                          class="text-xl font-bold block uppercase tracking-wide text-blueGray-600"
                       >
                         {{ noteCount }}
                       </span>
-                      <span class="text-sm text-blueGray-400">笔记</span>
-                    </div>
-                    <div class="lg:mr-4 p-3 text-center">
+                        <span class="text-sm text-blueGray-400">笔记</span>
+                      </div>
+                      <div class="lg:mr-4 p-3 text-center">
                       <span
-                        class="text-xl font-bold block uppercase tracking-wide text-blueGray-600"
+                          class="text-xl font-bold block uppercase tracking-wide text-blueGray-600"
                       >
                         {{ organizationCount }}
                       </span>
-                      <span class="text-sm text-blueGray-400">组织</span>
+                        <span class="text-sm text-blueGray-400">组织</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              <div class="text-center mt-12">
-                <h3
-                  class="text-4xl font-semibold leading-normal mb-2 text-blueGray-700 mb-2"
-                >
-                  {{ user.username || `user_${user.id}` }}
-                </h3>
-                <div
-                  class="text-sm leading-normal mt-0 mb-2 text-blueGray-400 font-bold uppercase"
-                >
-                  <i
-                    class="fas fa-map-marker-alt mr-2 text-lg text-blueGray-400"
-                  ></i>
-                  {{ user.address || '未知' }}
-                </div>
-                <div class="mb-2 text-blueGray-600">
-                  <i
-                    class="fas fa-university mr-2 text-lg text-blueGray-400"
-                  ></i>
-                  {{ user.university || '未知' }}
-                </div>
-              </div>
-              <div class="mt-10 py-10 border-t border-blueGray-200 text-center">
-                <div class="flex flex-wrap justify-center">
-                  <div class="w-full lg:w-9/12 px-4">
-                    <p class="mb-4 text-lg leading-relaxed text-blueGray-700">
-                      {{ user.introduction || '这里什么也没有' }}
-                    </p>
+                <div class="text-center mt-12">
+                  <h3
+                      class="text-4xl font-semibold leading-normal mb-2 text-blueGray-700 mb-2"
+                  >
+                    {{ user.username || `user_${user.id}` }}
+                  </h3>
+                  <div
+                      class="text-sm leading-normal mt-0 mb-2 text-blueGray-400 font-bold uppercase"
+                  >
+                    <i
+                        class="fas fa-map-marker-alt mr-2 text-lg text-blueGray-400"
+                    ></i>
+                    {{ user.address || '未知' }}
+                  </div>
+                  <div class="mb-2 text-blueGray-600">
+                    <i
+                        class="fas fa-university mr-2 text-lg text-blueGray-400"
+                    ></i>
+                    {{ user.university || '未知' }}
                   </div>
                 </div>
-              </div>
-              <!-- 新增折线图部分 -->
-              <div class="mt-10 py-10 border-t border-blueGray-200">
-                <div class="flex flex-wrap">
-                  <div class="w-full lg:w-6/12 px-4">
-                    <bar-chart
-                      :chart-data="literatureData"
-                      :gradient-colors="['rgba(76, 175, 80, 0.4)', 'rgba(76, 175, 80, 0)']"
-                    />
-                  </div>
-                  <div class="w-full lg:w-6/12 px-4">
-                    <bar-chart
-                      :chart-data="notesData"
-                      :gradient-colors="['rgba(33, 150, 243, 0.4)', 'rgba(33, 150, 243, 0)']"
-                    />
+                <div class="mt-10 py-10 border-t border-blueGray-200 text-center">
+                  <div class="flex flex-wrap justify-center">
+                    <div class="w-full lg:w-9/12 px-4">
+                      <p class="mb-4 text-lg leading-relaxed text-blueGray-700">
+                        {{ user.introduction || '这里什么也没有' }}
+                      </p>
+                    </div>
                   </div>
                 </div>
+                <!-- 新增折线图部分 -->
+                <div class="mt-10 py-10 border-t border-blueGray-200">
+                  <div class="flex flex-wrap">
+                    <div class="w-full lg:w-6/12 px-4">
+                      <bar-chart
+                          :chart-data="literatureData"
+                          :gradient-colors="['rgba(76, 175, 80, 0.4)', 'rgba(76, 175, 80, 0)']"
+                      />
+                    </div>
+                    <div class="w-full lg:w-6/12 px-4">
+                      <bar-chart
+                          :chart-data="notesData"
+                          :gradient-colors="['rgba(33, 150, 243, 0.4)', 'rgba(33, 150, 243, 0)']"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <!-- 折线图部分结束 -->
               </div>
-              <!-- 折线图部分结束 -->
             </div>
           </div>
-        </div>
-      </section>
-    </main>
-    <footer-component />
-   </div>
+        </section>
+      </main>
+      <footer-component />
+    </div>
     <!-- 新增密码修改对话框 -->
     <transition name="fade">
       <div v-if="showPasswordDialog" class="modal-overlay">
         <div class="modal-content">
-          <div class="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-blueGray-200 border-0">
+          <!-- 修改此处背景色 -->
+          <div class="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-white border-0">
             <div class="rounded-t mb-0 px-6 py-6">
               <div class="text-center mb-0">
-                <h6 class="text-blueGray-500 text-sm font-bold">修改密码</h6>
+                <!-- 调整标题颜色保持对比度 -->
+                <h6 class="text-blueGray-700 text-sm font-bold">修改密码</h6>
               </div>
             </div>
             <div class="flex-auto px-4 lg:px-10 py-10 pt-0">
               <form @submit.prevent="handlePasswordSubmit">
+                <!-- 保持输入框样式不变 -->
                 <div class="relative w-full mb-3">
                   <label class="block uppercase text-blueGray-600 text-xs font-bold mb-2">
                     旧密码
@@ -211,6 +214,7 @@
                   />
                 </div>
 
+                <!-- 保持按钮样式不变 -->
                 <div class="text-center mt-6">
                   <button
                       type="button"
@@ -363,6 +367,7 @@ export default {
       this.$router.push("/admin/settings");
     },
 
+
     async fetchData() {
       try {
         const token = localStorage.getItem("authToken");
@@ -378,8 +383,9 @@ export default {
         });
 
         const data = response.data;
+        console.log(data)
         this.articleCount = new Set(data.notes.map((note) => note.article_id))
-          .size; // 文献数量
+            .size; // 文献数量
         this.noteCount = data.notes.length; // 笔记数量
         this.organizationCount = 5; // 假设组织数量为固定值
         localStorage.setItem("article", this.articleCount);
@@ -409,8 +415,8 @@ export default {
           id: userData.id,
           username: userData.username || `user_${userData.id}`,
           avatar: userData.avatar
-            ? `http://43.143.228.56:8000${userData.avatar}`
-            : team2,
+              ? `http://43.143.228.56:8000${userData.avatar}`
+              : team2,
           address: userData.address || "未知",
           university: userData.university || "未知",
           introduction: userData.introduction || "这里什么也没有",
@@ -573,5 +579,13 @@ export default {
 /* 对话框动画 */
 .el-dialog__wrapper {
   transition: all 0.3s ease;
+}
+
+.custom-message-box {
+  z-index: 10000 !important;
+}
+
+.el-overlay {
+  z-index: 9999 !important;
 }
 </style>
