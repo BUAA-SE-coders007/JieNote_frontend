@@ -114,7 +114,6 @@ export default {
       navItems: [
         { label: "文献库", to: "/admin/maps", icon: "fas fa-map-marked" },
         { label: "文献管理", to: "/admin/dashboard", icon: "fas fa-book" },
-        { label: "文献阅读", to: "/admin/notelayout", icon: "fas fa-book-reader" },
         { label: "组织协作", to: "/admin/tables", icon: "fas fa-table" },
         { label: "个人主页", to: "/profile", icon: "fas fa-user-circle" },
         { label: "关于我们", to: "/landing", icon: "fas fa-newspaper" },

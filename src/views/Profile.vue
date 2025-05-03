@@ -69,15 +69,23 @@
                   </div>
                 </div>
                 <div
-                  class="w-full lg:w-4/12 px-4 lg:order-3 lg:text-right lg:self-center"
-                >
+                  class="flex w-full lg:w-4/12 px-4 lg:order-3 lg:text-right lg:self-center justify-end"
+                 >
                   <div class="py-6 px-3 mt-32 sm:mt-0">
-                    <button
+                    <span
                         @click="goToSettings"
-                      class="text-blueGray-800 text-xl font-bold hover:underline"
+                        class="cursor-pointer text-blueGray-600 text-base hover:text-blueGray-800 transition-colors font-bold"
                     >
-                      设置
-                    </button>
+                     编辑主页
+                   </span>
+                  </div>
+                  <div class="py-6 px-3 mt-32 sm:mt-0">
+                    <span
+                        @click="showPasswordDialog = true"
+                        class="cursor-pointer text-blueGray-600 text-base hover:text-blueGray-800 transition-colors font-bold"
+                    >
+                     修改密码
+                   </span>
                   </div>
                 </div>
                 <div class="w-full lg:w-4/12 px-4 lg:order-1">
@@ -164,6 +172,68 @@
     </main>
     <footer-component />
    </div>
+    <!-- 新增密码修改对话框 -->
+    <transition name="fade">
+      <div v-if="showPasswordDialog" class="modal-overlay">
+        <div class="modal-content">
+          <div class="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-blueGray-200 border-0">
+            <div class="rounded-t mb-0 px-6 py-6">
+              <div class="text-center mb-0">
+                <h6 class="text-blueGray-500 text-sm font-bold">修改密码</h6>
+              </div>
+            </div>
+            <div class="flex-auto px-4 lg:px-10 py-10 pt-0">
+              <form @submit.prevent="handlePasswordSubmit">
+                <div class="relative w-full mb-3">
+                  <label class="block uppercase text-blueGray-600 text-xs font-bold mb-2">
+                    旧密码
+                  </label>
+                  <input
+                      type="password"
+                      v-model="passwordForm.oldPassword"
+                      class="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
+                      placeholder="请输入旧密码"
+                      required
+                  />
+                </div>
+
+                <div class="relative w-full mb-6">
+                  <label class="block uppercase text-blueGray-600 text-xs font-bold mb-2">
+                    新密码
+                  </label>
+                  <input
+                      type="password"
+                      v-model="passwordForm.newPassword"
+                      class="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
+                      placeholder="请输入新密码（至少6位）"
+                      required
+                      minlength="6"
+                  />
+                </div>
+
+                <div class="text-center mt-6">
+                  <button
+                      type="button"
+                      @click="showPasswordDialog = false"
+                      class="bg-blueGray-600 text-white active:bg-blueGray-400 text-sm font-bold uppercase px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-2 mb-1 w-32 ease-linear transition-all duration-150"
+                  >
+                    取消
+                  </button>
+                  <button
+                      type="submit"
+                      :disabled="isSubmitting"
+                      class="bg-blueGray-800 text-white active:bg-blueGray-600 text-sm font-bold uppercase px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none ml-2 mb-1 w-32 ease-linear transition-all duration-150"
+                  >
+                    {{ isSubmitting ? '提交中...' : '确认修改' }}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </transition>
+
   </div>
 </template>
 
@@ -173,11 +243,17 @@ import FooterComponent from "@/components/Footers/Footer.vue";
 import BarChart from "@/components/Cards/BarChart.vue";
 import team2 from "@/assets/img/team-2-800x800.jpg";
 import axios from "axios";
-import {ElMessage} from 'element-plus'
+import { ElMessageBox, ElMessage } from 'element-plus'
 
 export default {
   data() {
     return {
+      showPasswordDialog: false,
+      isSubmitting: false,
+      passwordForm: {
+        oldPassword: '',
+        newPassword: ''
+      },
       isLoading: true, // 新增加载状态
       team2, // 将 team2 定义在 data 中
       user: {
@@ -224,6 +300,65 @@ export default {
     BarChart
   },
   methods: {
+    async handlePasswordSubmit() {
+      try {
+        // 表单验证
+        if (!this.passwordForm.oldPassword || !this.passwordForm.newPassword) {
+          ElMessage.warning('请填写完整密码信息')
+          return
+        }
+        if (this.passwordForm.newPassword.length < 6) {
+          ElMessage.warning('新密码至少需要6位')
+          return
+        }
+
+        // 二次确认
+        await ElMessageBox.confirm('确定要修改密码吗？', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+
+        this.isSubmitting = true
+
+        // 调用修改密码接口
+        const token = localStorage.getItem("authToken")
+        const response = await axios.post(
+            "http://43.143.228.56:8000/user/password",
+            {
+              old_password: this.passwordForm.oldPassword,
+              new_password: this.passwordForm.newPassword
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json"
+              }
+            }
+        )
+
+        console.log(response)
+
+        ElMessage.success('密码修改成功')
+        this.showPasswordDialog = false
+      } catch (error) {
+        if (error !== 'cancel') {
+          ElMessage.error(error.response?.data?.message || '密码修改失败')
+        }
+      } finally {
+        this.isSubmitting = false
+      }
+    },
+    handleClose(done) {
+      if (this.passwordForm.oldPassword || this.passwordForm.newPassword) {
+        ElMessageBox.confirm('确定要放弃修改吗？', '提示', {
+          type: 'warning'
+        }).then(() => done())
+            .catch(() => {})
+      } else {
+        done()
+      }
+    },
     goToSettings() {
       this.$router.push("/admin/settings");
     },
@@ -317,7 +452,7 @@ export default {
       // 每 5 分钟刷新一次 Token
       this.refreshInterval = setInterval(() => {
         this.refreshToken();
-      }, 4 * 60 * 1000);
+      }, 4.5 * 60 * 1000);
     },
     redirectToLogin() {
       // 清除 Token 并跳转到登录页面
@@ -351,10 +486,21 @@ export default {
     }
   },
   beforeDestroy() {
-    // 清除定时器
+    // 确保彻底清除定时器
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);
+      this.refreshInterval = null; // 添加这行重置指针
+      console.log('定时器已销毁'); // 添加调试日志
     }
+  },
+// 新增路由离开守卫（如果是 Vue Router 项目）
+  beforeRouteLeave(to, from, next) {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+      this.refreshInterval = null;
+      console.log('路由离开时清除定时器');
+    }
+    next();
   }
 };
 </script>
@@ -409,5 +555,23 @@ export default {
   color: #4CAF50;
   font-size: 18px;
   margin-top: 12px;
+}
+
+/* 自定义对话框样式 */
+.custom-dialog {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* 背景模糊效果 */
+.el-overlay {
+  backdrop-filter: blur(3px);
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* 对话框动画 */
+.el-dialog__wrapper {
+  transition: all 0.3s ease;
 }
 </style>
