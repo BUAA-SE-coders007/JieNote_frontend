@@ -100,7 +100,7 @@
           <li class="items-center">
             <a
                 href="#"
-                @click.prevent="redirectToLogin"
+                @click.prevent="confirmLogout"
                 class="text-sm uppercase py-3 font-bold block text-blueGray-700 hover:text-blueGray-500 cursor-pointer"
             >
               <i class="fas fa-sign-out-alt mr-2 text-base text-blueGray-300"></i>
@@ -116,6 +116,7 @@
 <script>
 import NotificationDropdown from "@/components/Dropdowns/NotificationDropdown.vue";
 import UserDropdown from "@/components/Dropdowns/UserDropdown.vue";
+import { ElMessageBox } from 'element-plus'
 
 export default {
   data() {
@@ -133,6 +134,22 @@ export default {
   methods: {
     toggleCollapseShow(classes) {
       this.collapseShow = classes;
+    },
+    async confirmLogout() {
+      try {
+        await ElMessageBox.confirm('确定要退出登录吗？', '提示', {
+          confirmButtonText: '确定退出',
+          cancelButtonText: '取消',
+          type: 'warning',
+          customClass: 'custom-message-box',
+          zIndex: 10000
+        })
+
+        // 用户确认后执行退出操作
+        this.redirectToLogin()
+      } catch (error) {
+        // 用户取消操作不做任何处理
+      }
     },
     redirectToLogin() {
       // 清除 Token 并跳转到登录页面
