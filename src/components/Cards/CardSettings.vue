@@ -1,7 +1,7 @@
 <template>
   <div>
     <div
-      class="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-blueGray-100 border-0"
+      class="relative flex flex-col min-w-12 break-words w-full mb-6 shadow-lg rounded-lg bg-blueGray-100 border-0"
     >
       <div class="rounded-t bg-white mb-0 px-6 py-6">
         <div class="text-center flex justify-between">
@@ -179,21 +179,30 @@
 import axios from "axios";
 
 export default {
+  props: {
+    userData: {
+      type: Object,
+      required: true
+    }
+  },
   data() {
     return {
-      form: {
-        username: "",
-        address: "",
-        university: "",
-        introduction: "",
-      },
-      avatar: null, // 用于存储上传的头像文件
+      form: { ...this.userData },
+      avatar: null,
       showChangePassword: false, // 控制修改密码窗口显示
       passwordForm: {
         oldPassword: "",
         newPassword: "",
       },
     };
+  },
+  watch: {
+    userData: {
+      handler(newVal) {
+        this.form = { ...newVal };
+      },
+      deep: true
+    }
   },
   methods: {
     handleFileUpload(event) {
@@ -202,24 +211,22 @@ export default {
     async submitSettings() {
       try {
         const token = localStorage.getItem("authToken");
-        if (!token) {
-          console.error("Token 不存在，请先登录！");
-          return;
+        const formData = new FormData();
+        // 明确按后端要求的字段名提交
+        formData.append("username", this.form.username || ""); // 处理空值
+        formData.append("address", this.form.address || "");
+        formData.append("university", this.form.university || "");
+        formData.append("introduction", this.form.introduction || "");
+
+        // 处理文件上传
+        if (this.avatar) {
+          formData.append("avatar", this.avatar); // 确保字段名与后端一致
         }
 
-        const formData = new FormData();
-
-        // 动态添加字段
-        if (this.form.username) formData.append("username", this.form.username);
-        if (this.form.address) formData.append("address", this.form.address);
-        if (this.form.university)
-          formData.append("university", this.form.university);
-        if (this.form.introduction)
-          formData.append("introduction", this.form.introduction);
-        if (this.avatar) formData.append("avatar", this.avatar);
+        console.log(formData);
 
         // 发送 PUT 请求
-        const response = await axios.put("http://localhost:8000/user", formData, {
+        const response = await axios.put("http://43.143.228.56:8000/user", formData, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
@@ -227,7 +234,12 @@ export default {
         });
 
         console.log("设置更新成功：", response.data);
-        this.$emit("close"); // 关闭设置页面
+        this.$emit("update-user", {
+          ...this.form,
+          avatar: response.data.avatar
+              ? `http://43.143.228.56:8000${response.data.avatar}`
+              : this.userData.avatar
+        });
       } catch (error) {
         console.error("更新设置失败：", error);
       }
@@ -260,6 +272,55 @@ export default {
         console.error("修改密码失败：", error);
       }
     },
+    async refreshToken() {
+      try {
+        const refreshToken = localStorage.getItem("refreshToken");
+        if (!refreshToken) {
+          console.error("Refresh Token 不存在，请重新登录！");
+          this.redirectToLogin();
+          return;
+        }
+
+        // 调用刷新 Token 的接口
+        const response = await axios.post(
+            "http://43.143.228.56:8000/public/refresh",
+            { refresh_token: refreshToken } // 传入 refresh_token
+        );
+
+        if (response.status === 200) {
+          const {access_token} = response.data;
+
+          console.log("Token 已刷新:", access_token);
+
+          // 更新 localStorage 中的 Token
+          localStorage.setItem("authToken", access_token);
+        }
+      } catch (error) {
+        console.error("刷新 Token 失败，请重试！");
+      }
+    },
+    startTokenRefresh() {
+      // 每 5 分钟刷新一次 Token
+      this.refreshInterval = setInterval(() => {
+        this.refreshToken();
+      }, 4 * 60 * 1000);
+    },
+    redirectToLogin() {
+      // 清除 Token 并跳转到登录页面
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("refreshToken");
+      this.$router.push("/auth/login");
+    },
+  },
+  beforeDestroy() {
+    // 清除定时器
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+    }
+  },
+  async mounted() {
+    await this.refreshToken();
+    this.startTokenRefresh();
   },
 };
 </script>

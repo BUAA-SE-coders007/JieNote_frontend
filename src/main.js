@@ -71,6 +71,14 @@ const routes = [
         path: "/admin/maps",
         component: Maps,
       },
+      {
+        path: "/landing",
+        component: Landing,
+      },
+      {
+        path: "/profile",
+        component: Profile,
+      },
     ],
   },
   {
@@ -99,14 +107,6 @@ const routes = [
     ],
   },
   {
-    path: "/landing",
-    component: Landing,
-  },
-  {
-    path: "/profile",
-    component: Profile,
-  },
-  {
     path: "/",
     component: Index,
   },
@@ -124,4 +124,3 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
 app.use(router).mount("#app");
-

@@ -1,12 +1,17 @@
 <template>
   <div class="container mx-auto px-4 h-full">
-    <div class="flex content-center items-center justify-center h-full">
+    <div class="flex flex-col content-center items-center justify-center h-full">
+      <div class="w-full text-center z-10 mb-[-2rem]">
+        <h1 class="text-5xl font-extrabold text-white animate-glow">
+          JieNote
+        </h1>
+      </div>
       <div class="w-full lg:w-4/12 px-4">
         <div
           class="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-blueGray-200 border-0"
         >
           <div class="rounded-t mb-0 px-6 py-6">
-            <div class="text-center mb-3">
+            <div class="text-center mb-0">
               <h6 class="text-blueGray-500 text-sm font-bold">
                 创建账户
               </h6>
@@ -118,6 +123,7 @@
 
 <script>
 import axios from "axios";
+import { ElMessage } from 'element-plus'
 
 export default {
   data() {
@@ -134,22 +140,22 @@ export default {
     // 发送验证码
     async sendVerificationCode() {
       if (!this.email) {
-        alert("请先输入邮箱地址！");
+        ElMessage.warning("请先输入邮箱地址！");
         return;
       }
       if (this.isSendingCode) {
-        alert("请稍后再试！");
+        ElMessage.warning("请稍后再试！");
         return;
       }
       try {
         // 调用发送验证码的接口
-        await axios.post("http://127.0.0.1:8000/public/send_code", {
+        await axios.post("http://43.143.228.56:8000/public/send_code", {
           email: this.email,
         });
-        alert(`验证码已发送至邮箱：${this.email}`);
+        ElMessage.success(`验证码已发送至邮箱：${this.email}`);
         this.startCountdown(); // 开始倒计时
       } catch (error) {
-        alert("发送验证码失败，请重试！");
+        ElMessage.error("发送验证码失败，请重试！");
         console.error(error);
       }
     },
@@ -174,13 +180,13 @@ export default {
         !this.password ||
         !this.verificationCode
       ) {
-        alert("请填写所有字段！");
+        ElMessage.warning("请填写所有字段！");
         return;
       }
       try {
         // 调用注册接口
         const response = await axios.post(
-          "http://127.0.0.1:8000/public/register",
+          "http://43.143.228.56:8000/public/register",
           {
             email: this.email,
             username: this.username,
@@ -188,14 +194,37 @@ export default {
             code: this.verificationCode,
           }
         );
-        alert("注册成功！");
+        ElMessage.success("注册成功！");
         console.log(response.data);
         this.$router.push("/auth/login"); // 跳转到登录页面
       } catch (error) {
-        alert("注册失败，请重试！");
+        ElMessage.error("注册失败，请重试！");
         console.error(error);
       }
     },
   },
 };
 </script>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');
+@keyframes glow {
+  0% {
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.4);
+  }
+  50% {
+    color: #e5e7eb;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.4);
+  }
+  100% {
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.4);
+  }
+}
+
+.animate-glow {
+  animation: glow 3s ease-in-out infinite;
+  font-family: 'Dancing Script', cursive; /* 更艺术的手写字体 */
+}
+</style>
