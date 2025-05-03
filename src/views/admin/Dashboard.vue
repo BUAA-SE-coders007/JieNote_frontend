@@ -408,7 +408,7 @@
 </template>
 
 <script>
-import { ref, nextTick, onMounted, getCurrentInstance } from 'vue'
+import { ref, nextTick, onMounted} from 'vue'
 import { useRouter } from 'vue-router'
 import { Edit, DocumentAdd, Delete,Management,Rank  } from '@element-plus/icons-vue'
 import KnowledgeGraph from '/src/components/Tree/KnowledgeGraph.vue'
