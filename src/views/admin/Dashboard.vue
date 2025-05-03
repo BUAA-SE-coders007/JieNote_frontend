@@ -1516,7 +1516,7 @@ export default {
           console.log(response.data);
 
           // 更新 localStorage 中的 Token
-          localStorage.setItem("token", access_token);
+          localStorage.setItem("authToken", access_token);
         }
       } catch (error) {
         console.error("刷新 Token 失败，请重新刷新！");
@@ -1540,7 +1540,7 @@ export default {
 // 跳转登录页（通用实现）
     const redirectToLogin = () => {
       // 清理认证信息
-      localStorage.removeItem("token");
+      localStorage.removeItem("authToken");
       localStorage.removeItem("refreshToken");
 
       router.push("/auth/login");
