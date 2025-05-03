@@ -293,12 +293,12 @@
                         <el-icon><Delete /></el-icon>
                       </el-button>
                     </el-tooltip>
-                    <el-tooltip v-if="node.level > 1" content="阅读" placement="top" :enterable="false" :duration="50">
+                    <el-tooltip v-if="node.level === 2" content="阅读" placement="top" :enterable="false" :duration="50">
                       <el-button
                           type="success"
                           size="small"
                           round
-                          @click.stop="remove(node, data)"
+                          @click.stop="handleRead(node, data)"
                           class="action-btn read-btn"
                       >
                         <el-icon><Management /></el-icon>
@@ -408,7 +408,8 @@
 </template>
 
 <script>
-import { ref,nextTick,onMounted} from 'vue'
+import { ref, nextTick, onMounted} from 'vue'
+import { useRouter } from 'vue-router'
 import { Edit, DocumentAdd, Delete,Management,Rank  } from '@element-plus/icons-vue'
 import KnowledgeGraph from '/src/components/Tree/KnowledgeGraph.vue'
 import JSZip from 'jszip'
@@ -433,6 +434,7 @@ export default {
 
 
   setup() {
+    const router = useRouter()
 
     const showNewNoteDialog = ref(false)
     const newNoteForm = ref({
@@ -650,6 +652,16 @@ export default {
         showEditDialog.value = false
       } catch (error) {
         ElMessage.error('保存失败: ' + error.message)
+      }
+    }
+
+    const handleRead = (node, data) => {
+      // 检查是否是文献节点
+      console.log("handleRead, node.level:", node.level)
+      if (node.level === 2 && data.depth === 1) {  // PDF nodes: level 2 in tree, depth 1 in data
+        router.push(`/admin/notelayout?article_id=${data.true_id}`);
+      } else {
+        ElMessage.warning('只能阅读文献');
       }
     }
 
@@ -1531,7 +1543,7 @@ export default {
       localStorage.removeItem("token");
       localStorage.removeItem("refreshToken");
 
-      this.$router.push("/auth/login");
+      router.push("/auth/login");
     };
 
 
@@ -1585,7 +1597,8 @@ export default {
       addTag,
       removeTag,
       onTagDragEnd,
-      saveEdit
+      saveEdit,
+      handleRead,
     }
   }
 }

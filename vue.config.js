@@ -4,6 +4,16 @@ const path = require('path');
 
 module.exports = {
   runtimeCompiler: true,
+  devServer: {
+    port: 8080,
+    proxy: {
+      '/sockjs-node': {
+        target: 'http://localhost:8080',
+        ws: true,
+        changeOrigin: true
+      }
+    }
+  },
   chainWebpack: (config) => {
     config.plugin('code-inspector-plugin').use(
       codeInspectorPlugin({
