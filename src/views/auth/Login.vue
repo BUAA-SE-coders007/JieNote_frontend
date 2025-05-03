@@ -78,8 +78,9 @@
 </template>
 
 <script>
-import axios from "axios";
-import { ElMessage } from 'element-plus'
+import { ElMessage } from 'element-plus';
+import { login, refreshToken } from '@/api/user';
+import { setToken, setRefreshToken, getRefreshToken, clearAuth } from '@/utils/auth';
 
 export default {
   data() {
@@ -97,7 +98,7 @@ export default {
       }
       try {
         // 调用登录接口
-        const response = await axios.post("http://43.143.228.56:8000/public/login", {
+        const response = await login({
           email: this.email,
           password: this.password,
         });
@@ -106,14 +107,12 @@ export default {
           ElMessage.success("登录成功！");
           const { access_token, refresh_token } = response.data;
 
-          // 存储 Token 到 localStorage
-          localStorage.setItem("authToken", access_token);
-          localStorage.setItem("refreshToken", refresh_token);
+          // 使用封装的工具函数存储 Token
+          setToken(access_token);
+          setRefreshToken(refresh_token);
 
           // 设置定时刷新 Token
           this.startTokenRefresh();
-
-          console.log(localStorage.getItem("refreshToken"))
 
           // 跳转到主页
           this.$router.push("/admin");
@@ -123,28 +122,24 @@ export default {
         console.error(error);
       }
     },
-    async refreshToken() {
+    async refreshTokenHandler() {
       try {
-        const refreshToken = localStorage.getItem("refreshToken");
-        if (!refreshToken) {
+        const refreshTokenValue = getRefreshToken();
+        if (!refreshTokenValue) {
           console.error("Refresh Token 不存在，请重新登录！");
           this.redirectToLogin();
           return;
         }
 
         // 调用刷新 Token 的接口
-        const response = await axios.post(
-          "http://43.143.228.56:8000/public/refresh",
-          { refresh_token: refreshToken } // 传入 refresh_token
-        );
+        const response = await refreshToken(refreshTokenValue);
 
         if (response.status === 200) {
           const {access_token} = response.data;
-
-          console.log("Token 已刷新:", access_token);
-
-          // 更新 localStorage 中的 Token
-          localStorage.setItem("authToken", access_token);
+          console.log("Token 已刷新");
+          
+          // 更新 Token
+          setToken(access_token);
         }
       } catch (error) {
         console.error("刷新 Token 失败，请重新登录！");
@@ -152,15 +147,14 @@ export default {
       }
     },
     startTokenRefresh() {
-      // 每 5 分钟刷新一次 Token
+      // 每 4 分钟刷新一次 Token
       this.refreshInterval = setInterval(() => {
-        this.refreshToken();
-      }, 4.5 * 60 * 1000);
+        this.refreshTokenHandler();
+      }, 4 * 60 * 1000);
     },
     redirectToLogin() {
       // 清除 Token 并跳转到登录页面
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("refreshToken");
+      clearAuth();
       this.$router.push("/auth/login");
     },
   },

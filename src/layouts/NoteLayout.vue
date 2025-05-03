@@ -48,10 +48,11 @@
 
 <script>
 import { Back, Loading } from '@element-plus/icons-vue';
-import axios from "axios";
+import http from '@/utils/http';
 import MdEditor from '@/components/Editor/MdEditor.vue';
 import { Splitpanes, Pane } from 'splitpanes';
 import 'splitpanes/dist/splitpanes.css';
+import { ElMessage } from 'element-plus';
 
 export default {
   name: "NoteLayout",
@@ -72,16 +73,7 @@ export default {
   methods: {
     async fetchPdf(articleId) {
       try {
-        const token = localStorage.getItem("authToken");
-        if (!token) {
-          console.error("Token 不存在，请先登录！");
-          return;
-        }
-
-        const response = await axios.get("http://43.143.228.56:8000/article/readArticle", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const response = await http.get("/article/readArticle", {
           params: {
             article_id: articleId,
           },
@@ -95,7 +87,7 @@ export default {
         this.pdfUrl = URL.createObjectURL(blob);
       } catch (error) {
         console.error("获取 PDF 文件失败：", error);
-        this.$message.error("加载 PDF 文件失败，请检查后端服务！");
+        ElMessage.error("加载 PDF 文件失败，请检查后端服务！");
       }
     },
 
@@ -115,7 +107,7 @@ export default {
     if (articleId) {
       this.fetchPdf(articleId);
     } else {
-      this.$message.error("请先选择要阅读的文献");
+      ElMessage.error("请先选择要阅读的文献");
       this.$router.push("/admin/dashboard");
     }
   }
@@ -224,13 +216,10 @@ export default {
 /* 笔记编辑区样式 */
 .note-container {
   height: calc(100vh - 60px);
-  padding: 0.5rem;
 }
 
 .md-editor {
   height: 100%;
-  border-radius: 0.375rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 /* 自定义 Splitpanes 样式 */

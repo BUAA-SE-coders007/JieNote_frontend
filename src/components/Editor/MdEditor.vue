@@ -33,7 +33,8 @@
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
 import { ref, onMounted, watch, computed } from 'vue';
-import axios from 'axios';
+import { updateNote } from '@/api/note';
+import { ElMessage } from 'element-plus';
 
 export default {
   name: 'CustomMdEditor',
@@ -140,11 +141,10 @@ export default {
 
       try {
         const noteId = props.noteId;
-        await axios.put(`http://localhost:8000/notes/${noteId}`, {
-          content,
-        });
-        console.log("笔记已更新");
+        await updateNote(noteId, { content });
+        ElMessage.success("笔记已更新");
       } catch (e) {
+        ElMessage.error(`更新失败: ${e.message}`);
         console.error("更新失败", e);
       } finally {
         updating.value = false;
@@ -153,31 +153,12 @@ export default {
 
     const handleUploadImg = async (files, callback) => {
       try {
-        const res = await Promise.all(
-          files.map((file) => {
-            return new Promise((resolve, reject) => {
-              const formData = new FormData();
-              formData.append('file', file);
-              
-              // 这里应该使用你自己的上传API
-              axios.post('http://localhost:8000/upload', formData, {
-                headers: {
-                  'Content-Type': 'multipart/form-data',
-                },
-              })
-              .then((response) => {
-                resolve(response);
-              })
-              .catch((error) => {
-                reject(error);
-              });
-            });
-          })
-        );
-        
-        // 回调函数返回上传后的URL列表
-        callback(res.map((item) => item.data.url));
+        ElMessage.info("图片上传功能尚未实现");
+        // 这里后续可以接入专门的图片上传 API
+        // 目前简单返回空数组，避免报错
+        callback([]);
       } catch (error) {
+        ElMessage.error("图片上传失败");
         console.error("图片上传失败", error);
       }
     };
