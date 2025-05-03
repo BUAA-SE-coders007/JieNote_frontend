@@ -122,8 +122,8 @@
 </template>
 
 <script>
-import axios from "axios";
-import { ElMessage } from 'element-plus'
+import { ElMessage } from 'element-plus';
+import { register, sendVerificationCode } from '@/api/user';
 
 export default {
   data() {
@@ -148,8 +148,8 @@ export default {
         return;
       }
       try {
-        // 调用发送验证码的接口
-        await axios.post("http://43.143.228.56:8000/public/send_code", {
+        // 调用封装的发送验证码 API
+        await sendVerificationCode({
           email: this.email,
         });
         ElMessage.success(`验证码已发送至邮箱：${this.email}`);
@@ -184,19 +184,18 @@ export default {
         return;
       }
       try {
-        // 调用注册接口
-        const response = await axios.post(
-          "http://43.143.228.56:8000/public/register",
-          {
-            email: this.email,
-            username: this.username,
-            password: this.password,
-            code: this.verificationCode,
-          }
-        );
-        ElMessage.success("注册成功！");
-        console.log(response.data);
-        this.$router.push("/auth/login"); // 跳转到登录页面
+        // 调用封装的注册 API
+        const response = await register({
+          email: this.email,
+          username: this.username,
+          password: this.password,
+          code: this.verificationCode,
+        });
+        
+        if (response.status === 200) {
+          ElMessage.success("注册成功！");
+          this.$router.push("/auth/login"); // 跳转到登录页面
+        }
       } catch (error) {
         ElMessage.error("注册失败，请重试！");
         console.error(error);

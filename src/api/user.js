@@ -30,10 +30,21 @@ export const refreshToken = (refreshToken) => {
  * @param {string} data.username - 用户名
  * @param {string} data.email - 用户邮箱
  * @param {string} data.password - 用户密码
+ * @param {string} data.code - 邮箱验证码
  * @returns {Promise<any>} 注册结果
  */
 export const register = (data) => {
   return http.post('/public/register', data);
+};
+
+/**
+ * 发送验证码
+ * @param {Object} data - 请求参数
+ * @param {string} data.email - 用户邮箱
+ * @returns {Promise<any>} 发送结果
+ */
+export const sendVerificationCode = (data) => {
+  return http.post('/public/send_code', data);
 };
 
 /**
@@ -84,6 +95,7 @@ export default {
   login,
   refreshToken,
   register,
+  sendVerificationCode,
   getUserInfo,
   updateUserInfo,
   changePassword

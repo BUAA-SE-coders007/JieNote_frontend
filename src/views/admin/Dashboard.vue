@@ -416,7 +416,9 @@ import JSZip from 'jszip'
 import draggable from 'vuedraggable'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
-import axios from "axios";
+import { refreshToken as refreshTokenAPI } from '@/api/user';
+import { setToken, getRefreshToken, clearAuth } from '@/utils/auth';
+import http from '@/utils/http';
 import { onUnmounted } from 'vue'
 
 export default {
@@ -1491,34 +1493,26 @@ export default {
 
     const refreshToken = async () => {
       try {
-        const refreshToken = localStorage.getItem("refreshToken");
-        console.log("123e4e23424e2")
-        console.log(typeof refreshToken)
-        if (!refreshToken) {
+        const refreshTokenValue = getRefreshToken();
+        console.log("准备刷新 token");
+        
+        if (!refreshTokenValue) {
           console.error("Refresh Token 不存在，请重新登录！");
           redirectToLogin();
           return;
         }
 
         // 调用刷新 Token 的接口
-        const response = await axios.post(
-            "http://43.143.228.56:8000/public/refresh",
-            { refresh_token: refreshToken } // 传入 refresh_token
-        );
-
-        console.log(response)
+        const response = await refreshTokenAPI(refreshTokenValue);
 
         if (response.status === 200) {
-          const {access_token} = response.data;
-
-          console.log("Token 已刷新:", access_token);
-          console.log(response.data);
-
-          // 更新 localStorage 中的 Token
-          localStorage.setItem("authToken", access_token);
+          const { access_token } = response.data;
+          // 使用封装的工具函数更新 Token
+          setToken(access_token);
+          console.log("Token 已刷新");
         }
       } catch (error) {
-        console.error("刷新 Token 失败，请重新刷新！");
+        console.error("刷新 Token 失败：", error);
       }
     }
 
@@ -1539,9 +1533,7 @@ export default {
 // 跳转登录页（通用实现）
     const redirectToLogin = () => {
       // 清理认证信息
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("refreshToken");
-
+      clearAuth();
       router.push("/auth/login");
     };
 
