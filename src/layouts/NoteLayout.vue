@@ -1,44 +1,44 @@
 <template>
-  <div class="flex flex-col h-screen w-full bg-blueGray-50 overflow-hidden">
+  <div class="jienote-layout">
     <!-- 顶部导航栏 -->
-    <div class="flex items-center px-6 py-2 bg-emerald-600 text-white h-[60px] shadow-md z-10">
+    <div class="jienote-header">
       <el-button
-        type="success"
-        class="mr-4 bg-emerald-700 border-0 transition-all duration-300 hover:bg-emerald-800 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
-        @click="$router.push('/admin/dashboard')"
-        circle
+          type="primary"
+          class="back-button"
+          @click="$router.push('/admin/dashboard')"
+          circle
       >
         <el-icon><Back /></el-icon>
       </el-button>
-      <div class="flex flex-col justify-center">
-        <span class="text-xl font-semibold tracking-wide text-shadow">JieNote 文献笔记</span>
-        <span v-if="documentTitle" class="text-sm opacity-85 mt-1">{{ documentTitle }}</span>
+      <div class="jienote-title">
+        <span class="title-text">JieNote 文献笔记</span>
+        <span class="subtitle" v-if="documentTitle">{{ documentTitle }}</span>
       </div>
     </div>
 
     <!-- 主内容区域 -->
-    <div class="flex-1 overflow-hidden relative">
+    <div class="jienote-content">
       <!-- 使用 splitpanes 组件 -->
       <splitpanes class="default-theme" :horizontal="false">
-        <pane :size="55" min-size="20">
+        <pane :size="57" min-size="20">
           <!-- PDF 查看区域 -->
-          <div class="h-[calc(100vh-60px)] bg-white relative border border-blueGray-200 rounded-md m-2 overflow-hidden shadow-inner">
+          <div class="pdf-container">
             <iframe
-              v-if="pdfUrl"
-              :src="pdfUrl"
-              class="w-full h-full border-none"
-              frameborder="0"
+                v-if="pdfUrl"
+                :src="pdfUrl"
+                class="pdf-viewer"
+                frameborder="0"
             ></iframe>
-            <div v-else class="flex flex-col items-center justify-center h-full text-gray-500">
-              <el-icon class="text-5xl mb-4 animate-spin text-emerald-600"><Loading /></el-icon>
+            <div v-else class="pdf-loading">
+              <el-icon class="loading-icon is-loading"><Loading /></el-icon>
               <span>正在加载 PDF 文件，请稍候...</span>
             </div>
           </div>
         </pane>
-        <pane min-size="20">
+        <pane :size="43" min-size="20">
           <!-- 笔记编辑区域 -->
-          <div :size="45" class="h-[calc(100vh-60px)]">
-            <MdEditor class="h-full" v-model="editorContent" />
+          <div class="note-container">
+            <MdEditor class="md-editor" v-model="editorContent" />
           </div>
         </pane>
       </splitpanes>
@@ -144,13 +144,13 @@ export default {
   background-color: rgba(255, 255, 255, 0.2);
   border: none;
   transition: all 0.3s ease;
-  
+
   &:hover {
     background-color: rgba(255, 255, 255, 0.3);
     transform: translateY(-2px);
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
   }
-  
+
   &:active {
     transform: translateY(0);
   }
@@ -160,14 +160,14 @@ export default {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  
+
   .title-text {
     font-size: 1.25rem;
     font-weight: 600;
     letter-spacing: 0.5px;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   }
-  
+
   .subtitle {
     font-size: 0.875rem;
     opacity: 0.85;
@@ -208,7 +208,7 @@ export default {
   justify-content: center;
   height: 100%;
   color: #64748b;
-  
+
   .loading-icon {
     font-size: 2.5rem;
     margin-bottom: 1rem;
@@ -226,40 +226,35 @@ export default {
 }
 
 /* 自定义 Splitpanes 样式 */
-.splitpanes.default-theme .splitpanes__splitter {
+:deep(.splitpanes) {
+  height: calc(100vh - 60px) !important;
+}
+
+:deep(.splitpanes__splitter) {
   position: relative;
-  background-color: #e2e8f0; /* blueGray-200 */
-}
+  background-color: #e2e8f0 !important;
 
-.splitpanes.default-theme .splitpanes__splitter::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 6px;
-  height: 60px;
-  background-color: rgba(16, 185, 129, 0.4); /* emerald-500 with opacity */
-  border-radius: 3px;
-  transition: all 0.3s ease;
-}
+  &::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 6px;
+    height: 60px;
+    background-color: rgba(5, 150, 105, 0.4);
+    border-radius: 3px;
+    transition: all 0.3s ease;
+  }
 
-.splitpanes.default-theme .splitpanes__splitter:hover::before {
-  background-color: rgba(16, 185, 129, 0.8); /* emerald-500 with higher opacity */
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
-}
-
-/* 添加文字阴影效果 */
-.text-shadow {
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  &:hover::before {
+    background-color: rgba(5, 150, 105, 0.8);
+    box-shadow: 0 0 8px rgba(5, 150, 105, 0.3);
+  }
 }
 
 /* 动画效果 */
-.animate-spin {
-  animation: spin 2s linear infinite;
-}
-
-@keyframes spin {
+@keyframes rotating {
   from {
     transform: rotate(0deg);
   }
@@ -270,10 +265,20 @@ export default {
 
 /* 响应式调整 */
 @media (max-width: 768px) {
-  .h-\[calc\(100vh-60px\)\] {
+  .jienote-header {
+    padding: 0.5rem 1rem;
+    height: 50px;
+  }
+
+  .jienote-title .title-text {
+    font-size: 1rem;
+  }
+
+  .pdf-container,
+  .note-container {
     height: calc(100vh - 50px);
   }
-  
+
   :deep(.splitpanes) {
     height: calc(100vh - 50px) !important;
   }
