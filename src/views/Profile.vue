@@ -15,7 +15,7 @@
           <div
               class="absolute top-0 w-full h-full bg-center bg-cover"
               style="
-            background-image: url('https://images.unsplash.com/photo-1499336315816-097655dcfbda?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2710&q=80');
+            background-image: url('http://images.unsplash.com/photo-1499336315816-097655dcfbda?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2710&q=80');
           "
           >
           <span
@@ -328,7 +328,7 @@ export default {
         // 调用修改密码接口
         const token = localStorage.getItem("authToken")
         const response = await axios.post(
-            "https://43.143.228.56:8000/user/password",
+            "http://43.143.228.56:8000/user/password",
             {
               old_password: this.passwordForm.oldPassword,
               new_password: this.passwordForm.newPassword
@@ -376,7 +376,7 @@ export default {
           return;
         }
 
-        const response = await axios.get("https://43.143.228.56:8000/notes", {
+        const response = await axios.get("http://43.143.228.56:8000/notes", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -403,7 +403,7 @@ export default {
           return;
         }
 
-        const response = await axios.get("https://43.143.228.56:8000/user", {
+        const response = await axios.get("http://43.143.228.56:8000/user", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -415,7 +415,7 @@ export default {
           id: userData.id,
           username: userData.username || `user_${userData.id}`,
           avatar: userData.avatar
-              ? `https://43.143.228.56:8000${userData.avatar}`
+              ? `http://43.143.228.56:8000${userData.avatar}`
               : team2,
           address: userData.address || "未知",
           university: userData.university || "未知",

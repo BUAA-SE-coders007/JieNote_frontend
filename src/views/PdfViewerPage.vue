@@ -63,7 +63,7 @@ export default {
         }
 
         // 向后端发送请求获取 PDF 文件
-        const response = await axios.get("https://43.143.228.56:8000/article/readArticle", {
+        const response = await axios.get("http://43.143.228.56:8000/article/readArticle", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
