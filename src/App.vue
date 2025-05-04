@@ -7,6 +7,15 @@
 </template>
 
 
+<script>
+export default {
+  mounted() {
+    document.title = "JieNote"
+  }
+}
+</script>
+
+
 <style>
 /* App.vue 或全局 CSS 文件中加入 */
 .fade-enter-active, .fade-leave-active {

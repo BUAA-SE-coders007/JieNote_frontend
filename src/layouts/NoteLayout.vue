@@ -15,7 +15,7 @@
         <span class="subtitle" v-if="documentTitle">{{ documentTitle }}</span>
       </div>
     </div>
-    
+
     <!-- 主内容区域 -->
     <div class="jienote-content">
       <!-- 使用 splitpanes 组件 -->
@@ -56,7 +56,7 @@ import { ElMessage } from 'element-plus';
 
 export default {
   name: "NoteLayout",
-  components: { 
+  components: {
     Back,
     Loading,
     MdEditor,
@@ -73,6 +73,8 @@ export default {
   methods: {
     async fetchPdf(articleId) {
       try {
+        const token = localStorage.getItem("authToken");
+        console.log(token)
         const response = await http.get("/article/readArticle", {
           params: {
             article_id: articleId,
@@ -182,7 +184,7 @@ export default {
 
 /* PDF 容器样式 */
 .pdf-container {
-  height: calc(100vh - 60px);
+  height: calc(100vh - 70px);
   background-color: #f0f2f5;
   position: relative;
   border: 1px solid #e2e8f0;
@@ -192,10 +194,11 @@ export default {
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
+
 .pdf-viewer {
   width: 100%;
-  height: 100%;
-  border: none;
+  height: 100%; /* 改为 100% 填充父容器 */
+  min-height: 500px; /* 添加最小高度保障 */
 }
 
 .pdf-loading {
@@ -278,6 +281,10 @@ export default {
   
   :deep(.splitpanes) {
     height: calc(100vh - 50px) !important;
+  }
+
+  :deep(.splitpanes__pane) {
+    height: 100% !important; /* 强制填充可用高度 */
   }
 }
 </style>

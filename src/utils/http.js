@@ -10,7 +10,7 @@ const BASE_URL = 'https://43.143.228.56:8000';
  */
 const http = axios.create({
   baseURL: BASE_URL,
-  timeout: 20000,
+  timeout: 100000,
   headers: {
     'Content-Type': 'application/json'
   }
