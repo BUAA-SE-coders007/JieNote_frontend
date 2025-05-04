@@ -56,6 +56,10 @@ const routes = [
         component: Note,
       },
       {
+        path: "/admin/note/:note_id",
+        component: Note,
+      },
+      {
         path: "/admin/dashboard",
         component: Dashboard,
       },

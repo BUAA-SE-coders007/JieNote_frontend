@@ -33,7 +33,7 @@
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
 import { ref, onMounted, watch, computed } from 'vue';
-import { updateNote } from '@/api/note';
+import { updateNote, getNotes } from '@/api/note';
 import { ElMessage } from 'element-plus';
 
 export default {
@@ -108,10 +108,17 @@ export default {
     // 设置语言
     const language = 'zh-CN';
 
-    // 监听值变化
+    // 监听值变化和noteId变化
     watch(() => props.modelValue, (newValue) => {
       if (newValue !== content.value) {
         content.value = newValue;
+      }
+    });
+    
+    // 监听noteId变化，以便加载不同的笔记
+    watch(() => props.noteId, async (newNoteId, oldNoteId) => {
+      if (newNoteId && newNoteId !== oldNoteId) {
+        await fetchNoteContent(newNoteId);
       }
     });
 
@@ -163,7 +170,30 @@ export default {
       }
     };
 
-    onMounted(() => {
+    // 获取笔记内容
+    const fetchNoteContent = async (noteId) => {
+      try {
+        const response = await getNotes({ id: noteId });
+        if (response && response.status === 200 && response.data.notes && response.data.notes.length > 0) {
+          content.value = response.data.notes[0].content || '';
+          emit('update:modelValue', content.value);
+          return content.value;
+        }
+        return null;
+      } catch (error) {
+        console.error('获取笔记内容失败:', error);
+        ElMessage.error('获取笔记内容失败');
+        return null;
+      }
+    };
+
+    onMounted(async () => {
+      // 如果有noteId，则获取笔记内容
+      if (props.noteId) {
+        await fetchNoteContent(props.noteId);
+      }
+      
+      // 自动聚焦
       if (props.autoFocus && mdEditorRef.value) {
         mdEditorRef.value.focus();
       }
@@ -202,6 +232,7 @@ export default {
       handleUploadImg,
       insertContent,
       getValue,
+      fetchNoteContent, // 导出这个方法供外部使用
     };
   },
 };
