@@ -31,7 +31,9 @@
         :autoFocus="true"
         :fullHeight="true"
         :hideToolbar="true"
+        :dragWidth="editorDragWidth"
         @save="updateNote"
+        @dragWidth="handleDragWidthChange"
       />
     </div>
   </div>
@@ -50,6 +52,7 @@ export default {
   setup() {
     const noteContent = ref("");
     const router = useRouter();
+    const editorDragWidth = ref("50%"); // 默认编辑区和预览区各占50%
     
     // 简化的处理函数
     const handleSave = () => {
@@ -59,11 +62,19 @@ export default {
     const handleBack = () => {
       router.push('/admin/dashboard');
     };
+    
+    // 处理编辑区与预览区宽度比例变化
+    const handleDragWidthChange = (width) => {
+      editorDragWidth.value = width;
+      console.log('编辑器宽度比例变化:', width);
+    };
 
     return {
       noteContent,
+      editorDragWidth,
       handleSave,
       handleBack,
+      handleDragWidthChange,
       // 简单的占位符函数，实际逻辑由MdEditor组件内部处理
       updateNote: () => {}
     };
