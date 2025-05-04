@@ -506,7 +506,7 @@ export default {
           article_id: currentEditNode.value.true_id,
           content: newTag.value.trim()
         }
-        const res = await fetch(`http://43.143.228.56:8000/article/createTag`, {
+        const res = await fetch(`https://43.143.228.56:8000/article/createTag`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -527,7 +527,7 @@ export default {
     // 删除标签
     const removeTag = async (index) => {
       //向后端发送请求
-      const res = await fetch(`http://43.143.228.56:8000/article/deleteTag?tag_id=${currentEditNode.value.tags[index].tag_id}`, {
+      const res = await fetch(`https://43.143.228.56:8000/article/deleteTag?tag_id=${currentEditNode.value.tags[index].tag_id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': 'Bearer ' + localStorage.getItem('token')
@@ -549,7 +549,7 @@ export default {
         tag_contents: currentEditNode.value.tags.map(tag => tag.tag_content)
       }
       console.log(tagdata.tag_contents)
-      const res = await fetch(`http://43.143.228.56:8000/article/allTagsOrder`, {
+      const res = await fetch(`https://43.143.228.56:8000/article/allTagsOrder`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -576,7 +576,7 @@ export default {
           }
           console.log('this is zheli')
           console.log(nodeData)
-          const res = await fetch(`http://43.143.228.56:8000/article/changeFolderName`, {
+          const res = await fetch(`https://43.143.228.56:8000/article/changeFolderName`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -596,7 +596,7 @@ export default {
             article_id: currentEditNode.value.true_id,
             article_name: currentEditNode.value.label
           }
-          const res = await fetch(`http://43.143.228.56:8000/article/changeArticleName`, {
+          const res = await fetch(`https://43.143.228.56:8000/article/changeArticleName`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -616,7 +616,7 @@ export default {
           if (!noteName.endsWith('.md')) {
             noteName += '.md'
           }
-          const res = await fetch(`http://43.143.228.56:8000/notes/${currentEditNode.value.true_id}?title=${noteName}`, {
+          const res = await fetch(`https://43.143.228.56:8000/notes/${currentEditNode.value.true_id}?title=${noteName}`, {
             method: 'PUT',
             headers: {
               'Authorization': 'Bearer ' + localStorage.getItem('token')
@@ -669,7 +669,7 @@ export default {
 
     // // 更新标签到后端
     // const updateTags = async () => {
-    //   // const res = await fetch(`http://43.143.228.56:8000/article/allTagsOrder`, {
+    //   // const res = await fetch(`https://43.143.228.56:8000/article/allTagsOrder`, {
     //   //   method: 'POST',
     //   //   headers: {
     //   //     'Content-Type': 'application/json',
@@ -689,7 +689,7 @@ export default {
     //     tag_contents: currentEditNode.value.tags.map(tag => tag.tag_content)
     //   }
     //   console.log(tagdata.tag_contents)
-    //   const res = await fetch(`http://43.143.228.56:8000/article/allTagsOrder`, {
+    //   const res = await fetch(`https://43.143.228.56:8000/article/allTagsOrder`, {
     //     method: 'POST',
     //     headers: {
     //       'Content-Type': 'application/json',
@@ -977,7 +977,7 @@ export default {
                 filePromises.push(
                     (async () => {
                       try {
-                        const res = await fetch(`http://43.143.228.56:8000/article/readArticle?article_id=${level2Node.true_id}`, {
+                        const res = await fetch(`https://43.143.228.56:8000/article/readArticle?article_id=${level2Node.true_id}`, {
                           headers: {
                             'Authorization': 'Bearer ' + localStorage.getItem('token')
                           }
@@ -1109,7 +1109,7 @@ export default {
       // 判断节点类型
       if (parent.parent === null) {
         // 如果父节点的父节点是null，说明当前节点是一级分类
-        const res = await fetch(`http://43.143.228.56:8000/article/selfFolderToRecycleBin?folder_id=${node.data.true_id}`, {
+        const res = await fetch(`https://43.143.228.56:8000/article/selfFolderToRecycleBin?folder_id=${node.data.true_id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': 'Bearer ' + localStorage.getItem('token')
@@ -1129,7 +1129,7 @@ export default {
         console.log(res);
       } else if (node.level === 2) {
         // 二级分类
-        const res = await fetch(`http://43.143.228.56:8000/article/selfArticleToRecycleBin?article_id=${node.data.true_id}`, {
+        const res = await fetch(`https://43.143.228.56:8000/article/selfArticleToRecycleBin?article_id=${node.data.true_id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': 'Bearer ' + localStorage.getItem('token')
@@ -1149,7 +1149,7 @@ export default {
         console.log(res);
       } else {
         //三级分类
-        const res = await fetch(`http://43.143.228.56:8000/notes/${node.data.true_id}`, {
+        const res = await fetch(`https://43.143.228.56:8000/notes/${node.data.true_id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': 'Bearer ' + localStorage.getItem('token')
@@ -1202,7 +1202,7 @@ export default {
         folder_name: newCategoryForm.value.name,
       }
 
-      const res = await fetch("http://43.143.228.56:8000/article/selfCreateFolder", {
+      const res = await fetch("https://43.143.228.56:8000/article/selfCreateFolder", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1268,7 +1268,7 @@ export default {
           content: "<p> 12 <p>",
         }
         showNewNoteDialog.value = false
-        const res = await fetch("http://43.143.228.56:8000/notes", {
+        const res = await fetch("https://43.143.228.56:8000/notes", {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1311,7 +1311,7 @@ export default {
 
     const fetchTags = async (articleId) => {
       try {
-        const res = await fetch(`http://43.143.228.56:8000/article/getArticleTags?article_id=${articleId}`,{
+        const res = await fetch(`https://43.143.228.56:8000/article/getArticleTags?article_id=${articleId}`,{
           headers: {
             'Authorization': 'Bearer ' + localStorage.getItem('token')
           }
@@ -1331,7 +1331,7 @@ export default {
         id = 0
         console.log(localStorage.getItem('token'))
         console.log('拿一级目录');
-        const url = new URL('http://43.143.228.56:8000/article/getSelfFolders', window.location.origin);
+        const url = new URL('https://43.143.228.56:8000/article/getSelfFolders', window.location.origin);
         url.searchParams.append('page_number', currentPage.value);
         url.searchParams.append('page_size', pageSize.value);
         const res = await fetch(url, {
@@ -1357,7 +1357,7 @@ export default {
           };
 
           // 获取二级目录
-          const secondRes = await fetch(`http://43.143.228.56:8000/article/getArticlesInFolder?folder_id=${folder.folder_id}`, {
+          const secondRes = await fetch(`https://43.143.228.56:8000/article/getArticlesInFolder?folder_id=${folder.folder_id}`, {
             headers: {
               'Authorization': 'Bearer ' + localStorage.getItem('token')
             }
@@ -1378,7 +1378,7 @@ export default {
             };
 
             // 获取三级目录
-            const thirdRes = await fetch(`http://43.143.228.56:8000/notes?article_id=${article.article_id}`, {
+            const thirdRes = await fetch(`https://43.143.228.56:8000/notes?article_id=${article.article_id}`, {
               type: 'GET',
               headers: {
                 'Authorization': 'Bearer ' + localStorage.getItem('token')
@@ -1440,7 +1440,7 @@ export default {
         console.log(pdfUploadForm.value.parentNode)
 
         // 发送文件到后端
-        const res = await fetch(`http://43.143.228.56:8000/article/uploadToSelfFolder?folder_id=${pdfUploadForm.value.parentNode.data.true_id}`, {
+        const res = await fetch(`https://43.143.228.56:8000/article/uploadToSelfFolder?folder_id=${pdfUploadForm.value.parentNode.data.true_id}`, {
           method: 'POST',
           headers: {
             'Authorization': 'Bearer ' + localStorage.getItem('token')
