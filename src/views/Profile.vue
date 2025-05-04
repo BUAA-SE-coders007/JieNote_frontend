@@ -328,7 +328,7 @@ export default {
         // 调用修改密码接口
         const token = localStorage.getItem("authToken")
         const response = await axios.post(
-            "http://43.143.228.56:8000/user/password",
+            "https://43.143.228.56:8000/user/password",
             {
               old_password: this.passwordForm.oldPassword,
               new_password: this.passwordForm.newPassword
@@ -376,7 +376,7 @@ export default {
           return;
         }
 
-        const response = await axios.get("http://43.143.228.56:8000/notes", {
+        const response = await axios.get("https://43.143.228.56:8000/notes", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -403,7 +403,7 @@ export default {
           return;
         }
 
-        const response = await axios.get("http://43.143.228.56:8000/user", {
+        const response = await axios.get("https://43.143.228.56:8000/user", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -415,7 +415,7 @@ export default {
           id: userData.id,
           username: userData.username || `user_${userData.id}`,
           avatar: userData.avatar
-              ? `http://43.143.228.56:8000${userData.avatar}`
+              ? `https://43.143.228.56:8000${userData.avatar}`
               : team2,
           address: userData.address || "未知",
           university: userData.university || "未知",
