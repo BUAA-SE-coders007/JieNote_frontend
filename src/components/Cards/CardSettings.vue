@@ -158,6 +158,7 @@ export default {
   data() {
     return {
       form: { ...this.userData },
+      previewAvatar: null, // 新增预览URL变量
       initialForm: { ...this.userData }, // 保存初始数据用于比较
       avatar: null,
       showChangePassword: false, // 控制修改密码窗口显示
@@ -247,6 +248,12 @@ export default {
     },
     handleFileUpload(event) {
       this.avatar = event.target.files[0]; // 获取上传的文件
+      if (this.avatar) {
+        // 生成本地预览URL
+        this.previewAvatar = URL.createObjectURL(this.avatar);
+      } else {
+        this.previewAvatar = null
+      }
     },
     async submitSettings() {
       try {
@@ -257,25 +264,27 @@ export default {
         formData.append("address", this.form.address || "");
         formData.append("university", this.form.university || "");
         formData.append("introduction", this.form.introduction || "");
+        console.log(this.avatar)
 
         if (this.avatar) {
           formData.append("avatar", this.avatar);
+          console.log(this.avatar)
         }
 
         console.log(formData)
 
-        const response = await axios.put("http://43.143.228.56:8000/user", formData, {
+        const response = await axios.put("https://jienote.top/user", formData, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
         });
 
+        console.log(response)
+
         this.$emit("update-user", {
           ...this.form,
-          avatar: response.data.avatar
-              ? `http://43.143.228.56:8000${response.data.avatar}`
-              : this.userData.avatar
+          avatar: this.previewAvatar || this.userData.avatar
         });
         return true;
       } catch (error) {

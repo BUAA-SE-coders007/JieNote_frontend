@@ -15,6 +15,10 @@ module.exports = {
     }
   },
   chainWebpack: (config) => {
+    config.devServer
+        .hot(true)
+        .inline(true)
+        .overlay(true)
     config.plugin('code-inspector-plugin').use(
       codeInspectorPlugin({
         bundler: 'webpack',
@@ -27,6 +31,8 @@ module.exports = {
       .add(path.resolve(__dirname, './node_modules'));
   },
   configureWebpack: {
+    cache: true,
+    devtool: 'cheap-module-source-map',
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'),
