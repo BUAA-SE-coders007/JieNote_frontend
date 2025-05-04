@@ -328,7 +328,7 @@ export default {
         // 调用修改密码接口
         const token = localStorage.getItem("authToken")
         const response = await axios.post(
-            "http://43.143.228.56:8000/user/password",
+            "https://jienote.top/user/password",
             {
               old_password: this.passwordForm.oldPassword,
               new_password: this.passwordForm.newPassword
@@ -376,7 +376,7 @@ export default {
           return;
         }
 
-        const response = await axios.get("http://43.143.228.56:8000/notes", {
+        const response = await axios.get("https://jienote.top/notes", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -403,7 +403,7 @@ export default {
           return;
         }
 
-        const response = await axios.get("http://43.143.228.56:8000/user", {
+        const response = await axios.get("https://jienote.top/user", {
           headers: {
             Authorization: `Bearer ${token}`,
           },

@@ -539,7 +539,7 @@ export default {
           article_id: currentEditNode.value.true_id,
           content: newTag.value.trim()
         }
-        const res = await fetch(`http://43.143.228.56:8000/article/createTag`, {
+        const res = await fetch(`https://jienote.top/article/createTag`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -549,9 +549,9 @@ export default {
         })
 
         if (res.ok) {
-          ElMessage.success('标签添加成功')
+          console.log('标签添加成功')
         } else {
-          ElMessage.error('标签添加失败')
+          console.log('标签添加失败')
         }
         newTag.value = ''
       }
@@ -560,7 +560,7 @@ export default {
     // 删除标签
     const removeTag = async (index) => {
       //向后端发送请求
-      const res = await fetch(`http://43.143.228.56:8000/article/deleteTag?tag_id=${currentEditNode.value.tags[index].tag_id}`, {
+      const res = await fetch(`https://jienote.top/article/deleteTag?tag_id=${currentEditNode.value.tags[index].tag_id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': 'Bearer ' + localStorage.getItem('authToken')
@@ -568,9 +568,9 @@ export default {
       })
       if (res.ok) {
         currentEditNode.value.tags.splice(index, 1)
-        ElMessage.success('标签删除成功')
+        console.log('标签删除成功')
       } else {
-        ElMessage.error('标签删除失败')
+        console.log('标签删除失败')
       }
     }
 
@@ -582,7 +582,7 @@ export default {
         tag_contents: currentEditNode.value.tags.map(tag => tag.tag_content)
       }
       console.log(tagdata.tag_contents)
-      const res = await fetch(`http://43.143.228.56:8000/article/allTagsOrder`, {
+      const res = await fetch(`https://jienote.top/article/allTagsOrder`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -591,9 +591,9 @@ export default {
         body: JSON.stringify(tagdata)
       })
       if (res.ok) {
-        ElMessage.success('标签顺序已更新')
+        console.log('标签顺序已更新')
       } else {
-        ElMessage.error('标签顺序更新失败')
+        console.log('标签顺序更新失败')
       }
     }
 
@@ -609,7 +609,7 @@ export default {
           }
           console.log('this is zheli')
           console.log(nodeData)
-          const res = await fetch(`http://43.143.228.56:8000/article/changeFolderName`, {
+          const res = await fetch(`https://jienote.top/article/changeFolderName`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -629,7 +629,7 @@ export default {
             article_id: currentEditNode.value.true_id,
             article_name: currentEditNode.value.label
           }
-          const res = await fetch(`http://43.143.228.56:8000/article/changeArticleName`, {
+          const res = await fetch(`https://jienote.top/article/changeArticleName`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -649,7 +649,7 @@ export default {
           if (!noteName.endsWith('.md')) {
             noteName += '.md'
           }
-          const res = await fetch(`http://43.143.228.56:8000/notes/${currentEditNode.value.true_id}?title=${noteName}`, {
+          const res = await fetch(`https://jienote.top/notes/${currentEditNode.value.true_id}?title=${noteName}`, {
             method: 'PUT',
             headers: {
               'Authorization': 'Bearer ' + localStorage.getItem('authToken')
@@ -702,7 +702,7 @@ export default {
 
     // // 更新标签到后端
     // const updateTags = async () => {
-    //   // const res = await fetch(`http://43.143.228.56:8000/article/allTagsOrder`, {
+    //   // const res = await fetch(`https://jienote.top/article/allTagsOrder`, {
     //   //   method: 'POST',
     //   //   headers: {
     //   //     'Content-Type': 'application/json',
@@ -722,7 +722,7 @@ export default {
     //     tag_contents: currentEditNode.value.tags.map(tag => tag.tag_content)
     //   }
     //   console.log(tagdata.tag_contents)
-    //   const res = await fetch(`http://43.143.228.56:8000/article/allTagsOrder`, {
+    //   const res = await fetch(`https://jienote.top/article/allTagsOrder`, {
     //     method: 'POST',
     //     headers: {
     //       'Content-Type': 'application/json',
@@ -1010,7 +1010,7 @@ export default {
                 filePromises.push(
                     (async () => {
                       try {
-                        const res = await fetch(`http://43.143.228.56:8000/article/readArticle?article_id=${level2Node.true_id}`, {
+                        const res = await fetch(`https://jienote.top/article/readArticle?article_id=${level2Node.true_id}`, {
                           headers: {
                             'Authorization': 'Bearer ' + localStorage.getItem('authToken')
                           }
@@ -1142,7 +1142,7 @@ export default {
       // 判断节点类型
       if (parent.parent === null) {
         // 如果父节点的父节点是null，说明当前节点是一级分类
-        const res = await fetch(`http://43.143.228.56:8000/article/selfFolderToRecycleBin?folder_id=${node.data.true_id}`, {
+        const res = await fetch(`https://jienote.top/article/selfFolderToRecycleBin?folder_id=${node.data.true_id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': 'Bearer ' + localStorage.getItem('authToken')
@@ -1168,7 +1168,7 @@ export default {
         console.log(res);
       } else if (node.level === 2) {
         // 二级分类
-        const res = await fetch(`http://43.143.228.56:8000/article/selfArticleToRecycleBin?article_id=${node.data.true_id}`, {
+        const res = await fetch(`https://jienote.top/article/selfArticleToRecycleBin?article_id=${node.data.true_id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': 'Bearer ' + localStorage.getItem('authToken')
@@ -1176,7 +1176,7 @@ export default {
         })
         if (!res.ok) {
           ElMessage({
-            message: '删除文件失败',
+            message: '删除文献失败',
             type: 'error'
           })
         } else {
@@ -1194,7 +1194,7 @@ export default {
         console.log(res);
       } else {
         //三级分类
-        const res = await fetch(`http://43.143.228.56:8000/notes/${node.data.true_id}`, {
+        const res = await fetch(`https://jienote.top/notes/${node.data.true_id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': 'Bearer ' + localStorage.getItem('authToken')
@@ -1205,7 +1205,7 @@ export default {
         console.log(res)
         if (!res.ok) {
           ElMessage({
-            message: '删除文件失败',
+            message: '删除笔记失败',
             type: 'error'
           })
         } else {
@@ -1239,20 +1239,12 @@ export default {
         return
       }
 
-      const newCategory = {
-        id: id++,
-        label: newCategoryForm.value.name,
-        depth: 0,
-        children: []
-      }
-      dataSource.value.push(newCategory)
-      dataSource.value = [...dataSource.value]
       //新建文件夹的信息传回后端
       const newFolderData = {
         folder_name: newCategoryForm.value.name,
       }
 
-      const res = await fetch("http://43.143.228.56:8000/article/selfCreateFolder", {
+      const res = await fetch("https://jienote.top/article/selfCreateFolder", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1272,6 +1264,15 @@ export default {
         })
       }
       if (res.ok) {
+        const newCategory = {
+          id: id++,
+          label: newCategoryForm.value.name,
+          depth: 0,
+          true_id: data.folder_id,
+          children: []
+        }
+        dataSource.value.push(newCategory)
+        dataSource.value = [...dataSource.value]
         await refreshData(); // 新增
         ElMessage.success('新建分类成功');
       }
@@ -1294,21 +1295,6 @@ export default {
           noteName += '.md'
         }
 
-        // 创建新节点
-        const newChild = {
-          id: id++,
-          label: noteName,
-          depth:2,
-          children: []
-        }
-
-        // 添加到父节点
-        if (!newNoteForm.value.parentData.children) {
-          newNoteForm.value.parentData.children = []
-        }
-        newNoteForm.value.parentData.children.push(newChild)
-        dataSource.value = [...dataSource.value]
-
 
 
         // 创建笔记的信息传回后端
@@ -1317,7 +1303,7 @@ export default {
           article_id: newNoteForm.value.parentData.true_id,
           content: "",
         }
-        const res = await fetch("http://43.143.228.56:8000/notes", {
+        const res = await fetch("https://jienote.top/notes", {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1332,7 +1318,21 @@ export default {
         const data = await res.json();
         console.log(data);
         if (res.ok) {
-          await refreshData();
+          // 创建新节点
+          const newChild = {
+            id: id++,
+            label: noteName,
+            depth:2,
+            true_id:data.note_id,
+            children: []
+          }
+
+          // 添加到父节点
+          if (!newNoteForm.value.parentData.children) {
+            newNoteForm.value.parentData.children = []
+          }
+          newNoteForm.value.parentData.children.push(newChild)
+          dataSource.value = [...dataSource.value]
           ElMessage.success('笔记创建成功');
         }
         showNewNoteDialog.value = false
@@ -1359,7 +1359,7 @@ export default {
 
     const fetchTags = async (articleId) => {
       try {
-        const res = await fetch(`http://43.143.228.56:8000/article/getArticleTags?article_id=${articleId}`,{
+        const res = await fetch(`https://jienote.top/article/getArticleTags?article_id=${articleId}`,{
           headers: {
             'Authorization': 'Bearer ' + localStorage.getItem('authToken')
           }
@@ -1374,160 +1374,160 @@ export default {
 
     //这个是新写的
 
-    const findAllfolders = async () => {
-      try {
-        id = 0
-        console.log(localStorage.getItem('authToken'))
-        console.log('拿一级目录');
-        const url = new URL('http://43.143.228.56:8000/article/getSelfFolders', window.location.origin);
-        url.searchParams.append('page_number', currentPage.value);
-        url.searchParams.append('page_size', pageSize.value);
-        const res = await fetch(url, {
-          headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-          }
-        });
-        const data = await res.json();
-        console.log('this is folder-data')
-        console.log(data)
-        totalFolders.value = data.total_num
-        console.log(totalFolders)
-
-        const transformedData = [];
-        // 使用Promise.all并行处理一级目录
-        await Promise.all(data.result.map(async folder => {
-          const firstLevel = {
-            id: id++,
-            true_id:folder.folder_id,
-            label: folder.folder_name,
-            depth: 0,
-            children: []
-          };
-
-          // 获取二级目录
-          const secondRes = await fetch(`http://43.143.228.56:8000/article/getArticlesInFolder?folder_id=${folder.folder_id}`, {
-            headers: {
-              'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-            }
-          });
-          const secondData = await secondRes.json();
-          console.log('this is second-data')
-          console.log(secondData.result)
-
-          // 并行处理二级目录
-          firstLevel.children = await Promise.all(secondData.result.map(async article => {
-            const secondLevel = {
-              id: id++,
-              true_id:article.article_id,
-              label: article.article_name,
-              tags: await fetchTags(article.article_id),
-              depth: 1,
-              children: []
-            };
-
-            // 获取三级目录
-            const thirdRes = await fetch(`http://43.143.228.56:8000/notes?article_id=${article.article_id}`, {
-              type: 'GET',
-              headers: {
-                'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-              }
-            });
-            const thirdData = await thirdRes.json();
-            console.log('this is third-data')
-            console.log(thirdData)
-            console.log(thirdData.notes)
-
-            if (thirdData.notes?.length) {
-              secondLevel.children = thirdData.notes.map(item => ({
-                id: id++,
-                true_id:item.id,
-                label: item.title,
-                depth: 2,
-                content: item.content
-              }));
-            }
-            return secondLevel;
-          }));
-
-          transformedData.push(firstLevel);
-        }));
-
-        dataSource.value = transformedData;
-        console.log('数据转换完成:', transformedData);
-      } catch (error) {
-        console.error('数据加载失败:', error);
-        throw error; // 抛出错误供外层捕获
-      }
-    };
-
     // const findAllfolders = async () => {
     //   try {
-    //     let id = 0; // 自增ID生成器
-    //     console.log('开始加载完整文件树');
-    //
-    //     // 1. 一次性获取完整文件树数据
-    //     const response = await fetch('http://43.143.228.56:8000/article/selfTree', {
+    //     id = 0
+    //     console.log(localStorage.getItem('authToken'))
+    //     console.log('拿一级目录');
+    //     const url = new URL('https://jienote.top/article/getSelfFolders', window.location.origin);
+    //     url.searchParams.append('page_number', currentPage.value);
+    //     url.searchParams.append('page_size', pageSize.value);
+    //     const res = await fetch(url, {
     //       headers: {
     //         'Authorization': 'Bearer ' + localStorage.getItem('authToken')
     //       }
     //     });
-    //     const data = await response.json();
-    //     console.log('完整文件树原始数据:', data);
+    //     const data = await res.json();
+    //     console.log('this is folder-data')
+    //     console.log(data)
+    //     totalFolders.value = data.total_num
+    //     console.log(totalFolders)
     //
-    //     // 2. 转换数据结构
-    //     const transformedData = data.folders.map(folder => {
-    //       // 一级节点：文件夹
-    //       const folderNode = {
+    //     const transformedData = [];
+    //     // 使用Promise.all并行处理一级目录
+    //     await Promise.all(data.result.map(async folder => {
+    //       const firstLevel = {
     //         id: id++,
-    //         true_id: folder.folder_id,
+    //         true_id:folder.folder_id,
     //         label: folder.folder_name,
     //         depth: 0,
     //         children: []
     //       };
     //
-    //       // 处理二级节点：文章（并行处理标签）
-    //       folderNode.children = folder.articles.map(article => {
-    //         // 二级节点：文章
-    //         const articleNode = {
+    //       // 获取二级目录
+    //       const secondRes = await fetch(`https://jienote.top/article/getArticlesInFolder?folder_id=${folder.folder_id}`, {
+    //         headers: {
+    //           'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+    //         }
+    //       });
+    //       const secondData = await secondRes.json();
+    //       console.log('this is second-data')
+    //       console.log(secondData.result)
+    //
+    //       // 并行处理二级目录
+    //       firstLevel.children = await Promise.all(secondData.result.map(async article => {
+    //         const secondLevel = {
     //           id: id++,
-    //           true_id: article.article_id,
+    //           true_id:article.article_id,
     //           label: article.article_name,
-    //           tags: [], // 先初始化，异步填充
+    //           tags: await fetchTags(article.article_id),
     //           depth: 1,
     //           children: []
     //         };
     //
-    //         // 异步获取标签（不阻塞主流程）
-    //         fetchTags(article.article_id).then(tags => {
-    //           articleNode.tags = tags;
+    //         // 获取三级目录
+    //         const thirdRes = await fetch(`https://jienote.top/notes?article_id=${article.article_id}`, {
+    //           type: 'GET',
+    //           headers: {
+    //             'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+    //           }
     //         });
+    //         const thirdData = await thirdRes.json();
+    //         console.log('this is third-data')
+    //         console.log(thirdData)
+    //         console.log(thirdData.notes)
     //
-    //         // 处理三级节点：笔记
-    //         articleNode.children = article.notes.map(note => ({
-    //           id: id++,
-    //           true_id: note.note_id,
-    //           label: note.note_title,
-    //           depth: 2,
-    //           content: note.content || '' // 根据实际接口字段调整
-    //         }));
+    //         if (thirdData.notes?.length) {
+    //           secondLevel.children = thirdData.notes.map(item => ({
+    //             id: id++,
+    //             true_id:item.id,
+    //             label: item.title,
+    //             depth: 2,
+    //             content: item.content
+    //           }));
+    //         }
+    //         return secondLevel;
+    //       }));
     //
-    //         return articleNode;
-    //       });
+    //       transformedData.push(firstLevel);
+    //     }));
     //
-    //       return folderNode;
-    //     });
-    //
-    //     // 3. 更新响应式数据
     //     dataSource.value = transformedData;
-    //     totalFolders.value = data.total_folder_num;
-    //     console.log('转换后的树形数据:', transformedData);
-    //
+    //     console.log('数据转换完成:', transformedData);
     //   } catch (error) {
-    //     console.error('文件树加载失败:', error);
-    //     ElMessage.error('数据加载失败，请检查网络或权限');
-    //     throw error;
+    //     console.error('数据加载失败:', error);
+    //     throw error; // 抛出错误供外层捕获
     //   }
     // };
+
+    const findAllfolders = async () => {
+      try {
+        id = 0; // 自增ID生成器
+        console.log('开始加载完整文件树');
+
+        // 1. 一次性获取完整文件树数据
+        const response = await fetch('https://jienote.top/article/selfTree', {
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+          }
+        });
+        const data = await response.json();
+        console.log('完整文件树原始数据:', data);
+
+        // 2. 转换数据结构
+        const transformedData = data.folders.map(folder => {
+          // 一级节点：文件夹
+          const folderNode = {
+            id: id++,
+            true_id: folder.folder_id,
+            label: folder.folder_name,
+            depth: 0,
+            children: []
+          };
+
+          // 处理二级节点：文章（并行处理标签）
+          folderNode.children = folder.articles.map(article => {
+            // 二级节点：文章
+            const articleNode = {
+              id: id++,
+              true_id: article.article_id,
+              label: article.article_name,
+              tags: [], // 先初始化，异步填充
+              depth: 1,
+              children: []
+            };
+
+            // 异步获取标签（不阻塞主流程）
+            fetchTags(article.article_id).then(tags => {
+              articleNode.tags = tags;
+            });
+
+            // 处理三级节点：笔记
+            articleNode.children = article.notes.map(note => ({
+              id: id++,
+              true_id: note.note_id,
+              label: note.note_title,
+              depth: 2,
+              content: note.content || '' // 根据实际接口字段调整
+            }));
+
+            return articleNode;
+          });
+
+          return folderNode;
+        });
+
+        // 3. 更新响应式数据
+        dataSource.value = transformedData;
+        totalFolders.value = data.total_folder_num;
+        console.log('转换后的树形数据:', transformedData);
+
+      } catch (error) {
+        console.error('文件树加载失败:', error);
+        ElMessage.error('数据加载失败，请检查网络或权限');
+        throw error;
+      }
+    };
 
 
 
@@ -1559,7 +1559,7 @@ export default {
         console.log(pdfUploadForm.value.parentNode)
 
         // 发送文件到后端
-        const res = await fetch(`http://43.143.228.56:8000/article/uploadToSelfFolder?folder_id=${pdfUploadForm.value.parentNode.data.true_id}`, {
+        const res = await fetch(`https://jienote.top/article/uploadToSelfFolder?folder_id=${pdfUploadForm.value.parentNode.data.true_id}`, {
           method: 'POST',
           headers: {
             'Authorization': 'Bearer ' + localStorage.getItem('authToken')
@@ -1568,28 +1568,29 @@ export default {
         })
 
         console.log(res)
+        const data = await res.json();
 
         if (!res.ok) {
           throw new Error('上传失败')
         }
 
         // 创建新节点
-        const newChild = {
-          id: pdfUploadForm.value.parentNode.id || id++,
-          label: `${fileName}.pdf`,
-          depth: 1,
-          tags:[],
-          children: []
-        }
-
-        // 添加到父节点
-        if (!pdfUploadForm.value.parentData.children) {
-          pdfUploadForm.value.parentData.children = []
-        }
-        pdfUploadForm.value.parentData.children.push(newChild)
-        dataSource.value = [...dataSource.value]
         if (res.ok) {
-          await refreshData(); // 新增
+          const newChild = {
+            id: pdfUploadForm.value.parentNode.id || id++,
+            label: `${fileName}.pdf`,
+            depth: 1,
+            true_id: data.article_id,
+            tags:[],
+            children: []
+          }
+
+          // 添加到父节点
+          if (!pdfUploadForm.value.parentData.children) {
+            pdfUploadForm.value.parentData.children = []
+          }
+          pdfUploadForm.value.parentData.children.push(newChild)
+          dataSource.value = [...dataSource.value]
           ElMessage.success('PDF上传成功');
         }
         // 关闭弹窗
@@ -1729,6 +1730,11 @@ export default {
     color: #333;
     font-weight: 600;
     padding-left: 8px;
+    white-space: nowrap; /* 不换行 */
+    overflow: hidden; /* 超出隐藏 */
+    text-overflow: ellipsis; /* 用省略号表示超出部分 */
+    max-width: calc(100% - 50%); /* 根据布局调整最大宽度，避免挤占标签和按钮 */
+    flex-shrink: 1; /* 可以缩小以适应布局 */
   }
 
   .node-actions {
@@ -2341,5 +2347,7 @@ export default {
   opacity: 0;
   transform: translateX(30px);
 }
+
+
 
 </style>
