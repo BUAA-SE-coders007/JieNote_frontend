@@ -342,7 +342,7 @@
     </div>
     <el-dialog
         v-model="showEditDialog"
-        :title="`编辑 ${currentEditNode?.label}`"
+        :title="`编辑`"
         width="500px"
         :close-on-click-modal="false"
     >
@@ -376,6 +376,11 @@
                   </template>
                 </draggable>
               </transition-group>
+
+              <!-- 新增提示文字 -->
+              <div v-if="currentEditNode.tags.length > 0" class="priority-hint">
+                （优先展示前三个标签）
+              </div>
             </div>
 
             <!-- 添加新标签 -->
@@ -485,6 +490,34 @@ export default {
     const currentEditNode = ref(null)
     const newTag = ref('')
 
+    const refreshData = async () => {
+      // isLoading.value = true;
+      try {
+        // 先获取当前总数量
+        // const preTotal = totalFolders.value;
+
+        // 获取最新数据
+        await findAllfolders();
+
+        // 计算删除后是否需要调整页码
+        const currentTotal = totalFolders.value;
+        const maxPage = Math.ceil(currentTotal / pageSize.value);
+
+        // 如果总数量减少且当前页超过最大页数
+        if (currentPage.value > maxPage && maxPage > 0) {
+          currentPage.value = maxPage;
+          await findAllfolders();
+        }
+
+        // 保持当前页展开状态
+        setInitialExpandedKeys();
+      } catch (error) {
+        ElMessage.error('刷新数据失败: ' + error.message);
+      } finally {
+        isLoading.value = false;
+      }
+    };
+
     // 打开编辑弹窗
     const openEditDialog = (node, data) => {
       currentEditNode.value = {
@@ -510,7 +543,7 @@ export default {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + localStorage.getItem('token')
+            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
           },
           body: JSON.stringify(tagdata)
         })
@@ -530,7 +563,7 @@ export default {
       const res = await fetch(`http://43.143.228.56:8000/article/deleteTag?tag_id=${currentEditNode.value.tags[index].tag_id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': 'Bearer ' + localStorage.getItem('token')
+          'Authorization': 'Bearer ' + localStorage.getItem('authToken')
         },
       })
       if (res.ok) {
@@ -553,7 +586,7 @@ export default {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('token')
+          'Authorization': 'Bearer ' + localStorage.getItem('authToken')
         },
         body: JSON.stringify(tagdata)
       })
@@ -580,13 +613,13 @@ export default {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + localStorage.getItem('token')
+              'Authorization': 'Bearer ' + localStorage.getItem('authToken')
             },
             body: JSON.stringify(nodeData)
           })
           console.log(res)
           if (res.ok) {
-            ElMessage.success('节点名称更新成功')
+            console.log(1)
           } else {
             ElMessage.error('节点名称更新失败')
           }
@@ -600,12 +633,12 @@ export default {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + localStorage.getItem('token')
+              'Authorization': 'Bearer ' + localStorage.getItem('authToken')
             },
             body: JSON.stringify(nodeData)
           })
           if (res.ok) {
-            ElMessage.success('节点名称更新成功')
+            console.log(1)
           } else {
             ElMessage.error('节点名称更新失败')
           }
@@ -619,12 +652,12 @@ export default {
           const res = await fetch(`http://43.143.228.56:8000/notes/${currentEditNode.value.true_id}?title=${noteName}`, {
             method: 'PUT',
             headers: {
-              'Authorization': 'Bearer ' + localStorage.getItem('token')
+              'Authorization': 'Bearer ' + localStorage.getItem('authToken')
             },
           })
           console.log(res)
           if (res.ok) {
-            ElMessage.success('节点名称更新成功')
+            console.log(1)
           } else {
             ElMessage.error('节点名称更新失败')
           }
@@ -673,7 +706,7 @@ export default {
     //   //   method: 'POST',
     //   //   headers: {
     //   //     'Content-Type': 'application/json',
-    //   //     'Authorization': 'Bearer ' + localStorage.getItem('token')
+    //   //     'Authorization': 'Bearer ' + localStorage.getItem('authToken')
     //   //   },
     //   //   body: JSON.stringify(tags.map(t => t.tag_content))
     //   // })
@@ -693,7 +726,7 @@ export default {
     //     method: 'POST',
     //     headers: {
     //       'Content-Type': 'application/json',
-    //       'Authorization': 'Bearer ' + localStorage.getItem('token')
+    //       'Authorization': 'Bearer ' + localStorage.getItem('authToken')
     //     },
     //     body: JSON.stringify(tagdata)
     //   })
@@ -979,7 +1012,7 @@ export default {
                       try {
                         const res = await fetch(`http://43.143.228.56:8000/article/readArticle?article_id=${level2Node.true_id}`, {
                           headers: {
-                            'Authorization': 'Bearer ' + localStorage.getItem('token')
+                            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
                           }
                         });
 
@@ -1112,7 +1145,7 @@ export default {
         const res = await fetch(`http://43.143.228.56:8000/article/selfFolderToRecycleBin?folder_id=${node.data.true_id}`, {
           method: 'DELETE',
           headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('token')
+            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
           }
         })
         if (!res.ok) {
@@ -1121,6 +1154,12 @@ export default {
             type: 'error'
           })
         } else {
+          const currentItems = dataSource.value.length;
+          // 如果删除的是最后一项且不是第一页
+          if (currentItems === 1 && currentPage.value > 1) {
+            currentPage.value -= 1;
+          }
+          await refreshData();
           ElMessage({
             message: '删除成功',
             type: 'success'
@@ -1132,7 +1171,7 @@ export default {
         const res = await fetch(`http://43.143.228.56:8000/article/selfArticleToRecycleBin?article_id=${node.data.true_id}`, {
           method: 'DELETE',
           headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('token')
+            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
           }
         })
         if (!res.ok) {
@@ -1141,6 +1180,12 @@ export default {
             type: 'error'
           })
         } else {
+          const currentItems = dataSource.value.length;
+          // 如果删除的是最后一项且不是第一页
+          if (currentItems === 1 && currentPage.value > 1) {
+            currentPage.value -= 1;
+          }
+          await refreshData();
           ElMessage({
             message: '删除成功',
             type: 'success'
@@ -1152,7 +1197,7 @@ export default {
         const res = await fetch(`http://43.143.228.56:8000/notes/${node.data.true_id}`, {
           method: 'DELETE',
           headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('token')
+            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
           }
         })
 
@@ -1164,7 +1209,12 @@ export default {
             type: 'error'
           })
         } else {
-          console.log('lklklk')
+          const currentItems = dataSource.value.length;
+          // 如果删除的是最后一项且不是第一页
+          if (currentItems === 1 && currentPage.value > 1) {
+            currentPage.value -= 1;
+          }
+          await refreshData();
           ElMessage({
             message: '删除成功',
             type: 'success'
@@ -1206,7 +1256,7 @@ export default {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('token')
+          'Authorization': 'Bearer ' + localStorage.getItem('authToken')
         },
         body: JSON.stringify(newFolderData)
       })
@@ -1221,11 +1271,11 @@ export default {
           type: 'error'
         })
       }
+      if (res.ok) {
+        await refreshData(); // 新增
+        ElMessage.success('新建分类成功');
+      }
       showNewCategoryDialog.value = false
-      ElMessage({
-        message: '新建分类成功',
-        type: 'success'
-      })
     }
 
     const confirmNewNote = async () => {
@@ -1265,14 +1315,13 @@ export default {
         const newNoteData = {
           title: noteName,
           article_id: newNoteForm.value.parentData.true_id,
-          content: "<p> 12 <p>",
+          content: "",
         }
-        showNewNoteDialog.value = false
         const res = await fetch("http://43.143.228.56:8000/notes", {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + localStorage.getItem('token')
+            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
           },
           body: JSON.stringify(newNoteData)
         })
@@ -1282,12 +1331,11 @@ export default {
         console.log(res);
         const data = await res.json();
         console.log(data);
-        console.log(res.json());
-
-        ElMessage({
-          message: '笔记创建成功',
-          type: 'success'
-        })
+        if (res.ok) {
+          await refreshData();
+          ElMessage.success('笔记创建成功');
+        }
+        showNewNoteDialog.value = false
       } catch (error) {
         console.error('创建笔记失败:', error)
         ElMessage({
@@ -1313,7 +1361,7 @@ export default {
       try {
         const res = await fetch(`http://43.143.228.56:8000/article/getArticleTags?article_id=${articleId}`,{
           headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('token')
+            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
           }
         });
         const data = await res.json();
@@ -1329,14 +1377,14 @@ export default {
     const findAllfolders = async () => {
       try {
         id = 0
-        console.log(localStorage.getItem('token'))
+        console.log(localStorage.getItem('authToken'))
         console.log('拿一级目录');
         const url = new URL('http://43.143.228.56:8000/article/getSelfFolders', window.location.origin);
         url.searchParams.append('page_number', currentPage.value);
         url.searchParams.append('page_size', pageSize.value);
         const res = await fetch(url, {
           headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('token')
+            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
           }
         });
         const data = await res.json();
@@ -1359,7 +1407,7 @@ export default {
           // 获取二级目录
           const secondRes = await fetch(`http://43.143.228.56:8000/article/getArticlesInFolder?folder_id=${folder.folder_id}`, {
             headers: {
-              'Authorization': 'Bearer ' + localStorage.getItem('token')
+              'Authorization': 'Bearer ' + localStorage.getItem('authToken')
             }
           });
           const secondData = await secondRes.json();
@@ -1381,7 +1429,7 @@ export default {
             const thirdRes = await fetch(`http://43.143.228.56:8000/notes?article_id=${article.article_id}`, {
               type: 'GET',
               headers: {
-                'Authorization': 'Bearer ' + localStorage.getItem('token')
+                'Authorization': 'Bearer ' + localStorage.getItem('authToken')
               }
             });
             const thirdData = await thirdRes.json();
@@ -1411,6 +1459,77 @@ export default {
         throw error; // 抛出错误供外层捕获
       }
     };
+
+    // const findAllfolders = async () => {
+    //   try {
+    //     let id = 0; // 自增ID生成器
+    //     console.log('开始加载完整文件树');
+    //
+    //     // 1. 一次性获取完整文件树数据
+    //     const response = await fetch('http://43.143.228.56:8000/article/selfTree', {
+    //       headers: {
+    //         'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+    //       }
+    //     });
+    //     const data = await response.json();
+    //     console.log('完整文件树原始数据:', data);
+    //
+    //     // 2. 转换数据结构
+    //     const transformedData = data.folders.map(folder => {
+    //       // 一级节点：文件夹
+    //       const folderNode = {
+    //         id: id++,
+    //         true_id: folder.folder_id,
+    //         label: folder.folder_name,
+    //         depth: 0,
+    //         children: []
+    //       };
+    //
+    //       // 处理二级节点：文章（并行处理标签）
+    //       folderNode.children = folder.articles.map(article => {
+    //         // 二级节点：文章
+    //         const articleNode = {
+    //           id: id++,
+    //           true_id: article.article_id,
+    //           label: article.article_name,
+    //           tags: [], // 先初始化，异步填充
+    //           depth: 1,
+    //           children: []
+    //         };
+    //
+    //         // 异步获取标签（不阻塞主流程）
+    //         fetchTags(article.article_id).then(tags => {
+    //           articleNode.tags = tags;
+    //         });
+    //
+    //         // 处理三级节点：笔记
+    //         articleNode.children = article.notes.map(note => ({
+    //           id: id++,
+    //           true_id: note.note_id,
+    //           label: note.note_title,
+    //           depth: 2,
+    //           content: note.content || '' // 根据实际接口字段调整
+    //         }));
+    //
+    //         return articleNode;
+    //       });
+    //
+    //       return folderNode;
+    //     });
+    //
+    //     // 3. 更新响应式数据
+    //     dataSource.value = transformedData;
+    //     totalFolders.value = data.total_folder_num;
+    //     console.log('转换后的树形数据:', transformedData);
+    //
+    //   } catch (error) {
+    //     console.error('文件树加载失败:', error);
+    //     ElMessage.error('数据加载失败，请检查网络或权限');
+    //     throw error;
+    //   }
+    // };
+
+
 
 
     // 处理PDF文件选择
@@ -1443,10 +1562,12 @@ export default {
         const res = await fetch(`http://43.143.228.56:8000/article/uploadToSelfFolder?folder_id=${pdfUploadForm.value.parentNode.data.true_id}`, {
           method: 'POST',
           headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('token')
+            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
           },
           body: formData
         })
+
+        console.log(res)
 
         if (!res.ok) {
           throw new Error('上传失败')
@@ -1467,14 +1588,12 @@ export default {
         }
         pdfUploadForm.value.parentData.children.push(newChild)
         dataSource.value = [...dataSource.value]
-
+        if (res.ok) {
+          await refreshData(); // 新增
+          ElMessage.success('PDF上传成功');
+        }
         // 关闭弹窗
         showPdfUploadDialog.value = false
-
-        ElMessage({
-          message: 'PDF上传成功',
-          type: 'success'
-        })
       } catch (error) {
         console.error('上传PDF失败:', error)
         ElMessage({
