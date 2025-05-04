@@ -415,7 +415,7 @@ export default {
           id: userData.id,
           username: userData.username || `user_${userData.id}`,
           avatar: userData.avatar
-              ? `http://43.143.228.56:8000${userData.avatar}`
+              ? `https://jienote.top${userData.avatar}`
               : team2,
           address: userData.address || "未知",
           university: userData.university || "未知",
