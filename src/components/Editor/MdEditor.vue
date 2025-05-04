@@ -1,18 +1,5 @@
 <template>
-  <div class="md-editor-container" :class="{ 'hide-toolbar': hideToolbar }">
-    <div 
-      class="toolbar-trigger-area" 
-      @mouseenter="showToolbar = true" 
-      @mouseleave="showToolbar = false"
-      :class="{ 'inactive': showToolbar }"
-    ></div>
-    <div 
-      class="catalog-trigger-area" 
-      @mouseenter="showCatalog = true" 
-      @mouseleave="showCatalog = false"
-      :class="{ 'inactive': showCatalog }"
-    ></div>
-    
+  <div class="md-editor-container">
     <MdEditor
       v-model="content"
       :theme="theme"
@@ -20,10 +7,12 @@
       :preview="'live'"
       :language="language"
       :style="editorStyle"
+      :dragWidth="dragWidth"
       @onSave="handleSave"
       @onUploadImg="handleUploadImg"
       @onChange="handleChange"
       @onError="handleError"
+      @onDragWidth="handleDragWidth"
       ref="mdEditorRef"
     />
   </div>
@@ -66,23 +55,21 @@ export default {
       type: String,
       default: 'light',
     },
-    hideToolbar: {
-      type: Boolean,
-      default: false,
-    },
     fullHeight: {
       type: Boolean,
       default: true,
+    },
+    dragWidth: {
+      type: String,
+      default: '50%', // 默认编辑区和预览区等宽
     }
   },
-  emits: ['update:modelValue', 'save', 'change', 'error'],
+  emits: ['update:modelValue', 'save', 'change', 'error', 'dragWidth'],
   setup(props, { emit }) {
     const mdEditorRef = ref(null);
     const content = ref(props.modelValue);
     const updating = ref(false);
     const preview = ref(true);
-    const showToolbar = ref(false);
-    const showCatalog = ref(false);
 
     // 计算编辑器样式，设置高度
     const editorStyle = computed(() => {
@@ -216,6 +203,11 @@ export default {
       return content.value;
     };
 
+    // 处理拖拽宽度变化
+    const handleDragWidth = (width) => {
+      emit('dragWidth', width);
+    };
+
     return {
       content,
       toolbars,
@@ -223,16 +215,15 @@ export default {
       preview,
       mdEditorRef,
       updating,
-      showToolbar,
-      showCatalog,
       editorStyle,
       handleChange,
       handleError,
       handleSave,
       handleUploadImg,
+      handleDragWidth,
       insertContent,
       getValue,
-      fetchNoteContent, // 导出这个方法供外部使用
+      fetchNoteContent // 导出这个方法供外部使用
     };
   },
 };
@@ -247,54 +238,25 @@ export default {
   flex-direction: column;
 }
 
-/* 增大触发区域 */
-.toolbar-trigger-area {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 25px; /* 从15px增加到25px */
-  z-index: 20; /* 提高z-index确保可以触发 */
-  cursor: pointer;
-  /* 当触发区域处于活动状态时改变指针样式，表示它现在只是显示而不可交互 */
-  pointer-events: auto;
-  transition: opacity 0.3s ease;
-}
-
-.catalog-trigger-area {
-  position: absolute;
-  top: 46px; /* 工具栏高度后 */
-  right: 0;
-  width: 30px;
-  bottom: 0;
-  z-index: 20; /* 提高z-index确保可以触发 */
-  cursor: pointer;
-  pointer-events: auto;
-  transition: opacity 0.3s ease;
-}
-
-/* 当工具栏或目录显示时，使触发区域不再捕获鼠标事件 */
-.toolbar-trigger-area.inactive,
-.catalog-trigger-area.inactive {
-  pointer-events: none;
-  opacity: 0;
-}
-
-/* 设置编辑区和预览区比例为5:3 */
+/* 设置编辑区和预览区可以调整大小 */
 :deep(.md-editor-content) {
   display: flex;
   height: 100%;
-  margin-top: 46px !important; /* 为工具栏预留空间 */
 }
 
-:deep(.md-editor-content .md-editor-input-wrapper) {
-  flex: 5;
-  height: 100%;
-}
-
+:deep(.md-editor-content .md-editor-input-wrapper),
 :deep(.md-editor-content .md-editor-preview-wrapper) {
-  flex: 3;
   height: 100%;
+}
+
+/* 添加调整大小的手柄样式 */
+:deep(.md-editor-input-wrapper .input-box .drag-handle) {
+  background-color: var(--md-border-color);
+  transition: all 0.3s ease;
+}
+
+:deep(.md-editor-input-wrapper .input-box .drag-handle:hover) {
+  background-color: var(--md-border-hover-color);
 }
 
 /* 设置编辑器填满容器 */
@@ -305,61 +267,17 @@ export default {
   flex-direction: column;
 }
 
-/* 重新设置工具栏的样式 */
+/* 工具栏样式 */
 :deep(.md-editor-toolbar) {
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  position: absolute !important; /* 改回绝对定位 */
-  top: 0;
-  left: 0;
-  right: 0;
   height: 46px;
   z-index: 10;
   background-color: var(--md-bk-color, #fff);
 }
 
-/* 工具栏在悬停触发区域时显示 */
-.hide-toolbar :deep(.md-editor-toolbar) {
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-100%);
-  pointer-events: none;
-}
-
-.hide-toolbar:hover .toolbar-trigger-area:not(.inactive) ~ :deep(.md-editor) .md-editor-toolbar,
-.hide-toolbar .toolbar-trigger-area:hover ~ :deep(.md-editor) .md-editor-toolbar,
-.hide-toolbar :deep(.md-editor-toolbar:hover) {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-  pointer-events: auto;
-  /* 确保工具栏在显示时的z-index高于触发区域 */
-  z-index: 30;
-}
-
-/* 目录悬停显示 */
-:deep(.md-editor-catalog) {
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateX(100%);
-}
-
-:deep(.md-editor-catalog):hover,
-.catalog-trigger-area:not(.inactive):hover ~ :deep(.md-editor) .md-editor-catalog {
-  opacity: 1;
-  visibility: visible;
-  transform: translateX(0);
-  /* 确保目录在显示时的z-index高于触发区域 */
-  z-index: 30;
-}
-
-/* 触发区域的视觉指示 */
-.toolbar-trigger-area:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-.catalog-trigger-area:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+:deep(.md-editor-toolbar__item),
+:deep(.md-editor-toolbar__item > svg) {
+  min-width: 28px !important;
+  min-height: 28px !important;
 }
 
 /* 修复列表样式 */
@@ -375,9 +293,4 @@ export default {
   list-style-type: circle !important;
 }
 
-:deep(.md-editor-toolbar__item),
-:deep(.md-editor-toolbar__item > svg) {
-  min-width: 28px !important;
-  min-height: 28px !important;
-}
 </style>
