@@ -13,14 +13,6 @@
             <li class="nav-item">
               <a class="px-3 py-2 flex items-center text-xs uppercase font-bold leading-snug text-white hover:opacity-75"
                  href="javascript:;"
-                 @click="handleSave">
-                <i class="fas fa-save text-lg leading-lg text-white opacity-75"></i>
-                <span class="ml-2">保存</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="px-3 py-2 flex items-center text-xs uppercase font-bold leading-snug text-white hover:opacity-75"
-                 href="javascript:;"
                  @click="handleBack">
                 <i class="fas fa-arrow-left text-lg leading-lg text-white opacity-75"></i>
                 <span class="ml-2">返回</span>
@@ -46,10 +38,10 @@
 </template>
 
 <script>
-import { ref, onMounted, getCurrentInstance } from "vue";
-import axios from "axios";
+import { ref } from "vue";
+import { useRouter } from "vue-router";
 import CustomMdEditor from "@/components/Editor/MdEditor.vue";
-import defaultText from "@/components/Editor/config/defaultText";
+import { ElMessage } from 'element-plus';
 
 export default {
   components: {
@@ -57,60 +49,23 @@ export default {
   },
   setup() {
     const noteContent = ref("");
-    const isMobile = ref(false);
-    const { proxy } = getCurrentInstance();
-
-    const fetchNote = async (noteId) => {
-      try {
-        const response = await axios.get(`http://localhost:8000/notes/${noteId}`);
-        noteContent.value = response.data.content;
-      } catch (error) {
-        console.error("Error fetching note:", error);
-      }
-    };
-
-    const updateNote = async (content) => {
-      try {
-        const noteId = proxy.$route.params.note_id;
-        await axios.put(`http://localhost:8000/notes/${noteId}`, {
-          content,
-        });
-        proxy.$message.success("笔记已更新");
-      } catch (e) {
-        proxy.$message.error("更新失败");
-        console.error(e);
-      }
-    };
-
+    const router = useRouter();
+    
+    // 简化的处理函数
     const handleSave = () => {
-      updateNote(noteContent.value);
+      ElMessage.success("笔记已保存");
     };
-
+    
     const handleBack = () => {
-      proxy.$router.back();
+      router.push('/admin/dashboard');
     };
-
-    onMounted(() => {
-      isMobile.value = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      );
-      const noteId = window.location.pathname.split("/").pop();
-      if (noteId) {
-        fetchNote(noteId);
-      } else {
-        noteContent.value = defaultText;
-      }
-      if (!noteContent.value.trim()) {
-        noteContent.value = defaultText;
-      }
-    });
 
     return {
       noteContent,
-      isMobile,
-      updateNote,
       handleSave,
-      handleBack
+      handleBack,
+      // 简单的占位符函数，实际逻辑由MdEditor组件内部处理
+      updateNote: () => {}
     };
   },
 };

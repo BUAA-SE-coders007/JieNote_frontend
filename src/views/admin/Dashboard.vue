@@ -293,7 +293,7 @@
                         <el-icon><Delete /></el-icon>
                       </el-button>
                     </el-tooltip>
-                    <el-tooltip v-if="node.level === 2" content="阅读" placement="top" :enterable="false" :duration="50">
+                    <el-tooltip v-if="node.level > 1" content="阅读" placement="top" :enterable="false" :duration="50">
                       <el-button
                           type="success"
                           size="small"
@@ -656,12 +656,14 @@ export default {
     }
 
     const handleRead = (node, data) => {
-      // 检查是否是文献节点
-      console.log("handleRead, node.level:", node.level)
+      // 检查是否是文献节点或笔记节点
+      console.log("handleRead, node.level:", node.level, "depth:", data.depth)
       if (node.level === 2 && data.depth === 1) {  // PDF nodes: level 2 in tree, depth 1 in data
         router.push(`/admin/notelayout?article_id=${data.true_id}`);
+      } else if (node.level === 3 && data.depth === 2) {  // 笔记节点：level 3 in tree, depth 2 in data
+        router.push(`/admin/note/${data.true_id}`);
       } else {
-        ElMessage.warning('只能阅读文献');
+        ElMessage.warning('只能阅读文献或笔记');
       }
     }
 
