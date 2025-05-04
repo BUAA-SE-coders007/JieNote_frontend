@@ -416,7 +416,7 @@ import JSZip from 'jszip'
 import draggable from 'vuedraggable'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
-import axios from "axios";
+import { clearAuth } from '@/utils/auth';
 import { onUnmounted } from 'vue'
 
 export default {
@@ -741,14 +741,9 @@ export default {
 
     onMounted(async () => {
       try {
-        await refreshToken() // ⚡️ 立刻执行第一次刷新
-        // 启动定时刷新（后续每5分钟一次）
-        startTokenRefresh()
         await findAllfolders()
         // 数据加载完成后设置默认展开
         setInitialExpandedKeys()
-        //refreshToken() // 立即执行一次
-        //setInterval(refreshToken, 4 * 60 * 1000) // 每4分钟执行一次
       } catch (error) {
         ElMessage.error('数据加载失败: ' + error.message)
       } finally {
@@ -1487,67 +1482,18 @@ export default {
       }
     }
 
-
-
-    const refreshToken = async () => {
-      try {
-        const refreshToken = localStorage.getItem("refreshToken");
-        console.log("123e4e23424e2")
-        console.log(typeof refreshToken)
-        if (!refreshToken) {
-          console.error("Refresh Token 不存在，请重新登录！");
-          redirectToLogin();
-          return;
-        }
-
-        // 调用刷新 Token 的接口
-        const response = await axios.post(
-            "http://43.143.228.56:8000/public/refresh",
-            { refresh_token: refreshToken } // 传入 refresh_token
-        );
-
-        console.log(response)
-
-        if (response.status === 200) {
-          const {access_token} = response.data;
-
-          console.log("Token 已刷新:", access_token);
-          console.log(response.data);
-
-          // 更新 localStorage 中的 Token
-          localStorage.setItem("authToken", access_token);
-        }
-      } catch (error) {
-        console.error("刷新 Token 失败，请重新刷新！");
-      }
-    }
-
-    let refreshInterval = null;
-    const startTokenRefresh = () => {
-      if (refreshInterval) clearInterval(refreshInterval); // 清除旧定时器
-      refreshInterval = setInterval(refreshToken, 4.5 * 60 * 1000);
-    };
-
     onUnmounted(() => {
-      if (refreshInterval) {
-        clearInterval(refreshInterval);
-        console.log('定时器已清除');
-      }
     });
 
-
-// 跳转登录页（通用实现）
+    // 跳转登录页（通用实现）
     const redirectToLogin = () => {
       // 清理认证信息
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("refreshToken");
-
+      clearAuth();
       router.push("/auth/login");
     };
 
 
     return {
-      refreshToken,
       findAllfolders,
       showCheckbox,
       showGraph,
@@ -1598,6 +1544,7 @@ export default {
       onTagDragEnd,
       saveEdit,
       handleRead,
+      redirectToLogin
     }
   }
 }

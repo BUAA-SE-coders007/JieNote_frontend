@@ -47,9 +47,16 @@
     methods: {
       async fetchPdf() {
         try {
+          // 使用 tokenRefreshService 确保 token 有效
+          import('@/utils/tokenRefreshService').then(module => {
+            const tokenRefreshService = module.default;
+            tokenRefreshService.init();
+          });
+          
           const token = localStorage.getItem("authToken"); // 从本地存储获取 Token
           if (!token) {
             console.error("Token 不存在，请先登录！");
+            window.location.href = '/auth/login';
             return;
           }
   
