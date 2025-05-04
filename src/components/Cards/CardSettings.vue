@@ -264,7 +264,7 @@ export default {
 
         console.log(formData)
 
-        const response = await axios.put("https://43.143.228.56:8000/user", formData, {
+        const response = await axios.put("http://43.143.228.56:8000/user", formData, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
@@ -274,7 +274,7 @@ export default {
         this.$emit("update-user", {
           ...this.form,
           avatar: response.data.avatar
-              ? `https://43.143.228.56:8000${response.data.avatar}`
+              ? `http://43.143.228.56:8000${response.data.avatar}`
               : this.userData.avatar
         });
         return true;
