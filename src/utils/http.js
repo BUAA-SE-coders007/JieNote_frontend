@@ -3,7 +3,7 @@ import { ElMessage } from 'element-plus';
 import { getToken, getRefreshToken, setToken, clearAuth } from './auth';
 
 // API 基础 URL
-const BASE_URL = 'http://43.143.228.56:8000';
+const BASE_URL = 'https://jienote.top';
 
 /**
  * 创建 axios 实例
