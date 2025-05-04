@@ -28,6 +28,7 @@
     "gulp": "4.0.2",
     "gulp-append-prepend": "1.0.8",
     "jszip": "^3.10.1",
+    "jwt-decode": "^4.0.0",
     "md-editor-v3": "^5.5.0",
     "splitpanes": "^4.0.3",
     "tailwindcss": "2.0.4",

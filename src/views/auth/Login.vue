@@ -79,15 +79,15 @@
 
 <script>
 import { ElMessage } from 'element-plus';
-import { login, refreshToken } from '@/api/user';
-import { setToken, setRefreshToken, getRefreshToken, clearAuth } from '@/utils/auth';
+import { login } from '@/api/user';
+import { setToken, setRefreshToken } from '@/utils/auth';
+import tokenRefreshService from '@/utils/tokenRefreshService';
 
 export default {
   data() {
     return {
       email: "",
-      password: "",
-      refreshInterval: null, // 定时器 ID
+      password: ""
     };
   },
   methods: {
@@ -110,9 +110,9 @@ export default {
           // 使用封装的工具函数存储 Token
           setToken(access_token);
           setRefreshToken(refresh_token);
-
-          // 设置定时刷新 Token
-          this.startTokenRefresh();
+          
+          // 使用全局 Token 刷新服务
+          tokenRefreshService.init();
 
           // 跳转到主页
           this.$router.push("/admin");
@@ -121,63 +121,10 @@ export default {
         ElMessage.error("登录失败，请检查邮箱或密码！");
         console.error(error);
       }
-    },
-    async refreshTokenHandler() {
-      try {
-        const refreshTokenValue = getRefreshToken();
-        if (!refreshTokenValue) {
-          console.error("Refresh Token 不存在，请重新登录！");
-          this.redirectToLogin();
-          return;
-        }
-
-        // 调用刷新 Token 的接口
-        const response = await refreshToken(refreshTokenValue);
-
-        if (response.status === 200) {
-          const {access_token} = response.data;
-          console.log("Token 已刷新");
-          
-          // 更新 Token
-          setToken(access_token);
-        }
-      } catch (error) {
-        console.error("刷新 Token 失败，请重新登录！");
-        this.redirectToLogin();
-      }
-    },
-    startTokenRefresh() {
-      // 每 4 分钟刷新一次 Token
-      this.refreshInterval = setInterval(() => {
-        this.refreshTokenHandler();
-      }, 4 * 60 * 1000);
-    },
-    redirectToLogin() {
-      // 清除 Token 并跳转到登录页面
-      clearAuth();
-      this.$router.push("/auth/login");
-    },
-  },
-  beforeDestroy() {
-    // 确保彻底清除定时器
-    if (this.refreshInterval) {
-      clearInterval(this.refreshInterval);
-      this.refreshInterval = null; // 添加这行重置指针
-      console.log('定时器已销毁'); // 添加调试日志
     }
-  },
-// 新增路由离开守卫（如果是 Vue Router 项目）
-  beforeRouteLeave(to, from, next) {
-    if (this.refreshInterval) {
-      clearInterval(this.refreshInterval);
-      this.refreshInterval = null;
-      console.log('路由离开时清除定时器');
-    }
-    next();
   }
 };
 </script>
-
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');

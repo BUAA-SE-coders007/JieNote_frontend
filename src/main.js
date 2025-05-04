@@ -117,4 +117,27 @@ app.use(ElementPlus)
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
+// 引入 Token 刷新服务
+import tokenRefreshService from '@/utils/tokenRefreshService';
+
+// 设置路由拦截来检查身份验证
+router.beforeEach((to, from, next) => {
+  // 如果不是访问登录或注册页面，并且有 token，则初始化刷新服务
+  const publicPages = ['/auth/login', '/auth/register', '/', '/project-intro'];
+  const authRequired = !publicPages.includes(to.path);
+  const loggedIn = localStorage.getItem('authToken');
+
+  if (authRequired && loggedIn) {
+    // 确保 token 刷新服务已初始化
+    tokenRefreshService.init();
+  }
+  
+  next();
+});
+
 app.use(router).mount("#app");
+
+// 如果用户已登录，初始化 Token 刷新服务
+if (localStorage.getItem('authToken')) {
+  tokenRefreshService.init();
+}

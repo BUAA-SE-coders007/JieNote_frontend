@@ -427,38 +427,16 @@ export default {
         console.error("获取用户信息失败：", error);
       }
     },
-    async refreshToken() {
-      try {
-        const refreshToken = localStorage.getItem("refreshToken");
-        if (!refreshToken) {
-          console.error("Refresh Token 不存在，请重新登录！");
-          this.redirectToLogin();
-          return;
-        }
-
-        // 调用刷新 Token 的接口
-        const response = await axios.post(
-            "http://43.143.228.56:8000/public/refresh",
-            { refresh_token: refreshToken } // 传入 refresh_token
-        );
-
-        if (response.status === 200) {
-          const {access_token} = response.data;
-
-          console.log("Token 已刷新:", access_token);
-
-          // 更新 localStorage 中的 Token
-          localStorage.setItem("authToken", access_token);
-        }
-      } catch (error) {
-        console.error("刷新 Token 失败，请重试！");
-      }
+    // 使用集中化的token刷新服务
+    initTokenRefresh() {
+      import('@/utils/tokenRefreshService').then(module => {
+        const tokenRefreshService = module.default;
+        tokenRefreshService.init();
+      });
     },
+    // 使用新的token刷新服务，不再需要自己维护刷新定时器
     startTokenRefresh() {
-      // 每 5 分钟刷新一次 Token
-      this.refreshInterval = setInterval(() => {
-        this.refreshToken();
-      }, 4.5 * 60 * 1000);
+      this.initTokenRefresh();
     },
     redirectToLogin() {
       // 清除 Token 并跳转到登录页面
@@ -474,7 +452,7 @@ export default {
 
       // 并行执行所有初始化任务
       await Promise.all([
-        this.refreshToken(),
+        this.initTokenRefresh(),
         this.fetchData(),
         this.fetchUser()
       ])
@@ -491,21 +469,8 @@ export default {
       this.isLoading = false
     }
   },
-  beforeDestroy() {
-    // 确保彻底清除定时器
-    if (this.refreshInterval) {
-      clearInterval(this.refreshInterval);
-      this.refreshInterval = null; // 添加这行重置指针
-      console.log('定时器已销毁'); // 添加调试日志
-    }
-  },
-// 新增路由离开守卫（如果是 Vue Router 项目）
+  // 不再需要手动清除定时器，因为使用了集中管理的tokenRefreshService
   beforeRouteLeave(to, from, next) {
-    if (this.refreshInterval) {
-      clearInterval(this.refreshInterval);
-      this.refreshInterval = null;
-      console.log('路由离开时清除定时器');
-    }
     next();
   }
 };
