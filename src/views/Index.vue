@@ -406,6 +406,7 @@
   </div>
 </template>
 <script>
+import axios from "axios"; // 引入 axios
 // import IndexNavbar from "@/components/Navbars/IndexNavbar.vue";
 import FooterComponent from "@/components/Footers/Footer.vue";
 
@@ -441,14 +442,14 @@ export default {
           label: "文献数量",
           borderColor: '#10B981',
           backgroundColor: 'rgba(16, 185, 129, 0.1)',
-          data: [12, 15, 18, 23, 27, 32, 41],
+          data: [],
           tension: 0.3
         },
         {
           label: "笔记数量",
           borderColor: '#3B82F6',
           backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          data: [8, 12, 15, 20, 25, 34, 45],
+          data: [],
           tension: 0.3
         }
         ]
@@ -459,6 +460,48 @@ export default {
     // IndexNavbar,
     FooterComponent,
     BarChart
+  },
+  mounted() {
+    // 获取文献数量数据
+    axios
+      .get("https://jienote.top/public/articleStatistic")
+      .then((response) => {
+        const articles = response.data.articles;
+        const articleData = this.formatData(articles);
+        this.tableData.datasets[0].data = articleData;
+      })
+      .catch((error) => {
+        console.error("获取文献数据失败:", error);
+      });
+
+    // 获取笔记数量数据
+    axios
+      .get("https://jienote.top/public/recent")
+      .then((response) => {
+        const notes = response.data.notes;
+        const noteData = this.formatData(notes);
+        this.tableData.datasets[1].data = noteData;
+      })
+      .catch((error) => {
+        console.error("获取笔记数据失败:", error);
+      });
+  },
+  methods: {
+    // 格式化数据，填充缺失日期
+    formatData(data) {
+      const result = Array(7).fill(0); // 初始化7天的数据为0
+      const today = new Date();
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - (6 - i)); // 计算每一天的日期
+        const dateString = date.toISOString().split("T")[0]; // 格式化为 YYYY-MM-DD
+        const item = data.find((d) => d.date === dateString);
+        if (item) {
+          result[i] = item.count;
+        }
+      }
+      return result;
+    },
   },
 };
 </script>
