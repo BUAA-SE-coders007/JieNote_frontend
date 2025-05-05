@@ -174,7 +174,7 @@
             </template>
             <template #tip>
               <div class="el-upload__tip">
-                请选择PDF文件，文件名将作为节点名称
+                请选择PDF文件
               </div>
             </template>
           </el-upload>
@@ -1303,7 +1303,7 @@ export default {
           article_id: newNoteForm.value.parentData.true_id,
           content: "",
         }
-        const res = await fetch("https://jienote.top/notes", {
+        const res = await fetch("https://jienote.top/notes/create", {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1466,7 +1466,11 @@ export default {
         console.log('开始加载完整文件树');
 
         // 1. 一次性获取完整文件树数据
-        const response = await fetch('https://jienote.top/article/selfTree', {
+        const url = new URL('https://jienote.top/article/selfTree', window.location.origin);
+        url.searchParams.append('page_number', currentPage.value);
+        url.searchParams.append('page_size', pageSize.value);
+
+        const response = await fetch(url, {
           headers: {
             'Authorization': 'Bearer ' + localStorage.getItem('authToken')
           }

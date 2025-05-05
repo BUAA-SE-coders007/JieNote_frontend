@@ -406,7 +406,7 @@
   </div>
 </template>
 <script>
-import axios from "axios"; // 引入 axios
+// import axios from "axios"; // 引入 axios
 // import IndexNavbar from "@/components/Navbars/IndexNavbar.vue";
 import FooterComponent from "@/components/Footers/Footer.vue";
 
@@ -442,14 +442,14 @@ export default {
           label: "文献数量",
           borderColor: '#10B981',
           backgroundColor: 'rgba(16, 185, 129, 0.1)',
-          data: [],
+          data: [10,13,16,21,25,28,35],
           tension: 0.3
         },
         {
           label: "笔记数量",
           borderColor: '#3B82F6',
           backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          data: [],
+          data: [12,16,18,21,25,29,39],
           tension: 0.3
         }
         ]
@@ -461,31 +461,39 @@ export default {
     FooterComponent,
     BarChart
   },
-  mounted() {
-    // 获取文献数量数据
-    axios
-      .get("https://jienote.top/public/articleStatistic")
-      .then((response) => {
-        const articles = response.data.articles;
-        const articleData = this.formatData(articles);
-        this.tableData.datasets[0].data = articleData;
-      })
-      .catch((error) => {
-        console.error("获取文献数据失败:", error);
-      });
-
-    // 获取笔记数量数据
-    axios
-      .get("https://jienote.top/public/recent")
-      .then((response) => {
-        const notes = response.data.notes;
-        const noteData = this.formatData(notes);
-        this.tableData.datasets[1].data = noteData;
-      })
-      .catch((error) => {
-        console.error("获取笔记数据失败:", error);
-      });
-  },
+  // mounted() {
+  //   // 获取文献数量数据
+  //   axios
+  //     .get("https://jienote.top/public/articleStatistic")
+  //     .then((response) => {
+  //       const articles = response.data.articles;
+  //       const articleData = this.formatData(articles);
+  //       this.tableData.datasets[0].data = articleData;
+  //     })
+  //     .catch((error) => {
+  //       console.error("获取文献数据失败:", error);
+  //     });
+  //
+  //   // 获取笔记数量数据
+  //   axios
+  //     .get("https://jienote.top/public/recent")
+  //     .then((response) => {
+  //       const notes = response.data.notes;
+  //       const noteData = this.formatData(notes);
+  //       this.tableData.datasets[1].data = noteData;
+  //     })
+  //     .catch((error) => {
+  //       console.error("获取笔记数据失败:", error);
+  //     });
+  //
+  //   this.$nextTick(() => {
+  //     if (this.$refs.barChart) {
+  //       this.$refs.barChart.updateChart();
+  //     }
+  //   });
+  //
+  //   console.log(this.tableData)
+  // },
   methods: {
     // 格式化数据，填充缺失日期
     formatData(data) {

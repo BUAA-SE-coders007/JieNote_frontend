@@ -268,9 +268,9 @@ export default {
         university: "",
         introduction: "",
       },
-      articleCount: 0, // 文献数量
-      noteCount: 0, // 笔记数量
-      organizationCount: 0, // 组织数量
+      articleCount: 10, // 文献数量
+      noteCount: 15, // 笔记数量
+      organizationCount: 3, // 组织数量
       refreshInterval: null, // 定时器 ID
       literatureData: {
         labels: ["6天前", "5天前", "4天前", "3天前", "2天前", "昨天", "今天"],
@@ -368,33 +368,36 @@ export default {
     },
 
 
-    async fetchData() {
-      try {
-        const token = localStorage.getItem("authToken");
-        if (!token) {
-          console.error("Token 不存在，请先登录！");
-          return;
-        }
-
-        const response = await axios.get("https://jienote.top/notes", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const data = response.data;
-        console.log(data)
-        this.articleCount = new Set(data.notes.map((note) => note.article_id))
-            .size; // 文献数量
-        this.noteCount = data.notes.length; // 笔记数量
-        this.organizationCount = 5; // 假设组织数量为固定值
-        localStorage.setItem("article", this.articleCount);
-        localStorage.setItem("note", this.noteCount);
-        localStorage.setItem("organization", this.organizationCount);
-      } catch (error) {
-        console.error("获取数据失败：", error);
-      }
-    },
+    // async fetchData() {
+    //   try {
+    //     const token = localStorage.getItem("authToken");
+    //     if (!token) {
+    //       console.error("Token 不存在，请先登录！");
+    //       return;
+    //     }
+    //
+    //     const response = await axios.get("https://jienote.top/notes", {
+    //       headers: {
+    //         Authorization: `Bearer ${token}`,
+    //       },
+    //     });
+    //
+    //     console.log("1111111111111111111111111111")
+    //     console.log(response.data)
+    //
+    //     const data = response.data;
+    //     console.log(data)
+    //     this.articleCount = new Set(data.notes.map((note) => note.article_id))
+    //         .size; // 文献数量
+    //     this.noteCount = data.notes.length; // 笔记数量
+    //     this.organizationCount = 5; // 假设组织数量为固定值
+    //     localStorage.setItem("article", this.articleCount);
+    //     localStorage.setItem("note", this.noteCount);
+    //     localStorage.setItem("organization", this.organizationCount);
+    //   } catch (error) {
+    //     console.error("获取数据失败：", error);
+    //   }
+    // },
     async fetchUser() {
       try {
         const token = localStorage.getItem("authToken");
@@ -403,7 +406,7 @@ export default {
           return;
         }
 
-        const response = await axios.get("https://jienote.top/user", {
+        const response = await axios.get("https://jienote.top/user/get", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -415,7 +418,7 @@ export default {
           id: userData.id,
           username: userData.username || `user_${userData.id}`,
           avatar: userData.avatar
-              ? `https://jienote.top${userData.avatar}`
+              ? `http://43.143.228.56:8000${userData.avatar}`
               : team2,
           address: userData.address || "未知",
           university: userData.university || "未知",
@@ -453,7 +456,7 @@ export default {
       // 并行执行所有初始化任务
       await Promise.all([
         this.initTokenRefresh(),
-        this.fetchData(),
+        // this.fetchData(),
         this.fetchUser()
       ])
 
