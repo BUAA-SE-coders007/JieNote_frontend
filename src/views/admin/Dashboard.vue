@@ -1497,9 +1497,12 @@ export default {
               children: []
             };
 
-            // 异步获取标签（不阻塞主流程）
+            // 异步获取标签并确保视图更新
             fetchTags(article.article_id).then(tags => {
-              articleNode.tags = tags;
+              // 使用数组解构重新赋值，确保 Vue 能够检测到变化
+              articleNode.tags = [...tags];
+              // 强制更新整个数据源以触发视图重新渲染
+              dataSource.value = [...dataSource.value];
             });
 
             // 处理三级节点：笔记
