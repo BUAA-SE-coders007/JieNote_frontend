@@ -251,6 +251,7 @@ export default {
       if (this.avatar) {
         // 生成本地预览URL
         this.previewAvatar = URL.createObjectURL(this.avatar);
+        console.log(this.previewAvatar)
       } else {
         this.previewAvatar = null
       }
@@ -273,7 +274,7 @@ export default {
 
         console.log(formData)
 
-        const response = await axios.put("https://jienote.top/user", formData, {
+        const response = await axios.put("https://jienote.top/user/update", formData, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",

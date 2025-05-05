@@ -14,7 +14,7 @@ import http from '@/utils/http';
  * @returns {Promise<any>} 笔记列表数据
  */
 export const getNotes = (params = {}) => {
-  return http.get('/notes', { params });
+  return http.get('/notes/get', { params });
 };
 
 /**
@@ -39,7 +39,7 @@ export const getNoteTitles = (params = {}) => {
  * @returns {Promise<any>} 创建结果
  */
 export const createNote = (data) => {
-  return http.post('/notes', data);
+  return http.post('/notes/create', data);
 };
 
 /**
