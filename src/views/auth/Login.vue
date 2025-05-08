@@ -43,14 +43,23 @@
                 >
                   密码
                 </label>
-                <input
-                  type="password"
-                  id="password"
-                  v-model="password"
-                  class="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-                  placeholder="请输入密码"
-                  required
-                />
+                <div class="relative">
+                  <input
+                    :type="showPassword ? 'text' : 'password'"
+                    id="password"
+                    v-model="password"
+                    class="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
+                    placeholder="请输入密码"
+                    required
+                  />
+                  <button
+                    type="button"
+                    @click="togglePasswordVisibility"
+                    class="absolute inset-y-0 right-0 px-3 text-blueGray-600 focus:outline-none"
+                  >
+                    <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i> <!-- 图标切换 -->
+                  </button>
+                </div>
               </div>
 
               <div class="text-center mt-6">
@@ -87,10 +96,14 @@ export default {
   data() {
     return {
       email: "",
-      password: ""
+      password: "",
+      showPassword: false, // 控制密码显示状态
     };
   },
   methods: {
+    togglePasswordVisibility() {
+      this.showPassword = !this.showPassword; // 切换密码显示状态
+    },
     async handleLogin() {
       if (!this.email || !this.password) {
         ElMessage.warning("请填写所有字段！");
