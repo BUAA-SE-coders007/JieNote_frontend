@@ -89,7 +89,7 @@
         custom-class="new-category-modal"
         :destroy-on-close="true"
     >
-      <el-form :model="newCategoryForm" label-width="80px">
+      <el-form :model="newCategoryForm" label-width="80px" @submit.native.prevent>
         <el-form-item label="分类名称">
           <el-input
               v-model="newCategoryForm.name"
@@ -97,6 +97,7 @@
               class="category-input"
               :maxlength="20"
               show-word-limit
+              @keyup.enter="confirmNewCategory"
           />
         </el-form-item>
       </el-form>
@@ -108,7 +109,7 @@
           >取消</el-button>
           <el-button
               type="primary"
-              @click="confirmNewCategory"
+              v-btnAntiShake="confirmNewCategory"
               class="modal-confirm-btn"
           >确定</el-button>
         </span>
@@ -124,7 +125,7 @@
         custom-class="new-note-modal"
         :destroy-on-close="true"
     >
-      <el-form :model="newNoteForm" label-width="80px">
+      <el-form :model="newNoteForm" label-width="80px" @submit.native.prevent>
         <el-form-item label="笔记名称">
           <el-input
               v-model="newNoteForm.name"
@@ -132,6 +133,7 @@
               class="note-input"
               :maxlength="20"
               show-word-limit
+              @keyup.enter="confirmNewNote"
           />
         </el-form-item>
       </el-form>
@@ -143,7 +145,7 @@
           >取消</el-button>
           <el-button
               type="primary"
-              @click="confirmNewNote"
+              v-btnAntiShake="confirmNewNote"
               class="modal-confirm-btn"
           >确定</el-button>
         </span>
@@ -159,7 +161,7 @@
         custom-class="pdf-upload-modal"
         :destroy-on-close="true"
     >
-      <el-form :model="pdfUploadForm" label-width="80px">
+      <el-form :model="pdfUploadForm" label-width="80px" @submit.native.prevent>
         <el-form-item label="PDF文件">
           <el-upload
               class="pdf-uploader"
@@ -188,7 +190,7 @@
           >取消</el-button>
           <el-button
               type="primary"
-              @click="confirmPdfUpload"
+              v-btnAntiShake="confirmPdfUpload"
               class="modal-confirm-btn"
               :disabled="!pdfUploadForm.file"
           >上传</el-button>
@@ -221,7 +223,7 @@
                 ref="treeRef"
             >
               <template #default="{ node, data }">
-                <div class="modern-node">
+                <div class="modern-node" @dblclick.stop="handleNodeClick(data)">
                   <span class="node-label">{{ getIconForNode(data) }} {{ data.label }}</span>
                   <div class="tag-container" v-if="data.depth === 1">
                     <el-tooltip
@@ -247,7 +249,7 @@
                   </div>
                   <div class="node-actions">
                     <!-- 只在前两级展示添加按钮 -->
-                    <el-tooltip content="编辑信息" placement="top" :enterable="false" :duration="50">
+                    <el-tooltip content="属性" placement="top" :enterable="false" :duration="50">
                       <el-button
                           type="warning"
                           size="small"
@@ -346,10 +348,12 @@
         width="500px"
         :close-on-click-modal="false"
     >
-      <el-form label-width="80px">
+      <el-form label-width="80px" @submit.native.prevent>
         <!-- 名称编辑 -->
         <el-form-item label="名称">
-          <el-input v-model="currentEditNode.label" />
+          <el-input :maxlength="[0, 2].includes(currentEditNode?.depth) ? 20 : null"
+                    :show-word-limit="[0, 2].includes(currentEditNode?.depth)"
+                    v-model="currentEditNode.label" />
         </el-form-item>
 
         <!-- 标签管理（仅depth=1显示） -->
@@ -395,7 +399,7 @@
               <el-button
                   type="primary"
                   size="small"
-                  @click="addTag"
+                  v-btnAntiShake="addTag"
               >
                 添加
               </el-button>
@@ -406,7 +410,7 @@
 
       <template #footer>
         <el-button @click="showEditDialog = false">取消</el-button>
-        <el-button type="primary" @click="saveEdit">保存</el-button>
+        <el-button type="primary" v-btnAntiShake="saveEdit">保存</el-button>
       </template>
     </el-dialog>
   </div>
@@ -800,6 +804,22 @@ export default {
       }
     }
 
+    const handleNodeClick = (data) => {
+      // 根据节点类型决定操作
+      if (data.depth === 1) { // 文献节点
+        router.push(`/admin/notelayout?article_id=${data.true_id}`);
+      } else if (data.depth === 2) { // 笔记节点
+        router.push(`/admin/note/${data.true_id}`);
+      } else {
+        // 其他类型节点保持原有点击逻辑（展开/折叠）
+        if (expandedKeys.value.has(data.id)) {
+          handleNodeCollapse(data)
+        } else {
+          handleNodeExpand(data)
+        }
+      }
+    }
+
 
 
 
@@ -945,8 +965,7 @@ export default {
         const rawCheckedNodes = treeRef.value.getCheckedNodes(false, true)
         const checkedKeys = treeRef.value.getCheckedKeys(false)
         const checkedNodes = filterCheckedTreeNodes(rawCheckedNodes, checkedKeys)
-        console.log(checkedNodes)
-        console.log(checkedKeys)
+
         if (checkedNodes.length === 0) {
           ElMessage({
             message: '请至少选择一个文件',
@@ -954,8 +973,23 @@ export default {
           })
           return
         }
-        exportSelectedFiles(checkedKeys).then(() => {
-          // 导出成功后，关闭选择框并清空选择
+
+        // 新增确认弹窗
+        ElMessageBox.confirm(
+            `确定要导出选中的 ${checkedNodes.length} 个文件吗？`,
+            '导出确认',
+            {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning',
+            }
+        ).then(() => {
+          exportSelectedFiles(checkedKeys).then(() => {
+            showCheckbox.value = false
+            treeRef.value.setCheckedKeys([])
+          })
+        }).catch(() => {
+          // 取消操作
           showCheckbox.value = false
           treeRef.value.setCheckedKeys([])
         })
@@ -1069,8 +1103,6 @@ export default {
         link.click()
         document.body.removeChild(link)
         URL.revokeObjectURL(url)
-
-        ElMessage.success('导出成功')
       } catch (error) {
         ElMessage.error('导出失败：' + error.message)
       }
@@ -1626,6 +1658,7 @@ export default {
       newCategoryForm,
       showNewNoteDialog,
       newNoteForm,
+      handleNodeClick,
       toggleCheckbox,
       append,
       remove,
@@ -1676,6 +1709,34 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.modern-node {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 95%;
+
+
+  .node-actions {
+    flex-shrink: 0; /* 防止按钮被压缩 */
+    margin-left: auto; /* 按钮靠右 */
+  }
+}
+
+.modern-node {
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  .node-actions {
+    /* 防止点击操作按钮时触发节点点击 */
+    pointer-events: auto;
+  }
+
+  .tag-container {
+    /* 标签区域不触发节点点击 */
+    pointer-events: none;
+  }
+}
+
 .section-title {
   color: #444;
   font-size: 20px;
