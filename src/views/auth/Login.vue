@@ -56,6 +56,7 @@
                     type="button"
                     @click="togglePasswordVisibility"
                     class="absolute inset-y-0 right-0 px-3 text-blueGray-600 focus:outline-none"
+                    style="top: 10px;"
                   >
                     <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i> <!-- 图标切换 -->
                   </button>
