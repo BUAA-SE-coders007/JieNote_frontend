@@ -140,7 +140,8 @@ router.beforeEach((to, from, next) => {
 });
 
 app.use(router).mount("#app");
-
+import btnAntiShake from '@/utils/directive/btnAntiShake'
+btnAntiShake(app)
 // 如果用户已登录，初始化 Token 刷新服务
 if (localStorage.getItem('authToken')) {
   tokenRefreshService.init();
