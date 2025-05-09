@@ -207,6 +207,21 @@ export default {
       }
     };
 
+    const handleBeforeUnload = (event) => { // Renamed back to 'event' as it will be used
+      if (props.autoSave && hasChanges.value && props.noteId) {
+        // 尝试在页面卸载前保存笔记 (如果当前没有正在进行的保存操作)
+        // 注意: 异步操作在 beforeunload 事件中不保证完成
+        if (!updating.value) {
+          saveNote(content.value, false);
+        }
+
+        // 如果有未保存的更改, 总是提示用户，因为异步保存可能未完成
+        // 这会显示浏览器原生的 "离开此网站?" 对话框
+        event.preventDefault();
+        event.returnValue = ''; // Chrome 和一些其他浏览器需要这个来显示提示
+      }
+    };
+
     onMounted(async () => {
       // 如果有noteId，则获取笔记内容
       if (props.noteId) {
@@ -218,11 +233,14 @@ export default {
         mdEditorRef.value.focus();
       }
       startAutoSave(); // 组件挂载时启动自动保存
+      window.addEventListener('beforeunload', handleBeforeUnload);
     });
 
     onBeforeUnmount(() => {
       clearAutoSave(); // 组件卸载前清除定时器
-      if (props.autoSave && hasChanges.value && props.noteId) {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      // Vue 组件卸载时的保存逻辑 (例如SPA内部导航)
+      if (props.autoSave && hasChanges.value && props.noteId && !updating.value) {
         // 退出前自动保存，不显示通知
         saveNote(content.value, false); 
       }
