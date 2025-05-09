@@ -129,14 +129,14 @@ export default {
       emit('error', err);
     };
 
-    const handleSave = async (content) => {
-      if (props.autoSave && props.noteId) {
-        await saveNote(content);
-      }
-      emit('save', content);
+    const handleSave = async (contentFromEditorEvent) => {
+      //手动保存总是尝试保存，并显示通知
+      await saveNote(contentFromEditorEvent, true);
+      emit('save', contentFromEditorEvent);
     };
 
-    const saveNote = async (currentContent) => {
+    // 添加 showNotification 参数，默认为 false，用于控制是否显示成功消息
+    const saveNote = async (currentContent, showNotification = false) => {
       // 确保有 noteId，有改动，并且当前没有正在保存
       if (!props.noteId || !hasChanges.value || updating.value) {
         return;
@@ -145,10 +145,12 @@ export default {
 
       try {
         await updateNote(props.noteId, { content: currentContent });
-        ElMessage.success("笔记已保存");
+        if (showNotification) {
+          ElMessage.success("笔记已保存"); // 手动保存时显示
+        }
         hasChanges.value = false; // 保存成功后重置标记
       } catch (e) {
-        ElMessage.error(`保存失败: ${e.message}`);
+        ElMessage.error(`保存失败: ${e.message}`); // 统一错误信息
         console.error("保存失败", e);
       } finally {
         updating.value = false;
@@ -190,7 +192,8 @@ export default {
       if (props.autoSave && props.noteId && props.autoSaveInterval > 0) {
         autoSaveTimer = setInterval(() => {
           if (hasChanges.value) {
-            saveNote(content.value);
+            // 定时自动保存，不显示通知
+            saveNote(content.value, false);
           }
         }, props.autoSaveInterval);
       }
@@ -220,7 +223,8 @@ export default {
     onBeforeUnmount(() => {
       clearAutoSave(); // 组件卸载前清除定时器
       if (props.autoSave && hasChanges.value && props.noteId) {
-        saveNote(content.value); // 尝试最后保存一次
+        // 退出前自动保存，不显示通知
+        saveNote(content.value, false); 
       }
     });
 
