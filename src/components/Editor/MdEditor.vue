@@ -21,7 +21,7 @@
 <script>
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
-import { ref, onMounted, watch, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
 import { updateNote, getNotes } from '@/api/note';
 import { ElMessage } from 'element-plus';
 
@@ -42,6 +42,10 @@ export default {
     autoSave: {
       type: Boolean,
       default: false,
+    },
+    autoSaveInterval: {
+      type: Number,
+      default: 30000, // 默认30秒
     },
     noteId: {
       type: String,
@@ -70,6 +74,8 @@ export default {
     const content = ref(props.modelValue);
     const updating = ref(false);
     const preview = ref(true);
+    const hasChanges = ref(false); // 标记是否有未保存的更改
+    let autoSaveTimer = null;
 
     // 计算编辑器样式，设置高度
     const editorStyle = computed(() => {
@@ -114,6 +120,7 @@ export default {
     });
 
     const handleChange = (value) => {
+      hasChanges.value = true; // 当内容改变时，标记有未保存的更改
       emit('change', value);
     };
 
@@ -129,17 +136,20 @@ export default {
       emit('save', content);
     };
 
-    const saveNote = async (content) => {
-      if (updating.value) return;
+    const saveNote = async (currentContent) => {
+      // 确保有 noteId，有改动，并且当前没有正在保存
+      if (!props.noteId || !hasChanges.value || updating.value) {
+        return;
+      }
       updating.value = true;
 
       try {
-        const noteId = props.noteId;
-        await updateNote(noteId, { content });
-        ElMessage.success("笔记已更新");
+        await updateNote(props.noteId, { content: currentContent });
+        ElMessage.success("笔记已保存");
+        hasChanges.value = false; // 保存成功后重置标记
       } catch (e) {
-        ElMessage.error(`更新失败: ${e.message}`);
-        console.error("更新失败", e);
+        ElMessage.error(`保存失败: ${e.message}`);
+        console.error("保存失败", e);
       } finally {
         updating.value = false;
       }
@@ -174,6 +184,26 @@ export default {
       }
     };
 
+    // 启动自动保存定时器
+    const startAutoSave = () => {
+      clearAutoSave(); // 先清除已有的定时器
+      if (props.autoSave && props.noteId && props.autoSaveInterval > 0) {
+        autoSaveTimer = setInterval(() => {
+          if (hasChanges.value) {
+            saveNote(content.value);
+          }
+        }, props.autoSaveInterval);
+      }
+    };
+
+    // 清除自动保存定时器
+    const clearAutoSave = () => {
+      if (autoSaveTimer) {
+        clearInterval(autoSaveTimer);
+        autoSaveTimer = null;
+      }
+    };
+
     onMounted(async () => {
       // 如果有noteId，则获取笔记内容
       if (props.noteId) {
@@ -184,6 +214,19 @@ export default {
       if (props.autoFocus && mdEditorRef.value) {
         mdEditorRef.value.focus();
       }
+      startAutoSave(); // 组件挂载时启动自动保存
+    });
+
+    onBeforeUnmount(() => {
+      clearAutoSave(); // 组件卸载前清除定时器
+      if (props.autoSave && hasChanges.value && props.noteId) {
+        saveNote(content.value); // 尝试最后保存一次
+      }
+    });
+
+    // 监听 autoSave 和 noteId 的变化以重新启动定时器
+    watch(() => [props.autoSave, props.noteId, props.autoSaveInterval], () => {
+      startAutoSave();
     });
 
     const insertContent = (text) => {
