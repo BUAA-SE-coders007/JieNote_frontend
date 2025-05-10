@@ -5,11 +5,12 @@
     <div class="px-6">
       <div class="flex flex-wrap justify-center">
         <div class="w-full px-4 flex justify-center">
-          <div class="relative">
-            <img
-                alt="Profile"
-                :src="userData.avatar"
-                class="shadow-xl rounded-full h-auto align-middle border-none absolute -m-16 -ml-20 lg:-ml-16 max-w-150-px"
+          <div class="relative z-10">
+            <el-avatar
+              :src="userData.avatar"
+              :size="120"
+              shape="circle"
+              style="position: absolute; left: 50%; top: 0; transform: translate(-50%, -50%); z-index: 10; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"
             />
           </div>
         </div>

@@ -43,7 +43,7 @@
             </svg>
           </div>
         </section>
-        <section class="relative py-16 bg-blueGray-200">
+        <section class="relative z-40 py-16 bg-blueGray-200">
           <div
               v-if="isLoading"
               v-loading="true"
@@ -60,12 +60,15 @@
                   <div
                       class="w-full lg:w-3/12 px-4 lg:order-2 flex justify-center"
                   >
-                    <div class="relative">
-                      <img
-                          alt="Avatar"
-                          :src="user.avatar || team2"
-                          class="shadow-xl rounded-full h-auto align-middle border-none absolute -m-16 -ml-20 lg:-ml-16 max-w-150-px"
+                    <div class="relative z-50" style="pointer-events:auto;overflow:visible;">
+                      <!-- avatar-begin -->
+                      <el-avatar
+                        :src="user.avatar || team2"
+                        :size="120"
+                        shape="circle"
+                        style="position: absolute; left: 50%; top: 0; transform: translate(-50%, -50%); z-index: 50; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"
                       />
+                      <!-- avatar-end -->
                     </div>
                   </div>
                   <div
@@ -417,14 +420,24 @@ export default {
         this.user = {
           id: userData.id,
           username: userData.username || `user_${userData.id}`,
-          avatar: userData.avatar
-              ? `http://43.143.228.56:8000${userData.avatar}`
-              : team2,
+          // 使用 IP 地址 http://43.143.228.56:8000/ 进行拼接
+          // 同时处理 userData.avatar 可能已经是完整 URL 的情况
+          avatar: (() => {
+            if (!userData.avatar) {
+              return team2;
+            }
+            if (userData.avatar.startsWith('http://') || userData.avatar.startsWith('https://')) {
+              return userData.avatar; // 已经是完整 URL，直接使用
+            }
+            // 否则，拼接 IP 地址
+            const path = userData.avatar.startsWith('/') ? userData.avatar.substring(1) : userData.avatar;
+            return `http://43.143.228.56:8000/${path}`;
+          })(),
           address: userData.address || "未知",
           university: userData.university || "未知",
           introduction: userData.introduction || "这里什么也没有",
         };
-        console.log(this.user)
+        console.log('fetchUser result:', this.user);
         localStorage.setItem("user", JSON.stringify(this.user));
       } catch (error) {
         console.error("获取用户信息失败：", error);
