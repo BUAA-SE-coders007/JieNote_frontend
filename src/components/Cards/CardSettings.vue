@@ -106,19 +106,47 @@
           <h6 class="text-blueGray-400 text-sm mt-3 mb-6 font-bold uppercase">
             上传头像
           </h6>
-          <div class="flex flex-wrap">
-            <div class="w-full lg:w-12/12 px-4">
+          <div class="flex flex-wrap items-center">
+            <div class="w-full lg:w-8/12 px-4">
               <div class="relative w-full mb-3">
                 <input
-                    type="file"
-                    @change="handleFileUpload"
-                    accept="image/*"
-                class="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
+                  type="file"
+                  @change="handleFileUpload"
+                  accept="image/*"
+                  class="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
                 />
                 <p class="text-xs text-gray-500 mt-1">仅支持 JPG/PNG/WebP 格式图片</p>
               </div>
             </div>
+            <div class="w-full lg:w-4/12 px-4 flex justify-start">
+              <div v-if="previewAvatar" class="ml-4">
+                <img :src="previewAvatar" alt="头像预览" style="width:80px;height:80px;border-radius:50%;object-fit:cover;">
+              </div>
+            </div>
           </div>
+          <div v-if="showCropper" class="modal-overlay">
+                  <div class="modal-content" style="width:350px;">
+                    <h6 class="mb-2 text-blueGray-700 font-bold">裁剪头像</h6>
+                    <cropper
+                      ref="cropper"
+                      :src="cropperImage"
+                      :stencil-component="CircleStencil"
+                      :stencil-props="{
+                        aspectRatio: 1,
+                        handlers: {},
+                        movable: false,
+                        resizable: false,
+                      }"
+                      :autoZoom="true"
+                      image-restriction="stencil"
+                      style="height:220px;width:220px;background:#f5f5f5;"
+                    />
+                    <div class="flex justify-end mt-4 gap-2">
+                      <button type="button" @click="handleCropCancel" class="px-3 py-1 rounded">取消</button>
+                      <button type="button" @click="handleCropConfirm" class="px-3 py-1 rounded">确定</button>
+                    </div>
+                  </div>
+                </div>
 
           <!-- 确认按钮 -->
           <div class="flex justify-end mt-6 gap-4">
@@ -146,7 +174,9 @@
 
 <script>
 import axios from "axios";
-import {ElMessage, ElMessageBox} from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Cropper, CircleStencil } from 'vue-advanced-cropper'
+import 'vue-advanced-cropper/dist/style.css'
 
 export default {
   props: {
@@ -161,11 +191,14 @@ export default {
       previewAvatar: null, // 新增预览URL变量
       initialForm: { ...this.userData }, // 保存初始数据用于比较
       avatar: null,
+      showCropper: false, // 控制裁剪弹窗显示
+      cropperImage: null, // 裁剪原图
       showChangePassword: false, // 控制修改密码窗口显示
       passwordForm: {
         oldPassword: "",
         newPassword: "",
       },
+      CircleStencil: CircleStencil // 在data中引用以便模板使用
     };
   },
   watch: {
@@ -247,13 +280,36 @@ export default {
       }
     },
     handleFileUpload(event) {
-      this.avatar = event.target.files[0]; // 获取上传的文件
-      if (this.avatar) {
-        // 生成本地预览URL
-        this.previewAvatar = URL.createObjectURL(this.avatar);
-        console.log(this.previewAvatar)
-      } else {
-        this.previewAvatar = null
+      const file = event.target.files[0];
+      if (file) {
+        this.cropperImage = URL.createObjectURL(file);
+        this.showCropper = true;
+      }
+    },
+    // 裁剪确认
+    async handleCropConfirm() {
+      const cropper = this.$refs.cropper;
+      if (cropper && cropper.getResult) {
+        const result = cropper.getResult();
+        if (result && result.canvas) {
+          result.canvas.toBlob(blob => {
+            this.avatar = blob;
+            this.previewAvatar = URL.createObjectURL(blob);
+            this.showCropper = false;
+            if (this.cropperImage) {
+              URL.revokeObjectURL(this.cropperImage);
+              this.cropperImage = null;
+            }
+          }, 'image/png');
+        }
+      }
+    },
+    // 裁剪取消
+    handleCropCancel() {
+      this.showCropper = false;
+      if (this.cropperImage) {
+        URL.revokeObjectURL(this.cropperImage);
+        this.cropperImage = null;
       }
     },
     async submitSettings() {
@@ -322,6 +378,10 @@ export default {
       }
     },
   },
+  components: {
+    Cropper,
+    // CircleStencil // 如果在模板中直接使用 :stencil-component="CircleStencil" 且CircleStencil已导入，则无需在此注册
+  }
 };
 </script>
 
