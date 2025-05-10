@@ -21,7 +21,7 @@
 <script>
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
-import { ref, onMounted, watch, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
 import { updateNote, getNotes } from '@/api/note';
 import { ElMessage } from 'element-plus';
 
@@ -42,6 +42,10 @@ export default {
     autoSave: {
       type: Boolean,
       default: false,
+    },
+    autoSaveInterval: {
+      type: Number,
+      default: 30000, // 默认30秒
     },
     noteId: {
       type: String,
@@ -70,6 +74,8 @@ export default {
     const content = ref(props.modelValue);
     const updating = ref(false);
     const preview = ref(true);
+    const hasChanges = ref(false); // 标记是否有未保存的更改
+    let autoSaveTimer = null;
 
     // 计算编辑器样式，设置高度
     const editorStyle = computed(() => {
@@ -114,6 +120,7 @@ export default {
     });
 
     const handleChange = (value) => {
+      hasChanges.value = true; // 当内容改变时，标记有未保存的更改
       emit('change', value);
     };
 
@@ -122,24 +129,29 @@ export default {
       emit('error', err);
     };
 
-    const handleSave = async (content) => {
-      if (props.autoSave && props.noteId) {
-        await saveNote(content);
-      }
-      emit('save', content);
+    const handleSave = async (contentFromEditorEvent) => {
+      //手动保存总是尝试保存，并显示通知
+      await saveNote(contentFromEditorEvent, true);
+      emit('save', contentFromEditorEvent);
     };
 
-    const saveNote = async (content) => {
-      if (updating.value) return;
+    // 添加 showNotification 参数，默认为 false，用于控制是否显示成功消息
+    const saveNote = async (currentContent, showNotification = false) => {
+      // 确保有 noteId，有改动，并且当前没有正在保存
+      if (!props.noteId || !hasChanges.value || updating.value) {
+        return;
+      }
       updating.value = true;
 
       try {
-        const noteId = props.noteId;
-        await updateNote(noteId, { content });
-        ElMessage.success("笔记已更新");
+        await updateNote(props.noteId, { content: currentContent });
+        if (showNotification) {
+          ElMessage.success("笔记已保存"); // 手动保存时显示
+        }
+        hasChanges.value = false; // 保存成功后重置标记
       } catch (e) {
-        ElMessage.error(`更新失败: ${e.message}`);
-        console.error("更新失败", e);
+        ElMessage.error(`保存失败: ${e.message}`); // 统一错误信息
+        console.error("保存失败", e);
       } finally {
         updating.value = false;
       }
@@ -174,6 +186,42 @@ export default {
       }
     };
 
+    // 启动自动保存定时器
+    const startAutoSave = () => {
+      clearAutoSave(); // 先清除已有的定时器
+      if (props.autoSave && props.noteId && props.autoSaveInterval > 0) {
+        autoSaveTimer = setInterval(() => {
+          if (hasChanges.value) {
+            // 定时自动保存，不显示通知
+            saveNote(content.value, false);
+          }
+        }, props.autoSaveInterval);
+      }
+    };
+
+    // 清除自动保存定时器
+    const clearAutoSave = () => {
+      if (autoSaveTimer) {
+        clearInterval(autoSaveTimer);
+        autoSaveTimer = null;
+      }
+    };
+
+    const handleBeforeUnload = (event) => { // Renamed back to 'event' as it will be used
+      if (props.autoSave && hasChanges.value && props.noteId) {
+        // 尝试在页面卸载前保存笔记 (如果当前没有正在进行的保存操作)
+        // 注意: 异步操作在 beforeunload 事件中不保证完成
+        if (!updating.value) {
+          saveNote(content.value, false);
+        }
+
+        // 如果有未保存的更改, 总是提示用户，因为异步保存可能未完成
+        // 这会显示浏览器原生的 "离开此网站?" 对话框
+        event.preventDefault();
+        event.returnValue = ''; // Chrome 和一些其他浏览器需要这个来显示提示
+      }
+    };
+
     onMounted(async () => {
       // 如果有noteId，则获取笔记内容
       if (props.noteId) {
@@ -184,6 +232,23 @@ export default {
       if (props.autoFocus && mdEditorRef.value) {
         mdEditorRef.value.focus();
       }
+      startAutoSave(); // 组件挂载时启动自动保存
+      window.addEventListener('beforeunload', handleBeforeUnload);
+    });
+
+    onBeforeUnmount(() => {
+      clearAutoSave(); // 组件卸载前清除定时器
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      // Vue 组件卸载时的保存逻辑 (例如SPA内部导航)
+      if (props.autoSave && hasChanges.value && props.noteId && !updating.value) {
+        // 退出前自动保存，不显示通知
+        saveNote(content.value, false); 
+      }
+    });
+
+    // 监听 autoSave 和 noteId 的变化以重新启动定时器
+    watch(() => [props.autoSave, props.noteId, props.autoSaveInterval], () => {
+      startAutoSave();
     });
 
     const insertContent = (text) => {

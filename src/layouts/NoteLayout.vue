@@ -38,7 +38,14 @@
         <pane :size="43" min-size="20">
           <!-- 笔记编辑区域 -->
           <div class="note-container">
-            <MdEditor class="md-editor" v-model="editorContent" />
+            <CustomMdEditor
+              class="md-editor"
+              v-model="editorContent"
+              :note-id="noteId"
+              :autoSave="true"
+              :autoSaveInterval="30000" 
+              :fullHeight="true"
+            />
           </div>
         </pane>
       </splitpanes>
@@ -49,7 +56,8 @@
 <script>
 import { Back, Loading } from '@element-plus/icons-vue';
 import http from '@/utils/http';
-import MdEditor from '@/components/Editor/MdEditor.vue';
+import CustomMdEditor from '@/components/Editor/MdEditor.vue'; // 使用 CustomMdEditor
+import { getNotes } from '@/api/note'; // 导入 getNotes API
 import { Splitpanes, Pane } from 'splitpanes';
 import 'splitpanes/dist/splitpanes.css';
 import { ElMessage } from 'element-plus';
@@ -59,7 +67,7 @@ export default {
   components: {
     Back,
     Loading,
-    MdEditor,
+    CustomMdEditor, // 注册 CustomMdEditor
     Splitpanes,
     Pane
   },
@@ -67,14 +75,15 @@ export default {
     return {
       pdfUrl: null,
       documentTitle: "",
-      editorContent: ""
+      editorContent: "",
+      noteId: null, // 新增 noteId
+      articleId: null, // 存储 articleId
     }
   },
   methods: {
     async fetchPdf(articleId) {
+      this.articleId = articleId; // 存储 articleId
       try {
-        const token = localStorage.getItem("authToken");
-        console.log(token)
         const response = await http.get("/article/readArticle", {
           params: {
             article_id: articleId,
@@ -84,6 +93,8 @@ export default {
 
         // 获取文档标题
         await this.fetchDocumentTitle(articleId);
+        // 获取关联的笔记
+        await this.fetchAssociatedNote(articleId);
 
         const blob = new Blob([response.data], { type: "application/pdf" });
         this.pdfUrl = URL.createObjectURL(blob);
@@ -95,19 +106,43 @@ export default {
 
     async fetchDocumentTitle(articleId) {
       try {
-        // 此处可以添加获取文献标题的API调用
-        // 暂时使用文献ID作为标题
-        this.documentTitle = `文献ID: ${articleId}`;
+        // 实际项目中应调用API获取文献真实标题
+        this.documentTitle = `文献ID: ${articleId}`; // 保持临时方案
       } catch (error) {
         console.error("获取文献信息失败：", error);
+        this.documentTitle = `文献ID: ${articleId}`; // 出错时回退
+      }
+    },
+
+    async fetchAssociatedNote(articleId) {
+      try {
+        const response = await getNotes({ article_id: articleId });
+        if (response && response.data && response.data.notes && response.data.notes.length > 0) {
+          const firstNote = response.data.notes[0];
+          this.noteId = firstNote.id;
+          // CustomMdEditor 会通过 noteId prop 自动加载其内容，
+          // 并通过 v-model 更新 editorContent。
+          // 如果 CustomMdEditor 内部加载内容后没有立即通过 emit 更新 modelValue，
+          // 可能需要在这里手动设置 this.editorContent = firstNote.content;
+          // 但通常 v-model 组件会处理好双向绑定。
+        } else {
+          this.noteId = null; // 没有关联笔记
+          this.editorContent = ""; // 清空编辑器内容
+          ElMessage.info("当前文献没有关联笔记，您可以开始新的记录。");
+        }
+      } catch (error) {
+        console.error("获取关联笔记失败：", error);
+        ElMessage.error("获取关联笔记失败！");
+        this.noteId = null;
+        this.editorContent = "";
       }
     }
   },
   mounted() {
-    const articleId = this.$route.query.article_id;
+    const currentArticleId = this.$route.query.article_id;
     console.log("Current route:", this.$route);
-    if (articleId) {
-      this.fetchPdf(articleId);
+    if (currentArticleId) {
+      this.fetchPdf(currentArticleId);
     } else {
       ElMessage.error("请先选择要阅读的文献");
       this.$router.push("/admin/dashboard");
@@ -193,7 +228,6 @@ export default {
   overflow: hidden;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
 }
-
 
 .pdf-viewer {
   width: 100%;
