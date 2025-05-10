@@ -398,6 +398,50 @@ export default {
     //     console.error("获取数据失败：", error);
     //   }
     // },
+
+    async fetchArticleCount() {
+      try {
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+          console.error("Token 不存在，请先登录！");
+          return;
+        }
+
+        const response = await axios.get("https://jienote.top/article/selfArticleStatistic", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        this.articleCount = response.data.article_total_num; // 更新文献数量
+      } catch (error) {
+        console.error("获取文献数量失败：", error);
+        ElMessage.error("获取文献数量失败！");
+      }
+    },
+
+    async fetchNoteCount() {
+      try {
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+          console.error("Token 不存在，请先登录！");
+          return;
+        }
+
+        const response = await axios.get("https://jienote.top/notes/count", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        this.noteCount = response.data.notes; // 更新笔记数量
+      } catch (error) {
+        console.error("获取笔记数量失败：", error);
+        ElMessage.error("获取笔记数量失败！");
+      }
+    },
+
+
     async fetchUser() {
       try {
         const token = localStorage.getItem("authToken");
@@ -457,7 +501,9 @@ export default {
       await Promise.all([
         this.initTokenRefresh(),
         // this.fetchData(),
-        this.fetchUser()
+        this.fetchUser(),
+        this.fetchArticleCount(), // 获取文献数量
+        this.fetchNoteCount(), // 获取笔记数量
       ])
 
       // 启动定时刷新
