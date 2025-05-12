@@ -25,7 +25,7 @@ import Dashboard from "@/views/admin/Dashboard.vue";
 import Settings from "@/views/admin/Settings.vue";
 import Tables from "@/views/admin/Tables.vue";
 import Maps from "@/views/admin/Maps.vue";
-import Note from "@/views/admin/Note";
+import note from "@/views/note";
 
 // views for Auth layout
 
@@ -52,12 +52,12 @@ const routes = [
     component: Admin,
     children: [
       {
-        path: "/admin/note",
-        component: Note,
+        path: "/note",
+        component: note,
       },
       {
-        path: "/admin/note/:note_id",
-        component: Note,
+        path: "/note/:note_id",
+        component: note,
       },
       {
         path: "/paper-library",
