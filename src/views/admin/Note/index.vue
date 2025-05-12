@@ -60,7 +60,7 @@ export default {
     };
     
     const handleBack = () => {
-      router.push('/admin/dashboard');
+      router.push('/paper-library');
     };
     
     // 处理编辑区与预览区宽度比例变化

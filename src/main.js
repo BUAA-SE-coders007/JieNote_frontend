@@ -48,7 +48,7 @@ const routes = [
   },
   {
     path: "/admin",
-    redirect: "/admin/dashboard",
+    redirect: "/paper-library",
     component: Admin,
     children: [
       {
@@ -60,7 +60,7 @@ const routes = [
         component: Note,
       },
       {
-        path: "/admin/dashboard",
+        path: "/paper-library",
         component: Dashboard,
       },
       {
