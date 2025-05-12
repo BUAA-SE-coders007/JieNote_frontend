@@ -427,6 +427,21 @@ import {ElMessage, ElMessageBox} from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
 import { clearAuth } from '@/utils/auth';
 import { onUnmounted } from 'vue'
+import {
+  getSelfTree,
+  selfCreateFolder,
+  uploadToSelfFolder,
+  selfArticleToRecycleBin,
+  selfFolderToRecycleBin,
+  changeFolderName,
+  changeArticleName,
+  createTag,
+  deleteTag,
+  allTagsOrder,
+  getArticleTags,
+  readArticle
+} from '@/api/dashboard';
+import { createNote, updateNote, deleteNote as apiDeleteNote } from '@/api/note'; // Added getNotes, getNoteTitles
 
 export default {
   name: "dashboard-page",
@@ -534,161 +549,83 @@ export default {
     // 添加标签
     const addTag = async () => {
       if (newTag.value.trim()) {
-        currentEditNode.value.tags.push({
-          tag_id: Date.now(), // 临时ID
-          tag_content: newTag.value.trim()
-        })
-        //向后端发送请求
-        const tagdata =  {
-          article_id: currentEditNode.value.true_id,
-          content: newTag.value.trim()
+        try {
+          const tagData = {
+            article_id: currentEditNode.value.true_id,
+            content: newTag.value.trim()
+          };
+          const response = await createTag(tagData);
+          // Assuming the backend returns the created tag with its ID
+          // If not, the temporary ID logic might need adjustment or removal if not strictly necessary for UI
+          currentEditNode.value.tags.push({
+            tag_id: response.data?.tag_id || Date.now(), // Use returned ID if available
+            tag_content: newTag.value.trim()
+          });
+          newTag.value = '';
+          ElMessage.success('标签添加成功');
+        } catch (error) {
+          ElMessage.error('标签添加失败: ' + error.message);
         }
-        const res = await fetch(`https://jienote.top/article/createTag`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-          },
-          body: JSON.stringify(tagdata)
-        })
-
-        if (res.ok) {
-          console.log('标签添加成功')
-        } else {
-          console.log('标签添加失败')
-        }
-        newTag.value = ''
       }
     }
 
     // 删除标签
     const removeTag = async (index) => {
-      //向后端发送请求
-      const res = await fetch(`https://jienote.top/article/deleteTag?tag_id=${currentEditNode.value.tags[index].tag_id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-        },
-      })
-      if (res.ok) {
-        currentEditNode.value.tags.splice(index, 1)
-        console.log('标签删除成功')
-      } else {
-        console.log('标签删除失败')
+      try {
+        await deleteTag(currentEditNode.value.tags[index].tag_id);
+        currentEditNode.value.tags.splice(index, 1);
+        ElMessage.success('标签删除成功');
+      } catch (error) {
+        ElMessage.error('标签删除失败: ' + error.message);
       }
     }
 
     // 标签拖拽结束
     const onTagDragEnd = async () => {
-      //向后端发送请求
-      const tagdata =  {
-        article_id: currentEditNode.value.true_id,
-        tag_contents: currentEditNode.value.tags.map(tag => tag.tag_content)
-      }
-      console.log(tagdata.tag_contents)
-      const res = await fetch(`https://jienote.top/article/allTagsOrder`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-        },
-        body: JSON.stringify(tagdata)
-      })
-      if (res.ok) {
-        console.log('标签顺序已更新')
-      } else {
-        console.log('标签顺序更新失败')
+      try {
+        const tagData = {
+          article_id: currentEditNode.value.true_id,
+          tag_contents: currentEditNode.value.tags.map(tag => tag.tag_content)
+        };
+        await allTagsOrder(tagData);
+        ElMessage.success('标签顺序已更新');
+      } catch (error) {
+        ElMessage.error('标签顺序更新失败: ' + error.message);
       }
     }
 
     // 保存修改
     const saveEdit = async () => {
       try {
-
         if (currentEditNode.value.depth === 0) {
-          // 更新节点名称
           const nodeData = {
             folder_id: currentEditNode.value.true_id,
             folder_name: currentEditNode.value.label
-          }
-          console.log('this is zheli')
-          console.log(nodeData)
-          const res = await fetch(`https://jienote.top/article/changeFolderName`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-            },
-            body: JSON.stringify(nodeData)
-          })
-          console.log(res)
-          if (res.ok) {
-            console.log(1)
-          } else {
-            ElMessage.error('节点名称更新失败')
-          }
+          };
+          await changeFolderName(nodeData);
         } else if (currentEditNode.value.depth === 1) {
-          // 更新节点名称
           const nodeData = {
             article_id: currentEditNode.value.true_id,
             article_name: currentEditNode.value.label
-          }
-          const res = await fetch(`https://jienote.top/article/changeArticleName`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-            },
-            body: JSON.stringify(nodeData)
-          })
-          if (res.ok) {
-            console.log(1)
-          } else {
-            ElMessage.error('节点名称更新失败')
-          }
-          //await updateTags(currentEditNode.value.tags)
+          };
+          await changeArticleName(nodeData);
+          // 标签顺序已在 onTagDragEnd 中处理，如果需要单独保存标签内容（非顺序），则需额外逻辑
         } else if (currentEditNode.value.depth === 2) {
-          // 更新节点名称
-          let noteName = currentEditNode.value.label
+          let noteName = currentEditNode.value.label;
           if (!noteName.endsWith('.md')) {
-            noteName += '.md'
+            noteName += '.md';
           }
-          const res = await fetch(`https://jienote.top/notes/${currentEditNode.value.true_id}?title=${noteName}`, {
-            method: 'PUT',
-            headers: {
-              'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-            },
-          })
-          console.log(res)
-          if (res.ok) {
-            console.log(1)
-          } else {
-            ElMessage.error('节点名称更新失败')
-          }
+          // updateNote API expects (noteId, { title, content, article_id })
+          // Here we only update the title. If content/article_id can also be changed via this dialog,
+          // they should be included. Assuming only title for now.
+          await updateNote(currentEditNode.value.true_id, { title: noteName });
         }
 
-        // // 根据节点类型调用不同API
-        // const apiUrl = currentEditNode.value.depth === 0
-        //     ? '/api/updateFolder'
-        //     : '/api/updateArticle'
-
-        // // 更新标签
-        // if (currentEditNode.value.depth === 1) {
-        //   await updateTags(currentEditNode.value.true_id, currentEditNode.value.tags)
-        // }
-
-        // // 调用保存接口
-        // await fetch(apiUrl, {
-        //   method: 'PUT',
-        //   body: JSON.stringify(nodeData)
-        // })
-
-        // 刷新数据，这个等会要保留
-        await findAllfolders()
-        ElMessage.success('保存成功')
-        showEditDialog.value = false
+        await findAllfolders(); // Refresh data
+        ElMessage.success('保存成功');
+        showEditDialog.value = false;
       } catch (error) {
-        ElMessage.error('保存失败: ' + error.message)
+        ElMessage.error('保存失败: ' + error.message);
       }
     }
 
@@ -1044,32 +981,14 @@ export default {
                 filePromises.push(
                     (async () => {
                       try {
-                        const res = await fetch(`https://jienote.top/article/readArticle?article_id=${level2Node.true_id}`, {
-                          headers: {
-                            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-                          }
-                        });
-
-                        if (res.ok) {
-                          const blob = await res.blob();
-                          folder.file(fileName, blob);
-                          ElMessage({
-                            message: `成功获取文件: ${fileName}`,
-                            type: 'success'
-                          });
-                        } else {
-                          console.error(`获取文件失败: ${fileName}`, res.status);
-                          ElMessage({
-                            message: `获取文件失败: ${fileName}`,
-                            type: 'error'
-                          });
-                        }
+                        // Use the API function readArticle
+                        // readArticle is configured in http.js to return blob data directly for this endpoint
+                        const blob = await readArticle(level2Node.true_id);
+                        folder.file(fileName, blob);
+                        ElMessage.success(`成功获取文件: ${fileName}`);
                       } catch (error) {
-                        console.error(`获取文件出错: ${fileName}`, error);
-                        ElMessage({
-                          message: `获取文件出错: ${fileName}`,
-                          type: 'error'
-                        });
+                        console.error(`获取文件 ${fileName} 出错:`, error);
+                        ElMessage.error(`获取文件 ${fileName} 失败: ${error.message || '未知错误'}`);
                       }
                     })()
                 );
@@ -1172,88 +1091,31 @@ export default {
 
 
       // 判断节点类型
-      if (parent.parent === null) {
-        // 如果父节点的父节点是null，说明当前节点是一级分类
-        const res = await fetch(`https://jienote.top/article/selfFolderToRecycleBin?folder_id=${node.data.true_id}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-          }
-        })
-        if (!res.ok) {
-          ElMessage({
-            message: '删除文件夹失败',
-            type: 'error'
-          })
-        } else {
-          const currentItems = dataSource.value.length;
-          // 如果删除的是最后一项且不是第一页
-          if (currentItems === 1 && currentPage.value > 1) {
-            currentPage.value -= 1;
-          }
-          await refreshData();
-          ElMessage({
-            message: '删除成功',
-            type: 'success'
-          })
+      try {
+        if (parent.parent === null) { // 一级分类 (Folder)
+          await selfFolderToRecycleBin(node.data.true_id);
+        } else if (node.level === 2) { // 二级分类 (Article)
+          await selfArticleToRecycleBin(node.data.true_id);
+        } else { // 三级分类 (Note)
+          await apiDeleteNote(node.data.true_id);
         }
-        console.log(res);
-      } else if (node.level === 2) {
-        // 二级分类
-        const res = await fetch(`https://jienote.top/article/selfArticleToRecycleBin?article_id=${node.data.true_id}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-          }
-        })
-        if (!res.ok) {
-          ElMessage({
-            message: '删除文献失败',
-            type: 'error'
-          })
-        } else {
-          const currentItems = dataSource.value.length;
-          // 如果删除的是最后一项且不是第一页
-          if (currentItems === 1 && currentPage.value > 1) {
-            currentPage.value -= 1;
-          }
-          await refreshData();
-          ElMessage({
-            message: '删除成功',
-            type: 'success'
-          })
-        }
-        console.log(res);
-      } else {
-        //三级分类
-        const res = await fetch(`https://jienote.top/notes/${node.data.true_id}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-          }
-        })
 
-        console.log('this is res')
-        console.log(res)
-        if (!res.ok) {
-          ElMessage({
-            message: '删除笔记失败',
-            type: 'error'
-          })
-        } else {
-          const currentItems = dataSource.value.length;
-          // 如果删除的是最后一项且不是第一页
-          if (currentItems === 1 && currentPage.value > 1) {
-            currentPage.value -= 1;
-          }
-          await refreshData();
-          ElMessage({
-            message: '删除成功',
-            type: 'success'
-          })
-        }
-        console.log(res);
+        // 统一处理删除成功后的逻辑
+        // const currentItems = dataSource.value.length;
+        // 如果删除的是最后一项且不是第一页 (这个逻辑可能需要调整，因为dataSource是整个树，不是当前页的项目)
+        // 考虑在refreshData中处理页码调整
+        // if (currentItems === 0 && currentPage.value > 1) { // If last item on a page > 1
+        //   currentPage.value -= 1;
+        // }
+        await refreshData(); // Refresh data which also handles pagination
+        ElMessage.success('删除成功');
 
+      } catch (error) {
+        let itemType = '项目';
+        if (parent.parent === null) itemType = '文件夹';
+        else if (node.level === 2) itemType = '文献';
+        else if (node.level === 3) itemType = '笔记';
+        ElMessage.error(`删除${itemType}失败: ` + error.message);
       }
     }
 
@@ -1271,44 +1133,25 @@ export default {
         return
       }
 
-      //新建文件夹的信息传回后端
-      const newFolderData = {
-        folder_name: newCategoryForm.value.name,
-      }
+      try {
+        const folderName = newCategoryForm.value.name.trim();
+        const newFolderData = {
+          folder_name: folderName,
+        };
 
-      const res = await fetch("https://jienote.top/article/selfCreateFolder", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-        },
-        body: JSON.stringify(newFolderData)
-      })
-      console.log('新建文件夹信息')
-      console.log(res);
-      const data = await res.json();
-      console.log(data);
-      console.log(res.json());
-      if (!res.ok) {
-        ElMessage({
-          message: '新建分类失败',
-          type: 'error'
-        })
-      }
-      if (res.ok) {
-        const newCategory = {
-          id: id++,
-          label: newCategoryForm.value.name,
-          depth: 0,
-          true_id: data.folder_id,
-          children: []
-        }
-        dataSource.value.push(newCategory)
-        dataSource.value = [...dataSource.value]
-        await refreshData(); // 新增
+        // API call using the imported function
+        await selfCreateFolder(newFolderData);
+        // Backend is expected to return success or throw an error handled by http.js or here.
+        // The response might contain data like { folder_id: ... }, but it's not explicitly used here
+        // as refreshData() will fetch the updated tree.
+
+        await refreshData(); // Refresh data to get the latest tree structure including the new folder
         ElMessage.success('新建分类成功');
+        showNewCategoryDialog.value = false;
+      } catch (error) {
+        console.error('新建分类失败:', error);
+        ElMessage.error('新建分类失败: ' + (error.message || '请稍后再试'));
       }
-      showNewCategoryDialog.value = false
     }
 
     const confirmNewNote = async () => {
@@ -1329,51 +1172,35 @@ export default {
 
 
 
-        // 创建笔记的信息传回后端
         const newNoteData = {
           title: noteName,
           article_id: newNoteForm.value.parentData.true_id,
-          content: "",
-        }
-        const res = await fetch("https://jienote.top/notes/create", {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-          },
-          body: JSON.stringify(newNoteData)
-        })
-        console.log('笔记信息')
-        console.log(newNoteData)
-        console.log('新建笔记信息')
-        console.log(res);
-        const data = await res.json();
-        console.log(data);
-        if (res.ok) {
-          // 创建新节点
-          const newChild = {
-            id: id++,
-            label: noteName,
-            depth:2,
-            true_id:data.note_id,
-            children: []
-          }
+          content: "", // Default content for a new note
+        };
+        const response = await createNote(newNoteData); // API call
+        // Assuming response.data contains { note_id: ... } or similar for the new note's ID
 
-          // 添加到父节点
-          if (!newNoteForm.value.parentData.children) {
-            newNoteForm.value.parentData.children = []
-          }
-          newNoteForm.value.parentData.children.push(newChild)
-          dataSource.value = [...dataSource.value]
-          ElMessage.success('笔记创建成功');
+        // Create new node for the tree
+        const newChild = {
+          id: id++, // Keep local ID generation for tree rendering
+          label: noteName,
+          depth: 2,
+          true_id: response.data.note_id, // Use ID from backend
+          children: []
+        };
+
+        // Add to parent node in the local tree
+        if (!newNoteForm.value.parentData.children) {
+          newNoteForm.value.parentData.children = [];
         }
-        showNewNoteDialog.value = false
+        newNoteForm.value.parentData.children.push(newChild);
+        dataSource.value = [...dataSource.value]; // Trigger reactivity
+
+        ElMessage.success('笔记创建成功');
+        showNewNoteDialog.value = false;
       } catch (error) {
-        console.error('创建笔记失败:', error)
-        ElMessage({
-          message: '创建笔记失败: ' + error.message,
-          type: 'error'
-        })
+        console.error('创建笔记失败:', error);
+        ElMessage.error('创建笔记失败: ' + error.message);
       }
     }
 
@@ -1391,12 +1218,7 @@ export default {
 
     const fetchTags = async (articleId) => {
       try {
-        const res = await fetch(`https://jienote.top/article/getArticleTags?article_id=${articleId}`,{
-          headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-          }
-        });
-        const data = await res.json();
+        const { data } = await getArticleTags(articleId);
         return data.result || [];
       } catch (error) {
         console.error('获取标签失败:', error);
@@ -1497,20 +1319,15 @@ export default {
         id = 0; // 自增ID生成器
         console.log('开始加载完整文件树');
 
-        // 1. 一次性获取完整文件树数据
-        const url = new URL('https://jienote.top/article/selfTree', window.location.origin);
-        url.searchParams.append('page_number', currentPage.value);
-        url.searchParams.append('page_size', pageSize.value);
-
-        const response = await fetch(url, {
-          headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-          }
+        const response = await getSelfTree({
+          page_number: currentPage.value,
+          page_size: pageSize.value
         });
-        const data = await response.json();
+
+        const data = response.data;
         console.log('完整文件树原始数据:', data);
 
-        // 2. 转换数据结构
+        // 转换数据结构
         const transformedData = data.folders.map(folder => {
           // 一级节点：文件夹
           const folderNode = {
@@ -1556,7 +1373,7 @@ export default {
           return folderNode;
         });
 
-        // 3. 更新响应式数据
+        // 更新响应式数据
         dataSource.value = transformedData;
         totalFolders.value = data.total_folder_num;
         console.log('转换后的树形数据:', transformedData);
@@ -1597,49 +1414,34 @@ export default {
         console.log('this is pdfUploadForm.value.parentNode')
         console.log(pdfUploadForm.value.parentNode)
 
-        // 发送文件到后端
-        const res = await fetch(`https://jienote.top/article/uploadToSelfFolder?folder_id=${pdfUploadForm.value.parentNode.data.true_id}`, {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-          },
-          body: formData
-        })
+        // API call to upload file
+        const response = await uploadToSelfFolder(pdfUploadForm.value.parentNode.data.true_id, formData);
+        // Assuming response.data contains { article_id: ... }
+        const responseData = response.data;
 
-        console.log(res)
-        const data = await res.json();
 
-        if (!res.ok) {
-          throw new Error('上传失败')
+        // Create new node for the tree
+        const newChild = {
+          id: pdfUploadForm.value.parentNode.id || id++, // Keep local ID generation
+          label: `${fileName}.pdf`, // Backend might return the actual name, adjust if needed
+          depth: 1,
+          true_id: responseData.article_id, // Use ID from backend
+          tags: [], // New PDFs won't have tags initially
+          children: []
+        };
+
+        // Add to parent node in the local tree
+        if (!pdfUploadForm.value.parentData.children) {
+          pdfUploadForm.value.parentData.children = [];
         }
+        pdfUploadForm.value.parentData.children.push(newChild);
+        dataSource.value = [...dataSource.value]; // Trigger reactivity
 
-        // 创建新节点
-        if (res.ok) {
-          const newChild = {
-            id: pdfUploadForm.value.parentNode.id || id++,
-            label: `${fileName}.pdf`,
-            depth: 1,
-            true_id: data.article_id,
-            tags:[],
-            children: []
-          }
-
-          // 添加到父节点
-          if (!pdfUploadForm.value.parentData.children) {
-            pdfUploadForm.value.parentData.children = []
-          }
-          pdfUploadForm.value.parentData.children.push(newChild)
-          dataSource.value = [...dataSource.value]
-          ElMessage.success('PDF上传成功');
-        }
-        // 关闭弹窗
-        showPdfUploadDialog.value = false
+        ElMessage.success('PDF上传成功');
+        showPdfUploadDialog.value = false;
       } catch (error) {
-        console.error('上传PDF失败:', error)
-        ElMessage({
-          message: '上传PDF失败: ' + error.message,
-          type: 'error'
-        })
+        console.error('上传PDF失败:', error);
+        ElMessage.error('上传PDF失败: ' + error.message);
       }
     }
 
