@@ -63,7 +63,7 @@ import 'splitpanes/dist/splitpanes.css';
 import { ElMessage } from 'element-plus';
 
 export default {
-  name: "NoteLayout",
+  name: "PaperNote",
   components: {
     Back,
     Loading,

@@ -1,7 +1,7 @@
 import { createApp } from "vue";
 import { createWebHistory, createRouter } from "vue-router";
 
-import NoteLayout from '@/layouts/NoteLayout.vue';
+import PaperNote from '@/layouts/PaperNote.vue';
 // styles
 
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -101,8 +101,8 @@ const routes = [
     ],
   },
   {
-    path: "/admin/notelayout",
-    component: NoteLayout,
+    path: "/paper-note",
+    component: PaperNote,
   },
   {
     path: "/",
