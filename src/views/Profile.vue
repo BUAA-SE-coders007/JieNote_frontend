@@ -370,38 +370,6 @@ export default {
       this.$router.push("/admin/settings");
     },
 
-
-    // async fetchData() {
-    //   try {
-    //     const token = localStorage.getItem("authToken");
-    //     if (!token) {
-    //       console.error("Token 不存在，请先登录！");
-    //       return;
-    //     }
-    //
-    //     const response = await axios.get("https://jienote.top/notes", {
-    //       headers: {
-    //         Authorization: `Bearer ${token}`,
-    //       },
-    //     });
-    //
-    //     console.log("1111111111111111111111111111")
-    //     console.log(response.data)
-    //
-    //     const data = response.data;
-    //     console.log(data)
-    //     this.articleCount = new Set(data.notes.map((note) => note.article_id))
-    //         .size; // 文献数量
-    //     this.noteCount = data.notes.length; // 笔记数量
-    //     this.organizationCount = 5; // 假设组织数量为固定值
-    //     localStorage.setItem("article", this.articleCount);
-    //     localStorage.setItem("note", this.noteCount);
-    //     localStorage.setItem("organization", this.organizationCount);
-    //   } catch (error) {
-    //     console.error("获取数据失败：", error);
-    //   }
-    // },
-
     async fetchArticleCount() {
       try {
         const token = localStorage.getItem("authToken");
@@ -437,11 +405,73 @@ export default {
           },
         });
 
-        this.noteCount = response.data.notes; // 更新笔记数量
+        this.noteCount = response.data.count; // 更新笔记数量
       } catch (error) {
         console.error("获取笔记数量失败：", error);
         ElMessage.error("获取笔记数量失败！");
       }
+    },
+
+    async fetchLiteratureData() {
+      try {
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+          console.error("Token 不存在，请先登录！");
+          return;
+        }
+
+        const response = await axios.get("https://jienote.top/article/selfArticleStatistic", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const articles = response.data.articles;
+        const formattedData = this.formatData(articles);
+        this.literatureData.datasets[0].data = formattedData; // 更新文献新增数量
+      } catch (error) {
+        console.error("获取文献新增数量失败：", error);
+        ElMessage.error("获取文献新增数量失败！");
+      }
+    },
+
+    async fetchNotesData() {
+      try {
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+          console.error("Token 不存在，请先登录！");
+          return;
+        }
+
+        const response = await axios.get("https://jienote.top/notes/count/recent", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const notes = response.data.notes;
+        const formattedData = this.formatData(notes);
+        console.log('formattedData:', formattedData)
+        this.notesData.datasets[0].data = formattedData; // 更新笔记新增数量
+      } catch (error) {
+        console.error("获取笔记新增数量失败：", error);
+        ElMessage.error("获取笔记新增数量失败！");
+      }
+    },
+
+    formatData(data) {
+      const result = Array(7).fill(0); // 初始化7天的数据为0
+      const today = new Date();
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - (6 - i)); // 计算每一天的日期
+        const dateString = date.toISOString().split("T")[0]; // 格式化为 YYYY-MM-DD
+        const item = data.find((d) => d.date === dateString);
+        if (item) {
+          result[i] = item.count;
+        }
+      }
+      return result;
     },
 
 
@@ -517,6 +547,8 @@ export default {
         this.fetchUser(),
         this.fetchArticleCount(), // 获取文献数量
         this.fetchNoteCount(), // 获取笔记数量
+        this.fetchLiteratureData(), // 获取文献新增数量
+        this.fetchNotesData(), // 获取笔记新增数量
       ])
 
       // 启动定时刷新
