@@ -5,7 +5,7 @@
       <el-button
           type="primary"
           class="back-button"
-          @click="$router.push('/admin/dashboard')"
+          @click="$router.push('/paper-library')"
           circle
       >
         <el-icon><Back /></el-icon>
@@ -145,7 +145,7 @@ export default {
       this.fetchPdf(currentArticleId);
     } else {
       ElMessage.error("请先选择要阅读的文献");
-      this.$router.push("/admin/dashboard");
+      this.$router.push("/paper-library");
     }
   }
 };
