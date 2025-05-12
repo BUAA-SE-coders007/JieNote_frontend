@@ -1,7 +1,7 @@
 import { createApp } from "vue";
 import { createWebHistory, createRouter } from "vue-router";
 
-import NoteLayout from '@/layouts/NoteLayout.vue';
+import PaperNote from '@/layouts/PaperNote.vue';
 // styles
 
 import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -25,7 +25,7 @@ import Dashboard from "@/views/admin/Dashboard.vue";
 import Settings from "@/views/admin/Settings.vue";
 import Tables from "@/views/admin/Tables.vue";
 import Maps from "@/views/admin/Maps.vue";
-import Note from "@/views/admin/Note";
+import note from "@/views/note";
 
 // views for Auth layout
 
@@ -48,19 +48,19 @@ const routes = [
   },
   {
     path: "/admin",
-    redirect: "/admin/dashboard",
+    redirect: "/paper-library",
     component: Admin,
     children: [
       {
-        path: "/admin/note",
-        component: Note,
+        path: "/note",
+        component: note,
       },
       {
-        path: "/admin/note/:note_id",
-        component: Note,
+        path: "/note/:note_id",
+        component: note,
       },
       {
-        path: "/admin/dashboard",
+        path: "/paper-library",
         component: Dashboard,
       },
       {
@@ -101,8 +101,8 @@ const routes = [
     ],
   },
   {
-    path: "/admin/notelayout",
-    component: NoteLayout,
+    path: "/paper-note",
+    component: PaperNote,
   },
   {
     path: "/",

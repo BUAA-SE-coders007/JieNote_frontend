@@ -696,9 +696,9 @@ export default {
       // 检查是否是文献节点或笔记节点
       console.log("handleRead, node.level:", node.level, "depth:", data.depth)
       if (node.level === 2 && data.depth === 1) {  // PDF nodes: level 2 in tree, depth 1 in data
-        router.push(`/admin/notelayout?article_id=${data.true_id}`);
+        router.push(`/paper-note?article_id=${data.true_id}`);
       } else if (node.level === 3 && data.depth === 2) {  // 笔记节点：level 3 in tree, depth 2 in data
-        router.push(`/admin/note/${data.true_id}`);
+        router.push(`/note/${data.true_id}`);
       } else {
         ElMessage.warning('只能阅读文献或笔记');
       }
@@ -807,9 +807,9 @@ export default {
     const handleNodeClick = (data) => {
       // 根据节点类型决定操作
       if (data.depth === 1) { // 文献节点
-        router.push(`/admin/notelayout?article_id=${data.true_id}`);
+        router.push(`/paper-note?article_id=${data.true_id}`);
       } else if (data.depth === 2) { // 笔记节点
-        router.push(`/admin/note/${data.true_id}`);
+        router.push(`/note/${data.true_id}`);
       } else {
         // 其他类型节点保持原有点击逻辑（展开/折叠）
         if (expandedKeys.value.has(data.id)) {

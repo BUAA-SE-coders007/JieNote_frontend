@@ -89,7 +89,7 @@ export default {
       this.fetchPdf(articleId);
     } else {
       this.$message.error("未提供 article_id 参数！");
-      this.$router.push('/admin/dashboard');
+      this.$router.push('/paper-library');
     }
   },
 };
