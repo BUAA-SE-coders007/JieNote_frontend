@@ -24,6 +24,14 @@ export default {
       required: true, // 接收渐变颜色数组
     },
   },
+  watch: {
+    chartData: {
+      handler() {
+        this.updateChart(); // 调用更新方法
+      },
+      deep: true, // 深度监听
+    },
+  },
   mounted() {
     this.renderChart();
   },
@@ -48,7 +56,7 @@ export default {
         dataset.pointHoverBorderColor = dataset.borderColor || "#4CAF50"; // 设置点悬停时的边框颜色
       });
 
-      new Chart(ctx, {
+      this.chartInstance = new Chart(ctx, {
         type: "line", // 折线图
         data: updatedData,
         options: {
@@ -114,6 +122,12 @@ export default {
           },
         },
       });
+    },
+    updateChart() {
+      if (this.chartInstance) {
+        this.chartInstance.data = JSON.parse(JSON.stringify(this.chartData)); // 更新数据
+        this.chartInstance.update(); // 刷新图表
+      }
     },
   },
 };
