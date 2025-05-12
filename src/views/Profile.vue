@@ -494,7 +494,7 @@ export default {
         this.user = {
           id: userData.id,
           username: userData.username || `user_${userData.id}`,
-          // 使用 IP 地址 http://43.143.228.56:8000/ 进行拼接
+          // 使用 IP 地址 https://jienote.top/ 进行拼接
           // 同时处理 userData.avatar 可能已经是完整 URL 的情况
           avatar: (() => {
             if (!userData.avatar) {
@@ -505,7 +505,7 @@ export default {
             }
             // 否则，拼接 IP 地址
             const path = userData.avatar.startsWith('/') ? userData.avatar.substring(1) : userData.avatar;
-            return `http://43.143.228.56:8000/${path}`;
+            return `https://jienote.top/${path}`;
           })(),
           address: userData.address || "未知",
           university: userData.university || "未知",
