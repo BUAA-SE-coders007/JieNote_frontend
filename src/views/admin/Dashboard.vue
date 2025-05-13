@@ -983,7 +983,9 @@ export default {
                       try {
                         // Use the API function readArticle
                         // readArticle is configured in http.js to return blob data directly for this endpoint
-                        const blob = await readArticle(level2Node.true_id);
+                        const response = await readArticle(level2Node.true_id);
+                        // Ensure we have a proper Blob object
+                        const blob = new Blob([response.data], { type: 'application/pdf' });
                         folder.file(fileName, blob);
                         ElMessage.success(`成功获取文件: ${fileName}`);
                       } catch (error) {
