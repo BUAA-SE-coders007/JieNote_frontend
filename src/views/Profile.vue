@@ -249,7 +249,13 @@
 import FooterComponent from "@/components/Footers/Footer.vue";
 import BarChart from "@/components/Cards/BarChart.vue";
 import team2 from "@/assets/img/team-2-800x800.jpg";
-import axios from "axios";
+import {
+  getUserProfile,
+  changePassword,
+  getSelfArticleStatistic,
+  getNoteCount,
+  getRecentNoteCount
+} from '@/api/profile';
 import { ElMessageBox, ElMessage } from 'element-plus'
 
 export default {
@@ -328,23 +334,10 @@ export default {
 
         this.isSubmitting = true
 
-        // 调用修改密码接口
-        const token = localStorage.getItem("authToken")
-        const response = await axios.post(
-            "https://jienote.top/user/password",
-            {
-              old_password: this.passwordForm.oldPassword,
-              new_password: this.passwordForm.newPassword
-            },
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json"
-              }
-            }
-        )
-
-        console.log(response)
+        await changePassword({
+          old_password: this.passwordForm.oldPassword,
+          new_password: this.passwordForm.newPassword
+        });
 
         ElMessage.success('密码修改成功')
         this.showPasswordDialog = false
@@ -372,19 +365,8 @@ export default {
 
     async fetchArticleCount() {
       try {
-        const token = localStorage.getItem("authToken");
-        if (!token) {
-          console.error("Token 不存在，请先登录！");
-          return;
-        }
-
-        const response = await axios.get("https://jienote.top/article/selfArticleStatistic", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        this.articleCount = response.data.article_total_num; // 更新文献数量
+        const response = await getSelfArticleStatistic();
+        this.articleCount = response.data.article_total_num;
         localStorage.setItem("article", this.articleCount);
       } catch (error) {
         console.error("获取文献数量失败：", error);
@@ -394,19 +376,8 @@ export default {
 
     async fetchNoteCount() {
       try {
-        const token = localStorage.getItem("authToken");
-        if (!token) {
-          console.error("Token 不存在，请先登录！");
-          return;
-        }
-
-        const response = await axios.get("https://jienote.top/notes/count", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        this.noteCount = response.data.count; // 更新笔记数量
+        const response = await getNoteCount();
+        this.noteCount = response.data.count;
         localStorage.setItem("note", this.noteCount);
       } catch (error) {
         console.error("获取笔记数量失败：", error);
@@ -416,18 +387,7 @@ export default {
 
     async fetchLiteratureData() {
       try {
-        const token = localStorage.getItem("authToken");
-        if (!token) {
-          console.error("Token 不存在，请先登录！");
-          return;
-        }
-
-        const response = await axios.get("https://jienote.top/article/selfArticleStatistic", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
+        const response = await getSelfArticleStatistic();
         const articles = response.data.articles;
         const formattedData = this.formatData(articles);
         this.literatureData.datasets[0].data = formattedData; // 更新文献新增数量
@@ -439,18 +399,7 @@ export default {
 
     async fetchNotesData() {
       try {
-        const token = localStorage.getItem("authToken");
-        if (!token) {
-          console.error("Token 不存在，请先登录！");
-          return;
-        }
-
-        const response = await axios.get("https://jienote.top/notes/count/recent", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
+        const response = await getRecentNoteCount();
         const notes = response.data.notes;
         const formattedData = this.formatData(notes);
         console.log('formattedData:', formattedData)
@@ -479,18 +428,7 @@ export default {
 
     async fetchUser() {
       try {
-        const token = localStorage.getItem("authToken");
-        if (!token) {
-          console.error("Token 不存在，请先登录！");
-          return;
-        }
-
-        const response = await axios.get("https://jienote.top/user/get", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
+        const response = await getUserProfile();
         const userData = response.data;
         console.log(userData.avatar)
         this.user = {
