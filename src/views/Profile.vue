@@ -360,13 +360,14 @@ export default {
       }
     },
     goToSettings() {
-      this.$router.push("/admin/settings");
+      this.$router.push("/settings");
     },
 
     async fetchArticleCount() {
       try {
         const response = await getSelfArticleStatistic();
         this.articleCount = response.data.article_total_num;
+        localStorage.setItem("article", this.articleCount);
       } catch (error) {
         console.error("获取文献数量失败：", error);
         ElMessage.error("获取文献数量失败！");
@@ -377,6 +378,7 @@ export default {
       try {
         const response = await getNoteCount();
         this.noteCount = response.data.count;
+        localStorage.setItem("note", this.noteCount);
       } catch (error) {
         console.error("获取笔记数量失败：", error);
         ElMessage.error("获取笔记数量失败！");

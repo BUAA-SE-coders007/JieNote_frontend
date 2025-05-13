@@ -64,15 +64,15 @@ const routes = [
         component: Dashboard,
       },
       {
-        path: "/admin/settings",
+        path: "/settings",
         component: Settings,
       },
       {
-        path: "/admin/tables",
+        path: "/collaboration",
         component: Tables,
       },
       {
-        path: "/admin/maps",
+        path: "/database",
         component: Maps,
       },
       {
