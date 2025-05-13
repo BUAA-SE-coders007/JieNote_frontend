@@ -349,34 +349,6 @@ export default {
         throw error;
       }
     },
-    async changePassword() {
-      try {
-        const token = localStorage.getItem("authToken");
-        if (!token) {
-          console.error("Token 不存在，请先登录！");
-          return;
-        }
-
-        const response = await axios.post(
-          "http://localhost:8000/user/password",
-          {
-            old_password: this.passwordForm.oldPassword,
-            new_password: this.passwordForm.newPassword,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json", // 确保请求体是 JSON 格式
-            },
-          }
-        );
-
-        console.log("密码修改成功：", response.data);
-        this.showChangePassword = false; // 关闭修改密码窗口
-      } catch (error) {
-        console.error("修改密码失败：", error);
-      }
-    },
   },
   components: {
     Cropper,

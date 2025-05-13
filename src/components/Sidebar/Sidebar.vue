@@ -123,9 +123,9 @@ export default {
     return {
       collapseShow: "hidden",
       navItems: [
-        { label: "文献库", to: "/admin/maps", icon: "fas fa-map-marked" },
+        { label: "文献库", to: "/database", icon: "fas fa-map-marked" },
         { label: "文献管理", to: "/paper-library", icon: "fas fa-book" },
-        { label: "组织协作", to: "/admin/tables", icon: "fas fa-table" },
+        { label: "组织协作", to: "/collaboration", icon: "fas fa-table" },
         { label: "个人主页", to: "/profile", icon: "fas fa-user-circle" },
         { label: "关于我们", to: "/landing", icon: "fas fa-newspaper" },
       ],

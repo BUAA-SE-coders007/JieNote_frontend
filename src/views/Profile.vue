@@ -367,7 +367,7 @@ export default {
       }
     },
     goToSettings() {
-      this.$router.push("/admin/settings");
+      this.$router.push("/settings");
     },
 
     async fetchArticleCount() {
@@ -385,6 +385,7 @@ export default {
         });
 
         this.articleCount = response.data.article_total_num; // 更新文献数量
+        localStorage.setItem("article", this.articleCount);
       } catch (error) {
         console.error("获取文献数量失败：", error);
         ElMessage.error("获取文献数量失败！");
@@ -406,6 +407,7 @@ export default {
         });
 
         this.noteCount = response.data.count; // 更新笔记数量
+        localStorage.setItem("note", this.noteCount);
       } catch (error) {
         console.error("获取笔记数量失败：", error);
         ElMessage.error("获取笔记数量失败！");
