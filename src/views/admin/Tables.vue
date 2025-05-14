@@ -4,6 +4,7 @@
     <nav class="org-navbar">
       <div class="org-navbar-title">组织协作</div>
       <div class="org-navbar-actions">
+        <el-button type="primary" size="small" icon="el-icon-plus" circle @click="showCreateOrgDialog = true" class="org-navbar-create-btn" />
         <notification-dropdown @click.native="showMessageDialog = true" />
         <user-dropdown />
       </div>
@@ -13,9 +14,7 @@
       <aside class="org-sidebar">
         <div class="org-sidebar-header">
           <span class="org-sidebar-title">我的组织</span>
-          <el-button type="primary" size="small" icon="el-icon-plus" @click="showCreateOrgDialog = true">新建</el-button>
         </div>
-        <el-input placeholder="筛选组织" size="small" v-model="orgFilter" class="org-sidebar-filter" />
         <div class="org-sidebar-list">
           <div v-if="filteredJoinedOrgs.length === 0 && filteredCreatedOrgs.length === 0" class="org-empty">暂无组织</div>
           <div v-else>
@@ -70,9 +69,9 @@
                     <div v-for="member in selectedOrg.membersList" :key="member.id" class="org-member-card">
                       <img :src="member.avatar" class="org-member-avatar" />
                       <span class="org-member-name">{{ member.name }}</span>
-                    </div>
-                  </div>
-                </div>
+            </div>
+          </div>
+        </div>
               </el-tab-pane>
               <el-tab-pane label="仓库" name="repos">
                 <div class="org-section">
@@ -81,7 +80,7 @@
                     <div v-for="repo in mockRepos" :key="repo.id" class="org-repo-card">
                       <div class="org-repo-name">{{ repo.name }}</div>
                       <div class="org-repo-desc">{{ repo.desc }}</div>
-                    </div>
+            </div>
                   </div>
                 </div>
               </el-tab-pane>
@@ -91,7 +90,7 @@
                   <ul class="org-log-list">
                     <li v-for="log in mockLogs" :key="log.id" class="org-log-item">{{ log.time }} - {{ log.content }}</li>
                   </ul>
-                </div>
+              </div>
               </el-tab-pane>
             </el-tabs>
           </div>
@@ -141,7 +140,6 @@ export default {
   data() {
     return {
       searchText: '',
-      orgFilter: '',
       showCreateOrgDialog: false,
       newOrgForm: { name: '', intro: '' },
       selectedOrg: null,
@@ -185,12 +183,10 @@ export default {
   },
   computed: {
     filteredJoinedOrgs() {
-      if (!this.orgFilter) return this.joinedOrgs;
-      return this.joinedOrgs.filter(org => org.name.includes(this.orgFilter));
+      return this.joinedOrgs;
     },
     filteredCreatedOrgs() {
-      if (!this.orgFilter) return this.createdOrgs;
-      return this.createdOrgs.filter(org => org.name.includes(this.orgFilter));
+      return this.createdOrgs;
     },
     isCreatedOrg() {
       return this.createdOrgs.some(org => org.id === (this.selectedOrg && this.selectedOrg.id));
@@ -243,6 +239,9 @@ export default {
   --org-text-main: #24292f;
   --org-text-sub: #57606a;
   --org-sidebar-width: 300px;
+  --org-sidebar-bg: #d1d5db;
+  --org-content-bg: #fff;
+  --org-sidebar-border: #9ca3af;
 }
 .org-page {
   min-height: 100vh;
@@ -270,7 +269,7 @@ export default {
 .org-navbar-actions {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 18px;
 }
 .org-main {
   display: flex;
@@ -279,25 +278,22 @@ export default {
 }
 .org-sidebar {
   width: var(--org-sidebar-width);
-  background: var(--org-card-bg);
-  border-right: 1px solid var(--org-border);
+  background: var(--org-sidebar-bg);
+  border-right: 3px solid var(--org-sidebar-border);
   display: flex;
   flex-direction: column;
   padding-top: 16px;
 }
 .org-sidebar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 24px 8px 24px;
+  padding: 0 24px 12px 24px;
 }
 .org-sidebar-title {
-  font-size: 1.1rem;
+  display: block;
+  font-size: 1.25rem;
   font-weight: 600;
   color: var(--org-text-main);
-}
-.org-sidebar-filter {
-  margin: 0 24px 8px 24px;
+  margin-bottom: 10px;
+  line-height: 1.2;
 }
 .org-sidebar-list {
   flex: 1;
@@ -349,7 +345,7 @@ export default {
   flex: 1;
   padding: 32px 40px 32px 40px;
   overflow-y: auto;
-  background: var(--org-bg);
+  background: var(--org-content-bg);
   min-width: 0;
 }
 .org-detail-card {
@@ -515,5 +511,29 @@ export default {
 .org-message-time {
   font-size: 0.85rem;
   color: var(--org-text-sub);
+}
+.org-navbar-create-btn {
+  background: #eaecef;
+  border: none;
+  color: #2186eb !important;
+  font-size: 26px !important;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  outline: none;
+  box-shadow: none;
+  padding: 0;
+  font-weight: bold;
+}
+.org-navbar-create-btn:hover {
+  background: #d0e6fa;
+  color: #0969da !important;
+  box-shadow: 0 2px 8px 0 rgba(33,134,235,0.13);
 }
 </style>
