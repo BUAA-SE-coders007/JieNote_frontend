@@ -92,10 +92,6 @@
                   <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ selectedOrg.name }}</h2>
                   <p class="text-gray-600 mb-2">{{ selectedOrg.intro || '这个组织还没有简介。' }}</p>
                   <p class="text-gray-500 mb-4">{{ selectedOrg.role ? '身份：' + selectedOrg.role : '成员数：' + selectedOrg.members }}</p>
-                  <div class="flex gap-2">
-                    <el-button v-if="isCreatedOrg" type="primary" size="small" icon="el-icon-setting">组织管理</el-button>
-                    <el-button v-else type="danger" size="small" icon="el-icon-close">退出组织</el-button>
-                  </div>
                 </div>
               </div>
 
@@ -188,15 +184,15 @@ export default {
       selectedOrg: null,
       orgTab: 'overview',
       joinedOrgs: [
-        { id: 1, name: 'AndroidDevTeam-2024', avatar: 'https://avatars.githubusercontent.com/u/12345678?v=4', role: '成员', intro: '专注于Android开发的技术团队', membersList: [
+        { id: 1, name: 'AndroidDevTeam-2024', avatar: 'https://avatars.githubusercontent.com/u/12345678?v=4', role: '成员', intro: '专注于Android开发的技术团队', members: 2, membersList: [
           { id: 1, name: 'Alice', avatar: 'https://randomuser.me/api/portraits/women/1.jpg', role: '成员' },
           { id: 2, name: 'Bob', avatar: 'https://randomuser.me/api/portraits/men/2.jpg', role: '成员' },
         ] },
-        { id: 2, name: 'BUAA-SE-coders007', avatar: 'https://avatars.githubusercontent.com/u/87654321?v=4', role: '管理员', intro: '北航软件工程协作组', membersList: [
-          { id: 3, name: 'Charlie', avatar: 'https://randomuser.me/api/portraits/men/3.jpg', role: '管理员' },
+        { id: 2, name: 'BUAA-SE-coders007', avatar: 'https://avatars.githubusercontent.com/u/87654321?v=4', role: '成员', intro: '北航软件工程协作组', members: 2, membersList: [
+          { id: 3, name: 'Charlie', avatar: 'https://randomuser.me/api/portraits/men/3.jpg', role: '成员' },
           { id: 4, name: 'Diana', avatar: 'https://randomuser.me/api/portraits/women/4.jpg', role: '成员' },
         ] },
-        { id: 3, name: 'DB-web-project', avatar: 'https://avatars.githubusercontent.com/u/11223344?v=4', role: '成员', intro: '数据库Web项目组', membersList: [
+        { id: 3, name: 'DB-web-project', avatar: 'https://avatars.githubusercontent.com/u/11223344?v=4', role: '成员', intro: '数据库Web项目组', members: 1, membersList: [
           { id: 5, name: 'Eve', avatar: 'https://randomuser.me/api/portraits/women/5.jpg', role: '成员' },
         ] },
       ],
@@ -205,7 +201,7 @@ export default {
           { id: 6, name: 'You', avatar: 'https://randomuser.me/api/portraits/men/6.jpg', role: '成员' },
           { id: 7, name: 'Frank', avatar: 'https://randomuser.me/api/portraits/men/7.jpg', role: '成员' },
         ] },
-        { id: 102, name: 'OpenSourceDream', avatar: 'https://avatars.githubusercontent.com/u/88776655?v=4', members: 7, intro: '开源梦想家', membersList: [
+        { id: 102, name: 'OpenSourceDream', avatar: 'https://avatars.githubusercontent.com/u/88776655?v=4', members: 7, chengintro: '开源梦想家', membersList: [
           { id: 8, name: 'Grace', avatar: 'https://randomuser.me/api/portraits/women/8.jpg', role: '成员' },
         ] },
       ],
