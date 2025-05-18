@@ -1,103 +1,150 @@
 <template>
-  <div class="org-page">
+  <div class="flex flex-col h-screen">
     <!-- 顶部导航栏 -->
-    <nav class="org-navbar">
-      <div class="org-navbar-title">组织协作</div>
-      <div class="org-navbar-actions">
-        <el-button type="primary" size="small" icon="el-icon-plus" circle @click="showCreateOrgDialog = true" class="org-navbar-create-btn" />
-        <notification-dropdown @click.native="showMessageDialog = true" />
-        <user-dropdown />
+    <nav class="relative flex flex-wrap items-center justify-between px-2 py-3 navbar-expand-lg bg-emerald-500">
+      <div class="container px-4 mx-auto flex flex-wrap items-center justify-between">
+        <div class="w-full relative flex justify-between lg:w-auto px-4 lg:static lg:block lg:justify-start">
+          <a class="text-lg font-bold leading-relaxed inline-block mr-4 py-2 whitespace-no-wrap uppercase text-white" href="#pablo">
+            组织协作
+          </a>
+        </div>
+        <div class="lg:flex flex-grow items-center">
+          <ul class="flex flex-col lg:flex-row list-none ml-auto">
+            <li class="nav-item">
+              <a class="px-3 py-2 flex items-center text-xs uppercase font-bold leading-snug text-white hover:opacity-75"
+                 href="javascript:;"
+                 @click="showCreateOrgDialog = true">
+                <i class="fas fa-plus text-lg leading-lg text-white opacity-75"></i>
+                <span class="ml-2">新建组织</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="px-3 py-2 flex items-center text-xs uppercase font-bold leading-snug text-white hover:opacity-75"
+                 href="javascript:;"
+                 @click="showMessageDialog = true">
+                <i class="fas fa-bell text-lg leading-lg text-white opacity-75"></i>
+                <span class="ml-2">消息</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="px-3 py-2 flex items-center text-xs uppercase font-bold leading-snug text-white hover:opacity-75"
+                 href="javascript:;">
+                <i class="fas fa-user text-lg leading-lg text-white opacity-75"></i>
+                <span class="ml-2">用户</span>
+              </a>
+            </li>
+          </ul>
+        </div>
       </div>
     </nav>
-    <div class="org-main">
-      <!-- 侧边栏 -->
-      <aside class="org-sidebar">
-        <div class="org-sidebar-header">
-          <span class="org-sidebar-title">我的组织</span>
-        </div>
-        <div class="org-sidebar-list">
-          <div v-if="filteredJoinedOrgs.length === 0 && filteredCreatedOrgs.length === 0" class="org-empty">暂无组织</div>
-          <div v-else>
-            <div v-if="filteredJoinedOrgs.length > 0" class="org-sidebar-group">
-              <div class="org-sidebar-group-title">加入的组织</div>
-              <ul>
-                <li v-for="org in filteredJoinedOrgs" :key="org.id" @click="selectOrg(org)" :class="['org-sidebar-item', selectedOrg && selectedOrg.id === org.id ? 'active' : '']">
-                  <img :src="org.avatar" class="org-avatar" />
-                  <div class="org-info">
-                    <div class="org-name">{{ org.name }}</div>
-                    <div v-if="org.members" class="org-role">成员数：{{ org.members }}</div>
+
+    <div class="flex-1 overflow-y-auto bg-gray-100">
+      <div class="container-fluid px-4 py-4">
+        <div class="flex">
+          <!-- 侧边栏 -->
+          <aside class="w-80 bg-white rounded-lg shadow mr-4">
+            <div class="p-4">
+              <div class="org-sidebar-header">
+                <span class="text-lg font-bold text-gray-800">我的组织</span>
+              </div>
+              <div class="org-sidebar-list">
+                <div v-if="filteredJoinedOrgs.length === 0 && filteredCreatedOrgs.length === 0" class="text-gray-500 text-center py-4">暂无组织</div>
+                <div v-else>
+                  <div v-if="filteredJoinedOrgs.length > 0" class="mt-4">
+                    <div class="text-sm font-medium text-gray-600 mb-2">加入的组织</div>
+                    <ul>
+                      <li v-for="org in filteredJoinedOrgs" :key="org.id" @click="selectOrg(org)" 
+                          :class="['flex items-center p-3 rounded-lg cursor-pointer hover:bg-gray-50', 
+                                  selectedOrg && selectedOrg.id === org.id ? 'bg-emerald-50' : '']">
+                        <img :src="org.avatar" class="w-10 h-10 rounded-full mr-3" />
+                        <div>
+                          <div class="font-medium text-gray-900">{{ org.name }}</div>
+                          <div class="text-sm text-gray-500">成员数：{{ org.members }}</div>
+                        </div>
+                      </li>
+                    </ul>
                   </div>
-                </li>
-              </ul>
-            </div>
-            <div v-if="filteredCreatedOrgs.length > 0" class="org-sidebar-group">
-              <div class="org-sidebar-group-title">我创建的组织</div>
-              <ul>
-                <li v-for="org in filteredCreatedOrgs" :key="org.id" @click="selectOrg(org)" :class="['org-sidebar-item', selectedOrg && selectedOrg.id === org.id ? 'active-created' : '']">
-                  <img :src="org.avatar" class="org-avatar" />
-                  <div class="org-info">
-                    <div class="org-name">{{ org.name }}</div>
-                    <div class="org-role">成员数：{{ org.members }}</div>
+                  <div v-if="filteredCreatedOrgs.length > 0" class="mt-4">
+                    <div class="text-sm font-medium text-gray-600 mb-2">我创建的组织</div>
+                    <ul>
+                      <li v-for="org in filteredCreatedOrgs" :key="org.id" @click="selectOrg(org)"
+                          :class="['flex items-center p-3 rounded-lg cursor-pointer hover:bg-gray-50',
+                                  selectedOrg && selectedOrg.id === org.id ? 'bg-emerald-50' : '']">
+                        <img :src="org.avatar" class="w-10 h-10 rounded-full mr-3" />
+                        <div>
+                          <div class="font-medium text-gray-900">{{ org.name }}</div>
+                          <div class="text-sm text-gray-500">成员数：{{ org.members }}</div>
+                        </div>
+                      </li>
+                    </ul>
                   </div>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </aside>
-      <!-- 主内容区 -->
-      <main class="org-content">
-        <div v-if="selectedOrg">
-          <div class="org-detail-card">
-            <div class="org-detail-header">
-              <img :src="selectedOrg.avatar" class="org-detail-avatar" />
-              <div class="org-detail-meta">
-                <div class="org-detail-title">{{ selectedOrg.name }}</div>
-                <div class="org-detail-desc">{{ selectedOrg.intro || '这个组织还没有简介。' }}</div>
-                <div class="org-detail-role">{{ selectedOrg.role ? '身份：' + selectedOrg.role : '成员数：' + selectedOrg.members }}</div>
-                <div class="org-detail-actions">
-                  <el-button v-if="isCreatedOrg" type="primary" size="small" icon="el-icon-setting">组织管理</el-button>
-                  <el-button v-else type="danger" size="small" icon="el-icon-close">退出组织</el-button>
                 </div>
               </div>
             </div>
-            <el-tabs v-model="orgTab" class="org-tabs">
-              <el-tab-pane label="概览" name="overview">
-                <div class="org-section">
-                  <div class="org-section-title">成员列表</div>
-                  <div class="org-members-list">
-                    <div v-for="member in selectedOrg.membersList" :key="member.id" class="org-member-card">
-                      <img :src="member.avatar" class="org-member-avatar" />
-                      <span class="org-member-name">{{ member.name }}</span>
-            </div>
-          </div>
-        </div>
-              </el-tab-pane>
-              <el-tab-pane label="仓库" name="repos">
-                <div class="org-section">
-                  <div class="org-section-title">组织仓库（模拟）</div>
-                  <div class="org-repos-list">
-                    <div v-for="repo in mockRepos" :key="repo.id" class="org-repo-card">
-                      <div class="org-repo-name">{{ repo.name }}</div>
-                      <div class="org-repo-desc">{{ repo.desc }}</div>
-            </div>
+          </aside>
+
+          <!-- 主内容区 -->
+          <main class="flex-1 bg-white rounded-lg shadow p-4">
+            <div v-if="selectedOrg">
+              <div class="flex items-start mb-6">
+                <img :src="selectedOrg.avatar" class="w-20 h-20 rounded-full mr-6" />
+                <div class="flex-1">
+                  <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ selectedOrg.name }}</h2>
+                  <p class="text-gray-600 mb-2">{{ selectedOrg.intro || '这个组织还没有简介。' }}</p>
+                  <p class="text-gray-500 mb-4">{{ selectedOrg.role ? '身份：' + selectedOrg.role : '成员数：' + selectedOrg.members }}</p>
+                  <div class="flex gap-2">
+                    <el-button v-if="isCreatedOrg" type="primary" size="small" icon="el-icon-setting">组织管理</el-button>
+                    <el-button v-else type="danger" size="small" icon="el-icon-close">退出组织</el-button>
                   </div>
                 </div>
-              </el-tab-pane>
-              <el-tab-pane label="日志" name="logs">
-                <div class="org-section">
-                  <div class="org-section-title">活动日志（模拟）</div>
-                  <ul class="org-log-list">
-                    <li v-for="log in mockLogs" :key="log.id" class="org-log-item">{{ log.time }} - {{ log.content }}</li>
-                  </ul>
               </div>
-              </el-tab-pane>
-            </el-tabs>
-          </div>
+
+              <el-tabs v-model="orgTab" class="org-tabs">
+                <el-tab-pane label="概览" name="overview">
+                  <div class="mt-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">成员列表</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div v-for="member in selectedOrg.membersList" :key="member.id" 
+                           class="flex items-center p-3 bg-gray-50 rounded-lg">
+                        <img :src="member.avatar" class="w-10 h-10 rounded-full mr-3" />
+                        <span class="font-medium text-gray-900">{{ member.name }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </el-tab-pane>
+                <el-tab-pane label="仓库" name="repos">
+                  <div class="mt-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">组织仓库</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div v-for="repo in mockRepos" :key="repo.id" 
+                           class="p-4 bg-gray-50 rounded-lg">
+                        <div class="font-medium text-gray-900 mb-1">{{ repo.name }}</div>
+                        <div class="text-sm text-gray-600">{{ repo.desc }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </el-tab-pane>
+                <el-tab-pane label="日志" name="logs">
+                  <div class="mt-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">活动日志</h3>
+                    <ul class="space-y-2">
+                      <li v-for="log in mockLogs" :key="log.id" 
+                          class="p-3 bg-gray-50 rounded-lg text-gray-600">
+                        {{ log.time }} - {{ log.content }}
+                      </li>
+                    </ul>
+                  </div>
+                </el-tab-pane>
+              </el-tabs>
+            </div>
+            <div v-else class="text-center text-gray-500 py-8">
+              请选择左侧组织查看详情
+            </div>
+          </main>
         </div>
-        <div v-else class="org-empty-main">请选择左侧组织查看详情</div>
-      </main>
+      </div>
     </div>
+
     <!-- 新建组织弹窗 -->
     <el-dialog v-model="showCreateOrgDialog" title="新建组织" width="400px">
       <el-form :model="newOrgForm" label-width="80px">
@@ -131,12 +178,8 @@
 </template>
 
 <script>
-import NotificationDropdown from '@/components/Dropdowns/NotificationDropdown.vue';
-import UserDropdown from '@/components/Dropdowns/UserDropdown.vue';
-
 export default {
   name: 'OrganizationPage',
-  components: { NotificationDropdown, UserDropdown },
   data() {
     return {
       searchText: '',
@@ -239,9 +282,10 @@ export default {
   --org-text-main: #24292f;
   --org-text-sub: #57606a;
   --org-sidebar-width: 300px;
-  --org-sidebar-bg: #d1d5db;
-  --org-content-bg: #fff;
+  --org-sidebar-bg: #e3f2fd;
+  --org-content-bg: #ffffff;
   --org-sidebar-border: #9ca3af;
+  --org-navbar-bg: #e8eaf6;
 }
 .org-page {
   min-height: 100vh;
@@ -255,7 +299,7 @@ export default {
   justify-content: space-between;
   padding: 0 32px;
   height: 64px;
-  background: var(--org-card-bg);
+  background: var(--org-navbar-bg) !important;
   border-bottom: 1px solid var(--org-border);
   box-shadow: var(--org-shadow);
   z-index: 10;
@@ -275,14 +319,16 @@ export default {
   display: flex;
   flex: 1;
   min-height: 0;
+  background: var(--org-bg);
 }
 .org-sidebar {
   width: var(--org-sidebar-width);
-  background: var(--org-sidebar-bg);
+  background: var(--org-sidebar-bg) !important;
   border-right: 3px solid var(--org-sidebar-border);
   display: flex;
   flex-direction: column;
   padding-top: 16px;
+  height: 100%;
 }
 .org-sidebar-header {
   padding: 0 24px 12px 24px;
@@ -345,8 +391,9 @@ export default {
   flex: 1;
   padding: 32px 40px 32px 40px;
   overflow-y: auto;
-  background: var(--org-content-bg);
+  background: var(--org-content-bg) !important;
   min-width: 0;
+  height: 100%;
 }
 .org-detail-card {
   background: var(--org-card-bg);
