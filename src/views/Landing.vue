@@ -7,9 +7,7 @@
       >
         <div
           class="absolute top-0 w-full h-full bg-center bg-cover"
-          style="
-            background-image: url('https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1267&q=80');
-          "
+          :style="{ backgroundImage: 'url(' + logo + ')' }"
         >
           <span
             id="blackOverlay"
@@ -21,12 +19,10 @@
             <div class="w-full lg:w-6/12 px-4 ml-auto mr-auto text-center">
               <div class="pr-12">
                 <h1 class="text-white font-semibold text-5xl">
-                  Your story starts with us.
+                  Coders007团队主页
                 </h1>
                 <p class="mt-4 text-lg text-blueGray-200">
-                  This is a simple example of a Landing Page you can build using
-                  Vue Notus. It features multiple CSS components based on the
-                  Tailwind CSS design system.
+                  这里是2025春季敏捷软件工程课程Coders007团队主页，感谢支持JieNote项目！
                 </p>
               </div>
             </div>
@@ -66,10 +62,9 @@
                   >
                     <i class="fas fa-award"></i>
                   </div>
-                  <h6 class="text-xl font-semibold">Awarded Agency</h6>
+                  <h6 class="text-xl font-semibold">JieNote项目介绍</h6>
                   <p class="mt-2 mb-4 text-blueGray-500">
-                    Divide details about your product or agency work into parts.
-                    A paragraph describing a feature will be enough.
+                    JieNote是一款集成文献管理与笔记管理的在线学习网站，后续功能还在不断更新中......
                   </p>
                 </div>
               </div>
@@ -85,10 +80,15 @@
                   >
                     <i class="fas fa-retweet"></i>
                   </div>
-                  <h6 class="text-xl font-semibold">Free Revisions</h6>
+                  <h6 class="text-xl font-semibold">开源精神</h6>
                   <p class="mt-2 mb-4 text-blueGray-500">
-                    Keep you user engaged by providing meaningful information.
-                    Remember that by this time, the user is curious.
+                    JieNote项目的源代码开源在
+                    <a
+                      href="https://github.com/BUAA-SE-coders007"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-blue-500 underline hover:text-blue-700"
+                    >GitHub平台</a>，支持二次开发
                   </p>
                 </div>
               </div>
@@ -104,75 +104,11 @@
                   >
                     <i class="fas fa-fingerprint"></i>
                   </div>
-                  <h6 class="text-xl font-semibold">Verified Company</h6>
+                  <h6 class="text-xl font-semibold">专业团队</h6>
                   <p class="mt-2 mb-4 text-blueGray-500">
-                    Write a few lines about each one. A paragraph describing a
-                    feature will be enough. Keep you user engaged!
+                    八人开发团队，具有扎实的编程基础和良好的团队协作能力，深谙敏捷软工之道
                   </p>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="flex flex-wrap items-center mt-32">
-            <div class="w-full md:w-5/12 px-4 mr-auto ml-auto">
-              <div
-                class="text-blueGray-500 p-3 text-center inline-flex items-center justify-center w-16 h-16 mb-6 shadow-lg rounded-full bg-white"
-              >
-                <i class="fas fa-user-friends text-xl"></i>
-              </div>
-              <h3 class="text-3xl mb-2 font-semibold leading-normal">
-                Working with us is a pleasure
-              </h3>
-              <p
-                class="text-lg font-light leading-relaxed mt-4 mb-4 text-blueGray-600"
-              >
-                Don't let your uses guess by attaching tooltips and popoves to
-                any element. Just make sure you enable them first via
-                JavaScript.
-              </p>
-              <p
-                class="text-lg font-light leading-relaxed mt-0 mb-4 text-blueGray-600"
-              >
-                The kit comes with three pre-built pages to help you get started
-                faster. You can change the text and images and you're good to
-                go. Just make sure you enable them first via JavaScript.
-              </p>
-              <router-link to="/" class="font-bold text-blueGray-700 mt-8">
-                Check Vue Notus!
-              </router-link>
-            </div>
-
-            <div class="w-full md:w-4/12 px-4 mr-auto ml-auto">
-              <div
-                class="relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded-lg bg-emerald-500"
-              >
-                <img
-                  alt="..."
-                  src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1051&q=80"
-                  class="w-full align-middle rounded-t-lg"
-                />
-                <blockquote class="relative p-8 mb-4">
-                  <svg
-                    preserveAspectRatio="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 583 95"
-                    class="absolute left-0 w-full block h-95-px -top-94-px"
-                  >
-                    <polygon
-                      points="-30,95 583,95 583,65"
-                      class="text-emerald-500 fill-current"
-                    ></polygon>
-                  </svg>
-                  <h4 class="text-xl font-bold text-white">
-                    Top Notch Services
-                  </h4>
-                  <p class="text-md font-light mt-2 text-white">
-                    The Arctic Ocean freezes every winter and much of the
-                    sea-ice then thaws every summer, and that process will
-                    continue whatever happens.
-                  </p>
-                </blockquote>
               </div>
             </div>
           </div>
@@ -199,92 +135,15 @@
             ></polygon>
           </svg>
         </div>
-
-        <div class="container mx-auto px-4">
-          <div class="items-center flex flex-wrap">
-            <div class="w-full md:w-4/12 ml-auto mr-auto px-4">
-              <img
-                alt="..."
-                class="max-w-full rounded-lg shadow-lg"
-                src="https://images.unsplash.com/photo-1555212697-194d092e3b8f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=634&q=80"
-              />
-            </div>
-            <div class="w-full md:w-5/12 ml-auto mr-auto px-4">
-              <div class="md:pr-12">
-                <div
-                  class="text-emerald-600 p-3 text-center inline-flex items-center justify-center w-16 h-16 mb-6 shadow-lg rounded-full bg-emerald-300"
-                >
-                  <i class="fas fa-rocket text-xl"></i>
-                </div>
-                <h3 class="text-3xl font-semibold">A growing company</h3>
-                <p class="mt-4 text-lg leading-relaxed text-blueGray-500">
-                  The extension comes with three pre-built pages to help you get
-                  started faster. You can change the text and images and you're
-                  good to go.
-                </p>
-                <ul class="list-none mt-6">
-                  <li class="py-2">
-                    <div class="flex items-center">
-                      <div>
-                        <span
-                          class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-emerald-600 bg-emerald-200 mr-3"
-                        >
-                          <i class="fas fa-fingerprint"></i>
-                        </span>
-                      </div>
-                      <div>
-                        <h4 class="text-blueGray-500">
-                          Carefully crafted components
-                        </h4>
-                      </div>
-                    </div>
-                  </li>
-                  <li class="py-2">
-                    <div class="flex items-center">
-                      <div>
-                        <span
-                          class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-emerald-600 bg-emerald-200 mr-3"
-                        >
-                          <i class="fab fa-html5"></i>
-                        </span>
-                      </div>
-                      <div>
-                        <h4 class="text-blueGray-500">
-                          Amazing page examples
-                        </h4>
-                      </div>
-                    </div>
-                  </li>
-                  <li class="py-2">
-                    <div class="flex items-center">
-                      <div>
-                        <span
-                          class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-emerald-600 bg-emerald-200 mr-3"
-                        >
-                          <i class="far fa-paper-plane"></i>
-                        </span>
-                      </div>
-                      <div>
-                        <h4 class="text-blueGray-500">Dynamic components</h4>
-                      </div>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
       </section>
 
       <section class="pt-20 pb-48">
         <div class="container mx-auto px-4">
           <div class="flex flex-wrap justify-center text-center mb-24">
             <div class="w-full lg:w-6/12 px-4">
-              <h2 class="text-4xl font-semibold">Here are our heroes</h2>
+              <h2 class="text-4xl font-semibold">团队成员介绍</h2>
               <p class="text-lg leading-relaxed m-4 text-blueGray-500">
-                According to the National Oceanic and Atmospheric
-                Administration, Ted, Scambos, NSIDClead scentist, puts the
-                potentially record maximum.
+                软件工程没有银弹
               </p>
             </div>
           </div>
@@ -293,36 +152,34 @@
               <div class="px-6">
                 <img
                   alt="..."
-                  :src="team1"
+                  :src="dqr"
                   class="shadow-lg rounded-full mx-auto max-w-120-px"
                 />
                 <div class="pt-6 text-center">
-                  <h5 class="text-xl font-bold">Ryan Tompson</h5>
+                  <h5 class="text-xl font-bold">杜启嵘</h5>
                   <p
                     class="mt-1 text-sm text-blueGray-400 uppercase font-semibold"
                   >
-                    Web Developer
+                    项目经理/运维
                   </p>
                   <div class="mt-6">
-                    <button
-                      class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"
-                      type="button"
+                    <a
+                      href="https://github.com/coder0xe"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-flex items-center justify-center"
+                      title="查看GitHub"
                     >
-                      <i class="fab fa-twitter"></i>
-                    </button>
-                    <button
-                      class="bg-lightBlue-600 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"
-                      type="button"
-                    >
-                      <i class="fab fa-facebook-f"></i>
-                    </button>
-                    <button
-                      class="bg-pink-500 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"
-                      type="button"
-                    >
-                      <i class="fab fa-dribbble"></i>
-                    </button>
+                      <i class="fab fa-github"></i>
+                    </a>
                   </div>
+                    <p class="mt-2 text-blueGray-500 text-sm border-l-4 border-lightBlue-400 pl-3 italic flex items-center">
+                      <span>
+                        <i class="fas fa-quote-left mr-1 text-lightBlue-400"></i>
+                        不会web开发的运维躺平人
+                        <i class="fas fa-quote-right ml-1 text-lightBlue-400"></i>
+                      </span>
+                    </p>
                 </div>
               </div>
             </div>
@@ -330,30 +187,34 @@
               <div class="px-6">
                 <img
                   alt="..."
-                  :src="team2"
+                  :src="gyr"
                   class="shadow-lg rounded-full mx-auto max-w-120-px"
                 />
                 <div class="pt-6 text-center">
-                  <h5 class="text-xl font-bold">Romina Hadid</h5>
+                  <h5 class="text-xl font-bold">高悠然</h5>
                   <p
                     class="mt-1 text-sm text-blueGray-400 uppercase font-semibold"
                   >
-                    Marketing Specialist
+                    前端开发
                   </p>
                   <div class="mt-6">
-                    <button
-                      class="bg-red-600 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"
-                      type="button"
+                    <a
+                      href="https://github.com/gaoxiaomo"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-flex items-center justify-center"
+                      title="查看GitHub"
                     >
-                      <i class="fab fa-google"></i>
-                    </button>
-                    <button
-                      class="bg-lightBlue-600 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"
-                      type="button"
-                    >
-                      <i class="fab fa-facebook-f"></i>
-                    </button>
+                      <i class="fab fa-github"></i>
+                    </a>
                   </div>
+                    <p class="mt-2 text-blueGray-500 text-sm border-l-4 border-lightBlue-400 pl-3 italic flex items-center">
+                      <span>
+                        <i class="fas fa-quote-left mr-1 text-lightBlue-400"></i>
+                        这个人很懒，什么都没有留下
+                        <i class="fas fa-quote-right ml-1 text-lightBlue-400"></i>
+                      </span>
+                    </p>
                 </div>
               </div>
             </div>
@@ -361,36 +222,34 @@
               <div class="px-6">
                 <img
                   alt="..."
-                  :src="team3"
+                  :src="lgq"
                   class="shadow-lg rounded-full mx-auto max-w-120-px"
                 />
                 <div class="pt-6 text-center">
-                  <h5 class="text-xl font-bold">Alexa Smith</h5>
+                  <h5 class="text-xl font-bold">李国庆</h5>
                   <p
                     class="mt-1 text-sm text-blueGray-400 uppercase font-semibold"
                   >
-                    UI/UX Designer
+                    后端开发
                   </p>
                   <div class="mt-6">
-                    <button
-                      class="bg-red-600 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"
-                      type="button"
+                    <a
+                      href="https://github.com/Fantasylee21"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-flex items-center justify-center"
+                      title="查看GitHub"
                     >
-                      <i class="fab fa-google"></i>
-                    </button>
-                    <button
-                      class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"
-                      type="button"
-                    >
-                      <i class="fab fa-twitter"></i>
-                    </button>
-                    <button
-                      class="bg-blueGray-700 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"
-                      type="button"
-                    >
-                      <i class="fab fa-instagram"></i>
-                    </button>
+                      <i class="fab fa-github"></i>
+                    </a>
                   </div>
+                    <p class="mt-2 text-blueGray-500 text-sm border-l-4 border-lightBlue-400 pl-3 italic flex items-center">
+                      <span>
+                        <i class="fas fa-quote-left mr-1 text-lightBlue-400"></i>
+                        软工没有通天路，我是sl你记住
+                        <i class="fas fa-quote-right ml-1 text-lightBlue-400"></i>
+                      </span>
+                    </p>
                 </div>
               </div>
             </div>
@@ -398,199 +257,186 @@
               <div class="px-6">
                 <img
                   alt="..."
-                  :src="team4"
+                  :src="ykq"
                   class="shadow-lg rounded-full mx-auto max-w-120-px"
                 />
                 <div class="pt-6 text-center">
-                  <h5 class="text-xl font-bold">Jenna Kardi</h5>
+                  <h5 class="text-xl font-bold">杨可清</h5>
                   <p
                     class="mt-1 text-sm text-blueGray-400 uppercase font-semibold"
                   >
-                    Founder and CEO
+                    测试
                   </p>
                   <div class="mt-6">
-                    <button
-                      class="bg-pink-500 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"
-                      type="button"
+                    <a
+                      href="https://github.com/thestormtree"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-flex items-center justify-center"
+                      title="查看GitHub"
                     >
-                      <i class="fab fa-dribbble"></i>
-                    </button>
-                    <button
-                      class="bg-red-600 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"
-                      type="button"
-                    >
-                      <i class="fab fa-google"></i>
-                    </button>
-                    <button
-                      class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"
-                      type="button"
-                    >
-                      <i class="fab fa-twitter"></i>
-                    </button>
-                    <button
-                      class="bg-blueGray-700 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1"
-                      type="button"
-                    >
-                      <i class="fab fa-instagram"></i>
-                    </button>
+                      <i class="fab fa-github"></i>
+                    </a>
                   </div>
+                    <p class="mt-2 text-blueGray-500 text-sm border-l-4 border-lightBlue-400 pl-3 italic flex items-center">
+                      <span>
+                        <i class="fas fa-quote-left mr-1 text-lightBlue-400"></i>
+                        如果遇到了bug和困难，微笑着面对它，等待并心怀希望——这只猴子正在写《莎士比亚全集》，等它编写正确的程序需要的时间需要很久
+                        <i class="fas fa-quote-right ml-1 text-lightBlue-400"></i>
+                      </span>
+                    </p>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
 
-      <section class="pb-20 relative block bg-blueGray-800">
-        <div
-          class="bottom-auto top-0 left-0 right-0 w-full absolute pointer-events-none overflow-hidden -mt-20 h-20"
-          style="transform: translateZ(0);"
-        >
-          <svg
-            class="absolute bottom-0 overflow-hidden"
-            xmlns="http://www.w3.org/2000/svg"
-            preserveAspectRatio="none"
-            version="1.1"
-            viewBox="0 0 2560 100"
-            x="0"
-            y="0"
-          >
-            <polygon
-              class="text-blueGray-800 fill-current"
-              points="2560 0 2560 100 0 100"
-            ></polygon>
-          </svg>
-        </div>
-
-        <div class="container mx-auto px-4 lg:pt-24 lg:pb-64">
-          <div class="flex flex-wrap text-center justify-center">
-            <div class="w-full lg:w-6/12 px-4">
-              <h2 class="text-4xl font-semibold text-white">
-                Build something
-              </h2>
-              <p class="text-lg leading-relaxed mt-4 mb-4 text-blueGray-400">
-                Put the potentially record low maximum sea ice extent tihs year
-                down to low ice. According to the National Oceanic and
-                Atmospheric Administration, Ted, Scambos.
-              </p>
-            </div>
-          </div>
-          <div class="flex flex-wrap mt-12 justify-center">
-            <div class="w-full lg:w-3/12 px-4 text-center">
-              <div
-                class="text-blueGray-800 p-3 w-12 h-12 shadow-lg rounded-full bg-white inline-flex items-center justify-center"
-              >
-                <i class="fas fa-medal text-xl"></i>
-              </div>
-              <h6 class="text-xl mt-5 font-semibold text-white">
-                Excelent Services
-              </h6>
-              <p class="mt-2 mb-4 text-blueGray-400">
-                Some quick example text to build on the card title and make up
-                the bulk of the card's content.
-              </p>
-            </div>
-            <div class="w-full lg:w-3/12 px-4 text-center">
-              <div
-                class="text-blueGray-800 p-3 w-12 h-12 shadow-lg rounded-full bg-white inline-flex items-center justify-center"
-              >
-                <i class="fas fa-poll text-xl"></i>
-              </div>
-              <h5 class="text-xl mt-5 font-semibold text-white">
-                Grow your market
-              </h5>
-              <p class="mt-2 mb-4 text-blueGray-400">
-                Some quick example text to build on the card title and make up
-                the bulk of the card's content.
-              </p>
-            </div>
-            <div class="w-full lg:w-3/12 px-4 text-center">
-              <div
-                class="text-blueGray-800 p-3 w-12 h-12 shadow-lg rounded-full bg-white inline-flex items-center justify-center"
-              >
-                <i class="fas fa-lightbulb text-xl"></i>
-              </div>
-              <h5 class="text-xl mt-5 font-semibold text-white">
-                Launch time
-              </h5>
-              <p class="mt-2 mb-4 text-blueGray-400">
-                Some quick example text to build on the card title and make up
-                the bulk of the card's content.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-      <section class="relative block py-24 lg:pt-0 bg-blueGray-800">
-        <div class="container mx-auto px-4">
-          <div class="flex flex-wrap justify-center lg:-mt-64 -mt-48">
-            <div class="w-full lg:w-6/12 px-4">
-              <div
-                class="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-blueGray-200"
-              >
-                <div class="flex-auto p-5 lg:p-10">
-                  <h4 class="text-2xl font-semibold">
-                    Want to work with us?
-                  </h4>
-                  <p class="leading-relaxed mt-1 mb-4 text-blueGray-500">
-                    Complete this form and we will get back to you in 24 hours.
+            <div class="w-full md:w-6/12 lg:w-3/12 lg:mb-0 mb-12 px-4">
+              <div class="px-6">
+                <img
+                  alt="..."
+                  :src="st"
+                  class="shadow-lg rounded-full mx-auto max-w-120-px"
+                />
+                <div class="pt-6 text-center">
+                  <h5 class="text-xl font-bold">石通</h5>
+                  <p
+                    class="mt-1 text-sm text-blueGray-400 uppercase font-semibold"
+                  >
+                    前端开发
                   </p>
-                  <div class="relative w-full mb-3 mt-8">
-                    <label
-                      class="block uppercase text-blueGray-600 text-xs font-bold mb-2"
-                      htmlFor="full-name"
+                  <div class="mt-6">
+                    <a
+                      href="https://github.com/dongfengwuyishi"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-flex items-center justify-center"
+                      title="查看GitHub"
                     >
-                      Full Name
-                    </label>
-                    <input
-                      type="text"
-                      class="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-                      placeholder="Full Name"
-                    />
+                      <i class="fab fa-github"></i>
+                    </a>
                   </div>
+                    <p class="mt-2 text-blueGray-500 text-sm border-l-4 border-lightBlue-400 pl-3 italic flex items-center">
+                      <span>
+                        <i class="fas fa-quote-left mr-1 text-lightBlue-400"></i>
+                        累了就休息一会儿~
+                        <i class="fas fa-quote-right ml-1 text-lightBlue-400"></i>
+                      </span>
+                    </p>
+                </div>
+              </div>
+            </div>
 
-                  <div class="relative w-full mb-3">
-                    <label
-                      class="block uppercase text-blueGray-600 text-xs font-bold mb-2"
-                      htmlFor="email"
+            <div class="w-full md:w-6/12 lg:w-3/12 lg:mb-0 mb-12 px-4">
+              <div class="px-6">
+                <img
+                  alt="..."
+                  :src="hxr"
+                  class="shadow-lg rounded-full mx-auto max-w-120-px"
+                />
+                <div class="pt-6 text-center">
+                  <h5 class="text-xl font-bold">韩昕睿</h5>
+                  <p
+                    class="mt-1 text-sm text-blueGray-400 uppercase font-semibold"
+                  >
+                    后端开发
+                  </p>
+                  <div class="mt-6">
+                    <a
+                      href="https://github.com/Xian-Yu0"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-flex items-center justify-center"
+                      title="查看GitHub"
                     >
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      class="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-                      placeholder="Email"
-                    />
+                      <i class="fab fa-github"></i>
+                    </a>
                   </div>
+                    <p class="mt-2 text-blueGray-500 text-sm border-l-4 border-lightBlue-400 pl-3 italic flex items-center">
+                      <span>
+                        <i class="fas fa-quote-left mr-1 text-lightBlue-400"></i>
+                        负者歌于途
+                        <i class="fas fa-quote-right ml-1 text-lightBlue-400"></i>
+                      </span>
+                    </p>
+                </div>
+              </div>
+            </div>
 
-                  <div class="relative w-full mb-3">
-                    <label
-                      class="block uppercase text-blueGray-600 text-xs font-bold mb-2"
-                      htmlFor="message"
+            
+            <div class="w-full md:w-6/12 lg:w-3/12 lg:mb-0 mb-12 px-4">
+              <div class="px-6">
+                <img
+                  alt="..."
+                  :src="zzw"
+                  class="shadow-lg rounded-full mx-auto max-w-120-px"
+                />
+                <div class="pt-6 text-center">
+                  <h5 class="text-xl font-bold">赵泽文</h5>
+                  <p
+                    class="mt-1 text-sm text-blueGray-400 uppercase font-semibold"
+                  >
+                    前端开发
+                  </p>
+                  <div class="mt-6">
+                    <a
+                      href="https://github.com/Zevan770"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-flex items-center justify-center"
+                      title="查看GitHub"
                     >
-                      Message
-                    </label>
-                    <textarea
-                      rows="4"
-                      cols="80"
-                      class="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full"
-                      placeholder="Type a message..."
-                    />
+                      <i class="fab fa-github"></i>
+                    </a>
                   </div>
-                  <div class="text-center mt-6">
-                    <button
-                      class="bg-blueGray-800 text-white active:bg-blueGray-600 text-sm font-bold uppercase px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
-                      type="button"
+                    <p class="mt-2 text-blueGray-500 text-sm border-l-4 border-lightBlue-400 pl-3 italic flex items-center">
+                      <span>
+                        <i class="fas fa-quote-left mr-1 text-lightBlue-400"></i>
+                        神秘的第八个人——770
+                        <i class="fas fa-quote-right ml-1 text-lightBlue-400"></i>
+                      </span>
+                    </p>
+                </div>
+              </div>
+            </div>
+
+                        <div class="w-full md:w-6/12 lg:w-3/12 lg:mb-0 mb-12 px-4">
+              <div class="px-6">
+                <img
+                  alt="..."
+                  :src="tpx"
+                  class="shadow-lg rounded-full mx-auto max-w-120-px"
+                />
+                <div class="pt-6 text-center">
+                  <h5 class="text-xl font-bold">田培瑄</h5>
+                  <p
+                    class="mt-1 text-sm text-blueGray-400 uppercase font-semibold"
+                  >
+                    前端开发
+                  </p>
+                  <div class="mt-6">
+                    <a
+                      href="https://github.com/tpxuan"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-flex items-center justify-center"
+                      title="查看GitHub"
                     >
-                      Send Message
-                    </button>
+                      <i class="fab fa-github"></i>
+                    </a>
                   </div>
+                    <p class="mt-2 text-blueGray-500 text-sm border-l-4 border-lightBlue-400 pl-3 italic flex items-center">
+                      <span>
+                        <i class="fas fa-quote-left mr-1 text-lightBlue-400"></i>
+                        我是一个软件工程师，专门用代码解决不存在的问题，顺便把简单的问题复杂化，最后再用一个注释‘// TODO: 以后修复’来掩盖一切。
+                        <i class="fas fa-quote-right ml-1 text-lightBlue-400"></i>
+                      </span>
+                    </p>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </section>
+      
     </main>
     <footer-component />
   </div>
@@ -599,18 +445,28 @@
 import Navbar from "@/components/Navbars/AuthNavbar.vue";
 import FooterComponent from "@/components/Footers/Footer.vue";
 
-import team1 from "@/assets/img/team-1-800x800.jpg";
-import team2 from "@/assets/img/team-2-800x800.jpg";
-import team3 from "@/assets/img/team-3-800x800.jpg";
-import team4 from "@/assets/img/team-4-470x470.png";
+import dqr from "@/assets/img/dqr.jpg";
+import gyr from "@/assets/img/gyr.jpg";
+import lgq from "@/assets/img/lgq.jpg";
+import ykq from "@/assets/img/ykq.jpg";
+import st from "@/assets/img/st.jpg";
+import zzw from "@/assets/img/zzw.jpg";
+import tpx from "@/assets/img/tpx.jpg";
+import hxr from "@/assets/img/hxr.jpg"
 
+import logo from "@/assets/img/logo4.png";
 export default {
   data() {
     return {
-      team1,
-      team2,
-      team3,
-      team4,
+      dqr,      
+      logo,
+      gyr,
+      lgq,
+      ykq,
+      st,
+      zzw,
+      tpx,
+      hxr,
     };
   },
   components: {
