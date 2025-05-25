@@ -175,9 +175,41 @@ export default {
     }
   },
   methods: {
-    selectOrg(org) {
+    async selectOrg(org) {
       this.selectedOrg = org;
       this.orgTab = 'overview';
+      
+      try {
+        const response = await tables.getOrgMembers(org.id);
+        if (response.status !== 200) {
+          this.$message({
+            message: response.message,
+            type: 'error',
+            duration: 3000
+          });
+          return;
+        }
+
+        console.log('拿到成员啦');
+        console.log(response);
+        
+        // 更新选中组织的成员信息
+        this.selectedOrg.membersList = [
+          response.data.leader,
+          ...response.data.admins,
+          ...response.data.members
+        ];
+        
+        // 更新成员数量
+        this.selectedOrg.members = this.selectedOrg.membersList.length;
+      } catch (error) {
+        console.error('Failed to fetch organization members:', error);
+        this.$message({
+          message: '获取组织成员信息失败',
+          type: 'error',
+          duration: 3000
+        });
+      }
     },
 
     getAvatarUrl(avatar) {
