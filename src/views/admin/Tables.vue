@@ -34,10 +34,10 @@
       <div class="container-fluid px-4 py-4">
         <div class="flex">
           <!-- 侧边栏 -->
-          <aside class="w-80 bg-white rounded-lg shadow mr-4">
+          <aside class="w-[400px] flex-shrink-0 flex-grow-0 bg-white rounded-lg shadow mr-4">
             <div class="p-4">
               <div class="org-sidebar-header">
-                <span class="text-lg font-bold text-gray-800">我的组织</span>
+                <span class="text-lg font-bold text-gray-800">我的组织 - 组织管理</span>
               </div>
               <div class="org-sidebar-list">
                 <div v-if="filteredJoinedOrgs.length === 0 && filteredCreatedOrgs.length === 0" class="text-gray-500 text-center py-4">暂无组织</div>
@@ -48,8 +48,8 @@
                       <li v-for="org in filteredJoinedOrgs" :key="org.id" @click="selectOrg(org)" 
                           :class="['flex items-center p-3 rounded-lg cursor-pointer hover:bg-gray-50', 
                                   selectedOrg && selectedOrg.id === org.id ? 'bg-emerald-50' : '']">
-                        <img :src="org.avatar" class="w-10 h-10 rounded-full mr-3" />
-                        <div>
+                        <img :src="getAvatarUrl(org.avatar)" class="w-10 h-10 rounded-full mr-3" />
+                        <div class="min-w-[200px]">
                           <div class="font-medium text-gray-900">{{ org.name }}</div>
                           <div class="text-sm text-gray-500">成员数：{{ org.members }}</div>
                         </div>
@@ -62,8 +62,8 @@
                       <li v-for="org in filteredCreatedOrgs" :key="org.id" @click="selectOrg(org)"
                           :class="['flex items-center p-3 rounded-lg cursor-pointer hover:bg-gray-50',
                                   selectedOrg && selectedOrg.id === org.id ? 'bg-emerald-50' : '']">
-                        <img :src="org.avatar" class="w-10 h-10 rounded-full mr-3" />
-                        <div>
+                        <img :src="getAvatarUrl(org.avatar)" class="w-10 h-10 rounded-full mr-3" />
+                        <div class="min-w-[200px]">
                           <div class="font-medium text-gray-900">{{ org.name }}</div>
                           <div class="text-sm text-gray-500">成员数：{{ org.members }}</div>
                         </div>
@@ -79,7 +79,7 @@
           <main class="flex-1 bg-white rounded-lg shadow p-4">
             <div v-if="selectedOrg">
               <div class="flex items-start mb-6">
-                <img :src="selectedOrg.avatar" class="w-20 h-20 rounded-full mr-6" />
+                <img :src="getAvatarUrl(selectedOrg.avatar)" class="w-20 h-20 rounded-full mr-6" />
                 <div class="flex-1">
                   <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ selectedOrg.name }}</h2>
                   <p class="text-gray-600 mb-2">{{ selectedOrg.intro || '这个组织还没有简介。' }}</p>
@@ -94,7 +94,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       <div v-for="member in selectedOrg.membersList" :key="member.id" 
                            class="flex items-center p-3 bg-gray-50 rounded-lg">
-                        <img :src="member.avatar" class="w-10 h-10 rounded-full mr-3" />
+                        <img :src="getAvatarUrl(member.avatar)" class="w-10 h-10 rounded-full mr-3" />
                         <span class="font-medium text-gray-900">{{ member.name }}</span>
                       </div>
                     </div>
@@ -140,7 +140,7 @@
 </template>
 
 <script>
-import { createOrg } from '@/api/tables';
+import * as tables from '@/api/tables';
 
 export default {
   name: 'OrganizationPage',
@@ -151,28 +151,8 @@ export default {
       newOrgForm: { name: '', intro: '' },
       selectedOrg: null,
       orgTab: 'overview',
-      joinedOrgs: [
-        { id: 1, name: 'AndroidDevTeam-2024', avatar: 'https://avatars.githubusercontent.com/u/12345678?v=4', role: '成员', intro: '专注于Android开发的技术团队', members: 2, membersList: [
-          { id: 1, name: 'Alice', avatar: 'https://randomuser.me/api/portraits/women/1.jpg', role: '成员' },
-          { id: 2, name: 'Bob', avatar: 'https://randomuser.me/api/portraits/men/2.jpg', role: '成员' },
-        ] },
-        { id: 2, name: 'BUAA-SE-coders007', avatar: 'https://avatars.githubusercontent.com/u/87654321?v=4', role: '成员', intro: '北航软件工程协作组', members: 2, membersList: [
-          { id: 3, name: 'Charlie', avatar: 'https://randomuser.me/api/portraits/men/3.jpg', role: '成员' },
-          { id: 4, name: 'Diana', avatar: 'https://randomuser.me/api/portraits/women/4.jpg', role: '成员' },
-        ] },
-        { id: 3, name: 'DB-web-project', avatar: 'https://avatars.githubusercontent.com/u/11223344?v=4', role: '成员', intro: '数据库Web项目组', members: 1, membersList: [
-          { id: 5, name: 'Eve', avatar: 'https://randomuser.me/api/portraits/women/5.jpg', role: '成员' },
-        ] },
-      ],
-      createdOrgs: [
-        { id: 101, name: 'MyAwesomeOrg', avatar: 'https://avatars.githubusercontent.com/u/99887766?v=4', members: 12, intro: '我的第一个组织', membersList: [
-          { id: 6, name: 'You', avatar: 'https://randomuser.me/api/portraits/men/6.jpg', role: '成员' },
-          { id: 7, name: 'Frank', avatar: 'https://randomuser.me/api/portraits/men/7.jpg', role: '成员' },
-        ] },
-        { id: 102, name: 'OpenSourceDream', avatar: 'https://avatars.githubusercontent.com/u/88776655?v=4', members: 7, chengintro: '开源梦想家', membersList: [
-          { id: 8, name: 'Grace', avatar: 'https://randomuser.me/api/portraits/women/8.jpg', role: '成员' },
-        ] },
-      ],
+      joinedOrgs: [],
+      createdOrgs: [],
       messages: [
         { id: 201, username: 'Alice', userAvatar: 'https://randomuser.me/api/portraits/women/1.jpg', orgName: 'MyAwesomeOrg', time: '2分钟前' },
         { id: 202, username: 'Bob', userAvatar: 'https://randomuser.me/api/portraits/men/2.jpg', orgName: 'OpenSourceDream', time: '5分钟前' },
@@ -180,8 +160,7 @@ export default {
       mockLogs: [
         { id: 1, time: '2024-06-01', content: 'Alice 加入了组织' },
         { id: 2, time: '2024-06-02', content: 'Bob 被提升为管理员' },
-      ],
-      showMessageDialog: false
+      ]
     }
   },
   computed: {
@@ -201,6 +180,13 @@ export default {
       this.orgTab = 'overview';
     },
 
+    getAvatarUrl(avatar) {
+      //return `https://jienote.top/${avatar}`;
+      console.log(avatar)
+      return 'http://43.143.228.56:8000/images/default.png';
+      //return avatar;
+    },
+
     async createOrg() {
       if (!this.newOrgForm.name) return;
       const newOrg = {
@@ -209,35 +195,99 @@ export default {
         group_avatar: 'https://avatars.githubusercontent.com/u/99887766?v=4',
       };
 
-      await createOrg(newOrg).then(res => {
-        console.log(res);
-        console.log('到这儿了');
-
-        console.log('你是个傻逼')
-        //把newOrg包装一下再push到createdOrgs
+      await tables.createOrg(newOrg).then(res => {
         this.createdOrgs.push({
-          id: 1111111,
+          id: res.group_id,
           name: this.newOrgForm.name,
           avatar: 'https://avatars.githubusercontent.com/u/99887766?v=4',
           members: 1,
           intro: this.newOrgForm.intro,
           membersList: [],
+          role: 'leader'
         });
         this.showCreateOrgDialog = false;
         this.newOrgForm = { name: '', intro: '' };
       });
-      
-      
+    },
+
+    processOrgData(data) {
+      this.createdOrgs = data.leader.map(org => ({
+        id: org.group_id,
+        name: org.group_name,
+        avatar: org.group_avatar,
+        intro: org.group_desc,
+        members: 0,
+        membersList: [],
+        role: 'leader'
+      }));
+
+      const adminOrgs = data.admin.map(org => ({
+        id: org.group_id,
+        name: org.group_name,
+        avatar: org.group_avatar,
+        intro: org.group_desc,
+        members: 0,
+        membersList: [],
+        role: 'admin'
+      }));
+
+      const memberOrgs = data.member.map(org => ({
+        id: org.group_id,
+        name: org.group_name,
+        avatar: org.group_avatar,
+        intro: org.group_desc,
+        members: 0,
+        membersList: [],
+        role: 'member'
+      }));
+
+      this.joinedOrgs = [...adminOrgs, ...memberOrgs];
     }
   },
-  mounted() {
-    // 页面加载时自动选中第一个组织
-    if (!this.selectedOrg) {
-      if (this.joinedOrgs.length > 0) {
-        this.selectOrg(this.joinedOrgs[0]);
-      } else if (this.createdOrgs.length > 0) {
-        this.selectOrg(this.createdOrgs[0]);
+  async mounted() {
+    try {
+      const response = await tables.getAllOrgs();
+      console.log(response)
+      if (response.status !== 200) {
+        // 处理错误情况
+        //弹窗报错
+        this.$message({
+          message: response.message,
+          type: 'error',
+          duration: 3000
+        })
+        console.error('Failed to fetch organizations:', response.message);
+        return;
       }
+      console.log(response.data);
+      console.log('获取所有组织成功')
+      this.processOrgData(response.data);
+
+
+      // const response = {
+      //   leader: [
+      //     { group_id: 1, group_name: 'M', group_avatar: 'https://avatars.githubusercontent.com/u/99887766?v=4', group_desc: '我的第一个组织' },
+      //   ],
+      //   admin: [
+      //     { group_id: 2, group_name: '0', group_avatar: 'https://avatars.githubusercontent.com/u/88776655?v=4', group_desc: '开源梦想家' },
+      //   ],
+      //   member: [
+      //     { group_id: 3, group_name: 'D', group_avatar: 'https://avatars.githubusercontent.com/u/11223344?v=4', group_desc: '数据库Web项目组' },
+      //   ]
+      // };
+      // console.log(response);
+      // console.log('获取所有组织成功')
+      // this.processOrgData(response);
+      
+      if (!this.selectedOrg) {
+        if (this.joinedOrgs.length > 0) {
+          this.selectOrg(this.joinedOrgs[0]);
+        } else if (this.createdOrgs.length > 0) {
+          this.selectOrg(this.createdOrgs[0]);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch organizations:', error);
     }
   }
 }
