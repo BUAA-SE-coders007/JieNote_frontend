@@ -20,14 +20,6 @@
             </li>
             <li class="nav-item">
               <a class="px-3 py-2 flex items-center text-xs uppercase font-bold leading-snug text-white hover:opacity-75"
-                 href="javascript:;"
-                 @click="showMessageDialog = true">
-                <i class="fas fa-bell text-lg leading-lg text-white opacity-75"></i>
-                <span class="ml-2">消息</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="px-3 py-2 flex items-center text-xs uppercase font-bold leading-snug text-white hover:opacity-75"
                  href="javascript:;">
                 <i class="fas fa-user text-lg leading-lg text-white opacity-75"></i>
                 <span class="ml-2">用户</span>
@@ -108,18 +100,6 @@
                     </div>
                   </div>
                 </el-tab-pane>
-                <el-tab-pane label="仓库" name="repos">
-                  <div class="mt-4">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">组织仓库</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <div v-for="repo in mockRepos" :key="repo.id" 
-                           class="p-4 bg-gray-50 rounded-lg">
-                        <div class="font-medium text-gray-900 mb-1">{{ repo.name }}</div>
-                        <div class="text-sm text-gray-600">{{ repo.desc }}</div>
-                      </div>
-                    </div>
-                  </div>
-                </el-tab-pane>
                 <el-tab-pane label="日志" name="logs">
                   <div class="mt-4">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">活动日志</h3>
@@ -156,24 +136,12 @@
         <el-button type="primary" @click="createOrg">创建</el-button>
       </template>
     </el-dialog>
-    <el-dialog v-model="showMessageDialog" title="消息通知" width="600px">
-      <div v-if="messages.length === 0" class="org-empty">暂无新消息</div>
-      <div v-else class="org-message-list">
-        <div v-for="msg in messages" :key="msg.id" class="org-message-item">
-          <img :src="msg.userAvatar" class="org-message-avatar" alt="user avatar" />
-          <div class="org-message-info">
-            <div class="org-message-user">{{ msg.username }} 请求加入 <span class="org-message-org">{{ msg.orgName }}</span></div>
-            <div class="org-message-time">{{ msg.time }}</div>
-          </div>
-          <el-button type="success" size="mini" class="ml-2">同意</el-button>
-          <el-button type="danger" size="mini" class="ml-2">拒绝</el-button>
-        </div>
-      </div>
-    </el-dialog>
   </div>
 </template>
 
 <script>
+import { createOrg } from '@/api/tables';
+
 export default {
   name: 'OrganizationPage',
   data() {
@@ -209,10 +177,6 @@ export default {
         { id: 201, username: 'Alice', userAvatar: 'https://randomuser.me/api/portraits/women/1.jpg', orgName: 'MyAwesomeOrg', time: '2分钟前' },
         { id: 202, username: 'Bob', userAvatar: 'https://randomuser.me/api/portraits/men/2.jpg', orgName: 'OpenSourceDream', time: '5分钟前' },
       ],
-      mockRepos: [
-        { id: 1, name: 'org-website', desc: '组织官网项目' },
-        { id: 2, name: 'org-docs', desc: '组织文档仓库' },
-      ],
       mockLogs: [
         { id: 1, time: '2024-06-01', content: 'Alice 加入了组织' },
         { id: 2, time: '2024-06-02', content: 'Bob 被提升为管理员' },
@@ -236,21 +200,34 @@ export default {
       this.selectedOrg = org;
       this.orgTab = 'overview';
     },
-    createOrg() {
+
+    async createOrg() {
       if (!this.newOrgForm.name) return;
       const newOrg = {
-        id: Date.now(),
-        name: this.newOrgForm.name,
-        avatar: 'https://avatars.githubusercontent.com/u/99887766?v=4',
-        members: 1,
-        intro: this.newOrgForm.intro,
-        membersList: [
-          { id: 999, name: 'You', avatar: 'https://randomuser.me/api/portraits/men/6.jpg', role: '成员' }
-        ]
+        group_name: this.newOrgForm.name,
+        group_desc: this.newOrgForm.intro,
+        group_avatar: 'https://avatars.githubusercontent.com/u/99887766?v=4',
       };
-      this.createdOrgs.push(newOrg);
-      this.showCreateOrgDialog = false;
-      this.newOrgForm = { name: '', intro: '' };
+
+      await createOrg(newOrg).then(res => {
+        console.log(res);
+        console.log('到这儿了');
+
+        console.log('你是个傻逼')
+        //把newOrg包装一下再push到createdOrgs
+        this.createdOrgs.push({
+          id: 1111111,
+          name: this.newOrgForm.name,
+          avatar: 'https://avatars.githubusercontent.com/u/99887766?v=4',
+          members: 1,
+          intro: this.newOrgForm.intro,
+          membersList: [],
+        });
+        this.showCreateOrgDialog = false;
+        this.newOrgForm = { name: '', intro: '' };
+      });
+      
+      
     }
   },
   mounted() {
