@@ -124,6 +124,17 @@
     <!-- 新建组织弹窗 -->
     <el-dialog v-model="showCreateOrgDialog" title="新建组织" width="400px">
       <el-form :model="newOrgForm" label-width="80px">
+        <el-form-item label="组织头像">
+          <el-upload
+            class="avatar-uploader"
+            :auto-upload="false"
+            :show-file-list="false"
+            :on-change="handleAvatarChange"
+            accept="image/jpeg,image/png">
+            <img v-if="newOrgForm.avatar" :src="newOrgForm.avatar" class="avatar" />
+            <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+          </el-upload>
+        </el-form-item>
         <el-form-item label="组织名称">
           <el-input v-model="newOrgForm.name" maxlength="20" show-word-limit placeholder="请输入组织名称" />
         </el-form-item>
@@ -141,14 +152,27 @@
 
 <script>
 import * as tables from '@/api/tables';
+import { Plus } from '@element-plus/icons-vue'
 
 export default {
   name: 'OrganizationPage',
+  components: {
+    Plus
+  },
   data() {
     return {
       searchText: '',
       showCreateOrgDialog: false,
-      newOrgForm: { name: '', intro: '' },
+      newOrgForm: { 
+        name: '', 
+        intro: '', 
+        avatar: '',
+        avatarFile: null
+      },
+      uploadUrl: 'http://43.143.228.56:8000/user/upload',
+      uploadHeaders: {
+        'Authorization': localStorage.getItem('token') || ''
+      },
       selectedOrg: null,
       orgTab: 'overview',
       joinedOrgs: [],
@@ -181,33 +205,46 @@ export default {
     },
 
     getAvatarUrl(avatar) {
-      //return `https://jienote.top/${avatar}`;
-      console.log(avatar)
-      return 'http://43.143.228.56:8000/images/default.png';
+      return `https://jienote.top/${avatar}`;
+      //console.log(avatar)
+      //return 'http://43.143.228.56:8000/images/default.png';
       //return avatar;
+    },
+
+    handleAvatarChange(file) {
+      if (file) {
+        this.newOrgForm.avatarFile = file.raw;
+        this.newOrgForm.avatar = URL.createObjectURL(file.raw);
+      }
     },
 
     async createOrg() {
       if (!this.newOrgForm.name) return;
-      const newOrg = {
-        group_name: this.newOrgForm.name,
-        group_desc: this.newOrgForm.intro,
-        group_avatar: 'https://avatars.githubusercontent.com/u/99887766?v=4',
-      };
+      
+      const formData = new FormData();
+      formData.append('group_name', this.newOrgForm.name);
+      formData.append('group_desc', this.newOrgForm.intro);
+      if (this.newOrgForm.avatarFile) {
+        formData.append('group_avatar', this.newOrgForm.avatarFile);
+      }
 
-      await tables.createOrg(newOrg).then(res => {
+      try {
+        const res = await tables.createOrg(formData);
         this.createdOrgs.push({
           id: res.group_id,
           name: this.newOrgForm.name,
-          avatar: 'https://avatars.githubusercontent.com/u/99887766?v=4',
+          avatar: this.newOrgForm.avatar || 'http://43.143.228.56:8000/images/default.png',
           members: 1,
           intro: this.newOrgForm.intro,
           membersList: [],
           role: 'leader'
         });
         this.showCreateOrgDialog = false;
-        this.newOrgForm = { name: '', intro: '' };
-      });
+        this.newOrgForm = { name: '', intro: '', avatar: '', avatarFile: null };
+      } catch (error) {
+        this.$message.error('创建组织失败');
+        console.error('Failed to create organization:', error);
+      }
     },
 
     processOrgData(data) {
@@ -605,5 +642,38 @@ export default {
   background: #d0e6fa;
   color: #0969da !important;
   box-shadow: 0 2px 8px 0 rgba(33,134,235,0.13);
+}
+.avatar-uploader {
+  text-align: center;
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  width: 178px;
+  height: 178px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.avatar-uploader:hover {
+  border-color: #409EFF;
+}
+
+.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 178px;
+  height: 178px;
+  text-align: center;
+  line-height: 178px;
+}
+
+.avatar {
+  width: 178px;
+  height: 178px;
+  display: block;
+  object-fit: cover;
 }
 </style>
