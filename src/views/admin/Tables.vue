@@ -178,38 +178,6 @@ export default {
     async selectOrg(org) {
       this.selectedOrg = org;
       this.orgTab = 'overview';
-      
-      try {
-        const response = await tables.getOrgMembers(org.id);
-        if (response.status !== 200) {
-          this.$message({
-            message: response.message,
-            type: 'error',
-            duration: 3000
-          });
-          return;
-        }
-
-        console.log('拿到成员啦');
-        console.log(response);
-        
-        // 更新选中组织的成员信息
-        this.selectedOrg.membersList = [
-          response.data.leader,
-          ...response.data.admins,
-          ...response.data.members
-        ];
-        
-        // 更新成员数量
-        this.selectedOrg.members = this.selectedOrg.membersList.length;
-      } catch (error) {
-        console.error('Failed to fetch organization members:', error);
-        this.$message({
-          message: '获取组织成员信息失败',
-          type: 'error',
-          duration: 3000
-        });
-      }
     },
 
     getAvatarUrl(avatar) {
@@ -281,8 +249,6 @@ export default {
       const response = await tables.getAllOrgs();
       console.log(response)
       if (response.status !== 200) {
-        // 处理错误情况
-        //弹窗报错
         this.$message({
           message: response.message,
           type: 'error',
@@ -295,21 +261,23 @@ export default {
       console.log('获取所有组织成功')
       this.processOrgData(response.data);
 
-
-      // const response = {
-      //   leader: [
-      //     { group_id: 1, group_name: 'M', group_avatar: 'https://avatars.githubusercontent.com/u/99887766?v=4', group_desc: '我的第一个组织' },
-      //   ],
-      //   admin: [
-      //     { group_id: 2, group_name: '0', group_avatar: 'https://avatars.githubusercontent.com/u/88776655?v=4', group_desc: '开源梦想家' },
-      //   ],
-      //   member: [
-      //     { group_id: 3, group_name: 'D', group_avatar: 'https://avatars.githubusercontent.com/u/11223344?v=4', group_desc: '数据库Web项目组' },
-      //   ]
-      // };
-      // console.log(response);
-      // console.log('获取所有组织成功')
-      // this.processOrgData(response);
+      // 获取所有组织的成员信息
+      const allOrgs = [...this.createdOrgs, ...this.joinedOrgs];
+      for (const org of allOrgs) {
+        try {
+          const memberResponse = await tables.getOrgMembers(org.id);
+          if (memberResponse.status === 200) {
+            org.membersList = [
+              memberResponse.data.leader,
+              ...memberResponse.data.admins,
+              ...memberResponse.data.members
+            ];
+            org.members = org.membersList.length;
+          }
+        } catch (error) {
+          console.error(`Failed to fetch members for org ${org.id}:`, error);
+        }
+      }
       
       if (!this.selectedOrg) {
         if (this.joinedOrgs.length > 0) {
