@@ -215,6 +215,20 @@ export default {
     async selectOrg(org) {
       this.selectedOrg = org;
       this.orgTab = 'overview';
+      
+      try {
+        const memberResponse = await tables.getOrgMembers(org.id);
+        if (memberResponse.status === 200) {
+          this.selectedOrg.membersList = [
+            memberResponse.data.leader,
+            ...memberResponse.data.admins,
+            ...memberResponse.data.members
+          ];
+          this.selectedOrg.members = this.selectedOrg.membersList.length;
+        }
+      } catch (error) {
+        console.error(`Failed to fetch members for org ${org.id}:`, error);
+      }
     },
 
     getAvatarUrl(avatar) {
@@ -310,24 +324,6 @@ export default {
       console.log(response.data);
       console.log('获取所有组织成功')
       this.processOrgData(response.data);
-
-      // 获取所有组织的成员信息
-      const allOrgs = [...this.createdOrgs, ...this.joinedOrgs];
-      for (const org of allOrgs) {
-        try {
-          const memberResponse = await tables.getOrgMembers(org.id);
-          if (memberResponse.status === 200) {
-            org.membersList = [
-              memberResponse.data.leader,
-              ...memberResponse.data.admins,
-              ...memberResponse.data.members
-            ];
-            org.members = org.membersList.length;
-          }
-        } catch (error) {
-          console.error(`Failed to fetch members for org ${org.id}:`, error);
-        }
-      }
       
       if (!this.selectedOrg) {
         if (this.joinedOrgs.length > 0) {
