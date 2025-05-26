@@ -51,7 +51,9 @@
                         <img :src="getAvatarUrl(org.avatar)" class="w-10 h-10 rounded-full mr-3" />
                         <div class="min-w-[200px]">
                           <div class="font-medium text-gray-900">{{ org.name }}</div>
-                          <div class="text-sm text-gray-500">成员数：{{ org.members }}</div>
+                          <div class="text-sm text-gray-500">
+                            {{ org.role === 'leader' ? '创建者' : org.role === 'admin' ? '管理员' : '成员' }}
+                          </div>
                         </div>
                       </li>
                     </ul>
@@ -65,7 +67,9 @@
                         <img :src="getAvatarUrl(org.avatar)" class="w-10 h-10 rounded-full mr-3" />
                         <div class="min-w-[200px]">
                           <div class="font-medium text-gray-900">{{ org.name }}</div>
-                          <div class="text-sm text-gray-500">成员数：{{ org.members }}</div>
+                          <div class="text-sm text-gray-500">
+                            {{ org.role === 'leader' ? '创建者' : org.role === 'admin' ? '管理员' : '成员' }}
+                          </div>
                         </div>
                       </li>
                     </ul>
