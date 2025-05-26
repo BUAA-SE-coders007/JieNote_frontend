@@ -78,12 +78,21 @@
           <!-- 主内容区 -->
           <main class="flex-1 bg-white rounded-lg shadow p-4">
             <div v-if="selectedOrg">
-              <div class="flex items-start mb-6">
-                <img :src="getAvatarUrl(selectedOrg.avatar)" class="w-20 h-20 rounded-full mr-6" />
-                <div class="flex-1">
-                  <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ selectedOrg.name }}</h2>
-                  <p class="text-gray-600 mb-2">{{ selectedOrg.intro || '这个组织还没有简介。' }}</p>
-                  <p class="text-gray-500 mb-4">{{ selectedOrg.role ? '身份：' + selectedOrg.role : '成员数：' + selectedOrg.members }}</p>
+              <div class="flex items-start mb-8">
+                <img :src="getAvatarUrl(selectedOrg.avatar)" class="w-24 h-24 rounded-full mr-8 border-4 border-emerald-100" style="width: 100px;margin-right: 20px;height: 100px;" />
+                <div class="flex-1 pt-2">
+                  <h2 class="text-2xl font-bold text-gray-900 mb-3">{{ selectedOrg.name }}</h2>
+                  <p class="text-gray-600 mb-3 text-base">{{ selectedOrg.intro || '这个组织还没有简介。' }}</p>
+                  <div class="flex items-center space-x-6">
+                    <span class="text-gray-500">
+                      <i class="fas fa-users mr-2"></i>
+                      成员数：{{ selectedOrg.members }}
+                    </span>
+                    <span class="text-gray-500">
+                      <i class="fas fa-user-tag mr-2"></i>
+                      身份：{{ selectedOrg.role === 'leader' ? '创建者' : selectedOrg.role === 'admin' ? '管理员' : '成员' }}
+                    </span>
+                  </div>
                 </div>
               </div>
 
