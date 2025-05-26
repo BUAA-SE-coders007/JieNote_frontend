@@ -22,6 +22,7 @@
       <splitpanes class="default-theme" :horizontal="false">
         <pane :size="57" min-size="20">
           <!-- PDF 查看区域 -->
+          <!-- PDF 查看区域 -->
           <div class="pdf-container">
             <iframe
                 v-if="pdfUrl"
@@ -62,6 +63,7 @@ import { Splitpanes, Pane } from 'splitpanes';
 import 'splitpanes/dist/splitpanes.css';
 import { ElMessage } from 'element-plus';
 
+
 export default {
   name: "PaperNote",
   components: {
@@ -69,7 +71,7 @@ export default {
     Loading,
     CustomMdEditor, // 注册 CustomMdEditor
     Splitpanes,
-    Pane
+    Pane,
   },
   data() {
     return {
