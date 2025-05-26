@@ -84,7 +84,7 @@
                   <h2 class="text-2xl font-bold text-gray-900 mb-3">{{ selectedOrg.name }}</h2>
                   <p class="text-gray-600 mb-3 text-base">{{ selectedOrg.intro || '这个组织还没有简介。' }}</p>
                   <div class="flex items-center space-x-6">
-                    <span class="text-gray-500">
+                    <span class="text-gray-500" style="margin-right: 20px;">
                       <i class="fas fa-users mr-2"></i>
                       成员数：{{ selectedOrg.members }}
                     </span>
