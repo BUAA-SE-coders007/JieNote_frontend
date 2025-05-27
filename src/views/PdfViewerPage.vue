@@ -4,6 +4,7 @@
 
     <PdfViewer ref="pdfViewerRef"
     fileUrl="https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf" 
+    articleId = "123456"
     />
 
     

@@ -6,7 +6,7 @@
         <span class="info">最近修改：{{ displayLastModified }}</span>
       </div>
       <div
-        v-if="pdfUrl"
+        v-if="pdfUrl && write"
         class="save-btn"
         :class="{ disabled: isSaving }"
         @click="handleSave"
@@ -37,6 +37,7 @@
 import { ref, watch, onMounted, onUnmounted, defineExpose, defineProps, computed } from 'vue';
 import { ElMessage } from 'element-plus'
 import { Document } from '@element-plus/icons-vue'
+import {getToken} from '@/utils/auth.js'
 
 const props = defineProps({
   fileUrl: {
@@ -50,6 +51,15 @@ const props = defineProps({
   lastModified: {
     type: String,
     default: ''
+  },
+  articleId: {
+    type: String,
+    default: ''
+  },
+  write:{
+    type: Boolean,
+    default: false
+
   }
 })
 
@@ -59,11 +69,12 @@ const isSaving = ref(false)
 const countdown = ref(10)
 const isLoading = ref(true)
 let countdownTimer = null
+const BASE_URL = 'http://127.0.0.1:8081/web/viewer.html'
 
 // 监听 fileUrl 变化
 watch(() => props.fileUrl, (newVal) => {
   if (newVal) {
-    pdfUrl.value = `http://127.0.0.1:8081/web/viewer.html?file=${encodeURIComponent(newVal)}`
+    pdfUrl.value = `${BASE_URL}?file=${encodeURIComponent(newVal)}`
     console.log('更新 pdfUrl:', pdfUrl.value)
     isLoading.value = true
   }
@@ -71,7 +82,9 @@ watch(() => props.fileUrl, (newVal) => {
 
 function handleSave() {
   if (isSaving.value) return
-  sendMessageToIframe({ type: 'save', token: '', articleId: '123' })
+
+  const token = getToken()
+  sendMessageToIframe({ type: 'save', token: token, articleId: props.articleId })
   startCountdown()
 }
 
