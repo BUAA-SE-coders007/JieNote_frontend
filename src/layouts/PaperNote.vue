@@ -44,8 +44,14 @@
               v-model="editorContent"
               :note-id="noteId"
               :autoSave="true"
-              :autoSaveInterval="30000" 
+              :autoSaveInterval="30000"
               :fullHeight="true"
+              :theme="'light'"
+              :showCodeRowNumber="true"
+              :preview="true"
+              :previewTheme="'default'"
+              :codeTheme="'atom'"
+              :scrollAuto="true"
             />
           </div>
         </pane>

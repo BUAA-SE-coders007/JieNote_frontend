@@ -2,13 +2,8 @@
   <div class="md-editor-container">
     <MdEditor
       v-model="content"
-      :theme="theme"
+      v-bind="$props"
       :toolbars="toolbars"
-      :preview="true"
-      :language="language"
-      :dragWidth="dragWidth"
-      :catalogLayout="'fixed'"
-      :previewTheme="'github'"
       @onSave="handleSave"
       @onUploadImg="handleUploadImg"
       @onChange="handleChange"
@@ -33,10 +28,8 @@ export default {
     MdEditor,
   },
   props: {
-    modelValue: {
-      type: String,
-      default: '',
-    },
+    ...MdEditor.props, // 继承所有原始props
+    // 自定义props
     autoSave: {
       type: Boolean,
       default: false,
@@ -49,17 +42,9 @@ export default {
       type: String,
       default: null,
     },
-    autoFocus: {
-      type: Boolean,
-      default: true,
-    },
-    theme: {
+    modelValue: {
       type: String,
-      default: 'light',
-    },
-    dragWidth: {
-      type: String,
-      default: '50%', // 默认编辑区和预览区等宽
+      default: '',
     },
   },
   emits: ['update:modelValue', 'save', 'change', 'error', 'dragWidth'],
