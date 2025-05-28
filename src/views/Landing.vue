@@ -3,15 +3,15 @@
     <navbar />
     <main>
       <div
-        class="relative pt-16 pb-32 flex content-center items-center justify-center min-h-screen-75"
+          class="relative pt-16 pb-32 flex content-center items-center justify-center min-h-screen-75"
       >
         <div
-          class="absolute top-0 w-full h-full bg-center bg-cover"
-          :style="{ backgroundImage: 'url(' + logo + ')' }"
+            class="absolute top-0 w-full h-full bg-center bg-cover"
+            :style="{ backgroundImage: 'url(' + logo + ')' }"
         >
           <span
-            id="blackOverlay"
-            class="w-full h-full absolute opacity-75 bg-black"
+              id="blackOverlay"
+              class="w-full h-full absolute opacity-75 bg-black"
           ></span>
         </div>
         <div class="container relative mx-auto">
@@ -29,21 +29,21 @@
           </div>
         </div>
         <div
-          class="top-auto bottom-0 left-0 right-0 w-full absolute pointer-events-none overflow-hidden h-70-px"
-          style="transform: translateZ(0);"
+            class="top-auto bottom-0 left-0 right-0 w-full absolute pointer-events-none overflow-hidden h-70-px"
+            style="transform: translateZ(0);"
         >
           <svg
-            class="absolute bottom-0 overflow-hidden"
-            xmlns="http://www.w3.org/2000/svg"
-            preserveAspectRatio="none"
-            version="1.1"
-            viewBox="0 0 2560 100"
-            x="0"
-            y="0"
+              class="absolute bottom-0 overflow-hidden"
+              xmlns="http://www.w3.org/2000/svg"
+              preserveAspectRatio="none"
+              version="1.1"
+              viewBox="0 0 2560 100"
+              x="0"
+              y="0"
           >
             <polygon
-              class="text-blueGray-200 fill-current"
-              points="2560 0 2560 100 0 100"
+                class="text-blueGray-200 fill-current"
+                points="2560 0 2560 100 0 100"
             ></polygon>
           </svg>
         </div>
@@ -54,11 +54,11 @@
           <div class="flex flex-wrap">
             <div class="lg:pt-12 pt-6 w-full md:w-4/12 px-4 text-center">
               <div
-                class="relative flex flex-col min-w-0 break-words bg-white w-full mb-8 shadow-lg rounded-lg"
+                  class="relative flex flex-col min-w-0 break-words bg-white w-full mb-8 shadow-lg rounded-lg"
               >
                 <div class="px-4 py-5 flex-auto">
                   <div
-                    class="text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-red-400"
+                      class="text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-red-400"
                   >
                     <i class="fas fa-award"></i>
                   </div>
@@ -72,11 +72,11 @@
 
             <div class="w-full md:w-4/12 px-4 text-center">
               <div
-                class="relative flex flex-col min-w-0 break-words bg-white w-full mb-8 shadow-lg rounded-lg"
+                  class="relative flex flex-col min-w-0 break-words bg-white w-full mb-8 shadow-lg rounded-lg"
               >
                 <div class="px-4 py-5 flex-auto">
                   <div
-                    class="text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-lightBlue-400"
+                      class="text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-lightBlue-400"
                   >
                     <i class="fas fa-retweet"></i>
                   </div>
@@ -84,10 +84,10 @@
                   <p class="mt-2 mb-4 text-blueGray-500">
                     JieNote项目的源代码开源在
                     <a
-                      href="https://github.com/BUAA-SE-coders007"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="text-blue-500 underline hover:text-blue-700"
+                        href="https://github.com/BUAA-SE-coders007"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-blue-500 underline hover:text-blue-700"
                     >GitHub平台</a>，支持二次开发
                   </p>
                 </div>
@@ -96,11 +96,11 @@
 
             <div class="pt-6 w-full md:w-4/12 px-4 text-center">
               <div
-                class="relative flex flex-col min-w-0 break-words bg-white w-full mb-8 shadow-lg rounded-lg"
+                  class="relative flex flex-col min-w-0 break-words bg-white w-full mb-8 shadow-lg rounded-lg"
               >
                 <div class="px-4 py-5 flex-auto">
                   <div
-                    class="text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-emerald-400"
+                      class="text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-emerald-400"
                   >
                     <i class="fas fa-fingerprint"></i>
                   </div>
@@ -117,21 +117,21 @@
 
       <section class="relative py-20">
         <div
-          class="bottom-auto top-0 left-0 right-0 w-full absolute pointer-events-none overflow-hidden -mt-20 h-20"
-          style="transform: translateZ(0);"
+            class="bottom-auto top-0 left-0 right-0 w-full absolute pointer-events-none overflow-hidden -mt-20 h-20"
+            style="transform: translateZ(0);"
         >
           <svg
-            class="absolute bottom-0 overflow-hidden"
-            xmlns="http://www.w3.org/2000/svg"
-            preserveAspectRatio="none"
-            version="1.1"
-            viewBox="0 0 2560 100"
-            x="0"
-            y="0"
+              class="absolute bottom-0 overflow-hidden"
+              xmlns="http://www.w3.org/2000/svg"
+              preserveAspectRatio="none"
+              version="1.1"
+              viewBox="0 0 2560 100"
+              x="0"
+              y="0"
           >
             <polygon
-              class="text-white fill-current"
-              points="2560 0 2560 100 0 100"
+                class="text-white fill-current"
+                points="2560 0 2560 100 0 100"
             ></polygon>
           </svg>
         </div>
@@ -151,140 +151,140 @@
             <div class="w-full md:w-6/12 lg:w-3/12 lg:mb-0 mb-12 px-4">
               <div class="px-6">
                 <img
-                  alt="..."
-                  :src="dqr"
-                  class="shadow-lg rounded-full mx-auto max-w-120-px"
+                    alt="..."
+                    :src="dqr"
+                    class="shadow-lg rounded-full mx-auto max-w-120-px"
                 />
                 <div class="pt-6 text-center">
                   <h5 class="text-xl font-bold">杜启嵘</h5>
                   <p
-                    class="mt-1 text-sm text-blueGray-400 uppercase font-semibold"
+                      class="mt-1 text-sm text-blueGray-400 uppercase font-semibold"
                   >
                     项目经理/运维
                   </p>
                   <div class="mt-6">
                     <a
-                      href="https://github.com/coder0xe"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-flex items-center justify-center"
-                      title="查看GitHub"
+                        href="https://github.com/coder0xe"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-flex items-center justify-center"
+                        title="查看GitHub"
                     >
                       <i class="fab fa-github"></i>
                     </a>
                   </div>
-                    <p class="mt-2 text-blueGray-500 text-sm border-l-4 border-lightBlue-400 pl-3 italic flex items-center">
+                  <p class="mt-2 text-blueGray-500 text-sm border-l-4 border-lightBlue-400 pl-3 italic flex items-center">
                       <span>
                         <i class="fas fa-quote-left mr-1 text-lightBlue-400"></i>
                         不会web开发的运维躺平人
                         <i class="fas fa-quote-right ml-1 text-lightBlue-400"></i>
                       </span>
-                    </p>
+                  </p>
                 </div>
               </div>
             </div>
             <div class="w-full md:w-6/12 lg:w-3/12 lg:mb-0 mb-12 px-4">
               <div class="px-6">
                 <img
-                  alt="..."
-                  :src="gyr"
-                  class="shadow-lg rounded-full mx-auto max-w-120-px"
+                    alt="..."
+                    :src="gyr"
+                    class="shadow-lg rounded-full mx-auto max-w-120-px"
                 />
                 <div class="pt-6 text-center">
                   <h5 class="text-xl font-bold">高悠然</h5>
                   <p
-                    class="mt-1 text-sm text-blueGray-400 uppercase font-semibold"
+                      class="mt-1 text-sm text-blueGray-400 uppercase font-semibold"
                   >
                     前端开发
                   </p>
                   <div class="mt-6">
                     <a
-                      href="https://github.com/gaoxiaomo"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-flex items-center justify-center"
-                      title="查看GitHub"
+                        href="https://github.com/gaoxiaomo"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-flex items-center justify-center"
+                        title="查看GitHub"
                     >
                       <i class="fab fa-github"></i>
                     </a>
                   </div>
-                    <p class="mt-2 text-blueGray-500 text-sm border-l-4 border-lightBlue-400 pl-3 italic flex items-center">
+                  <p class="mt-2 text-blueGray-500 text-sm border-l-4 border-lightBlue-400 pl-3 italic flex items-center">
                       <span>
                         <i class="fas fa-quote-left mr-1 text-lightBlue-400"></i>
                         这个人很懒，什么都没有留下
                         <i class="fas fa-quote-right ml-1 text-lightBlue-400"></i>
                       </span>
-                    </p>
+                  </p>
                 </div>
               </div>
             </div>
             <div class="w-full md:w-6/12 lg:w-3/12 lg:mb-0 mb-12 px-4">
               <div class="px-6">
                 <img
-                  alt="..."
-                  :src="lgq"
-                  class="shadow-lg rounded-full mx-auto max-w-120-px"
+                    alt="..."
+                    :src="lgq"
+                    class="shadow-lg rounded-full mx-auto max-w-120-px"
                 />
                 <div class="pt-6 text-center">
                   <h5 class="text-xl font-bold">李国庆</h5>
                   <p
-                    class="mt-1 text-sm text-blueGray-400 uppercase font-semibold"
+                      class="mt-1 text-sm text-blueGray-400 uppercase font-semibold"
                   >
                     后端开发
                   </p>
                   <div class="mt-6">
                     <a
-                      href="https://github.com/Fantasylee21"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-flex items-center justify-center"
-                      title="查看GitHub"
+                        href="https://github.com/Fantasylee21"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-flex items-center justify-center"
+                        title="查看GitHub"
                     >
                       <i class="fab fa-github"></i>
                     </a>
                   </div>
-                    <p class="mt-2 text-blueGray-500 text-sm border-l-4 border-lightBlue-400 pl-3 italic flex items-center">
+                  <p class="mt-2 text-blueGray-500 text-sm border-l-4 border-lightBlue-400 pl-3 italic flex items-center">
                       <span>
                         <i class="fas fa-quote-left mr-1 text-lightBlue-400"></i>
                         软工没有通天路，我是sl你记住
                         <i class="fas fa-quote-right ml-1 text-lightBlue-400"></i>
                       </span>
-                    </p>
+                  </p>
                 </div>
               </div>
             </div>
             <div class="w-full md:w-6/12 lg:w-3/12 lg:mb-0 mb-12 px-4">
               <div class="px-6">
                 <img
-                  alt="..."
-                  :src="ykq"
-                  class="shadow-lg rounded-full mx-auto max-w-120-px"
+                    alt="..."
+                    :src="ykq"
+                    class="shadow-lg rounded-full mx-auto max-w-120-px"
                 />
                 <div class="pt-6 text-center">
                   <h5 class="text-xl font-bold">杨可清</h5>
                   <p
-                    class="mt-1 text-sm text-blueGray-400 uppercase font-semibold"
+                      class="mt-1 text-sm text-blueGray-400 uppercase font-semibold"
                   >
                     测试
                   </p>
                   <div class="mt-6">
                     <a
-                      href="https://github.com/thestormtree"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-flex items-center justify-center"
-                      title="查看GitHub"
+                        href="https://github.com/thestormtree"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-flex items-center justify-center"
+                        title="查看GitHub"
                     >
                       <i class="fab fa-github"></i>
                     </a>
                   </div>
-                    <p class="mt-2 text-blueGray-500 text-sm border-l-4 border-lightBlue-400 pl-3 italic flex items-center">
+                  <p class="mt-2 text-blueGray-500 text-sm border-l-4 border-lightBlue-400 pl-3 italic flex items-center">
                       <span>
                         <i class="fas fa-quote-left mr-1 text-lightBlue-400"></i>
                         如果遇到了bug和困难，微笑着面对它，等待并心怀希望——这只猴子正在写《莎士比亚全集》，等它编写正确的程序需要的时间需要很久
                         <i class="fas fa-quote-right ml-1 text-lightBlue-400"></i>
                       </span>
-                    </p>
+                  </p>
                 </div>
               </div>
             </div>
@@ -292,35 +292,35 @@
             <div class="w-full md:w-6/12 lg:w-3/12 lg:mb-0 mb-12 px-4">
               <div class="px-6">
                 <img
-                  alt="..."
-                  :src="st"
-                  class="shadow-lg rounded-full mx-auto max-w-120-px"
+                    alt="..."
+                    :src="st"
+                    class="shadow-lg rounded-full mx-auto max-w-120-px"
                 />
                 <div class="pt-6 text-center">
                   <h5 class="text-xl font-bold">石通</h5>
                   <p
-                    class="mt-1 text-sm text-blueGray-400 uppercase font-semibold"
+                      class="mt-1 text-sm text-blueGray-400 uppercase font-semibold"
                   >
                     前端开发
                   </p>
                   <div class="mt-6">
                     <a
-                      href="https://github.com/dongfengwuyishi"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-flex items-center justify-center"
-                      title="查看GitHub"
+                        href="https://github.com/dongfengwuyishi"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-flex items-center justify-center"
+                        title="查看GitHub"
                     >
                       <i class="fab fa-github"></i>
                     </a>
                   </div>
-                    <p class="mt-2 text-blueGray-500 text-sm border-l-4 border-lightBlue-400 pl-3 italic flex items-center">
+                  <p class="mt-2 text-blueGray-500 text-sm border-l-4 border-lightBlue-400 pl-3 italic flex items-center">
                       <span>
                         <i class="fas fa-quote-left mr-1 text-lightBlue-400"></i>
                         累了就休息一会儿~
                         <i class="fas fa-quote-right ml-1 text-lightBlue-400"></i>
                       </span>
-                    </p>
+                  </p>
                 </div>
               </div>
             </div>
@@ -328,115 +328,115 @@
             <div class="w-full md:w-6/12 lg:w-3/12 lg:mb-0 mb-12 px-4">
               <div class="px-6">
                 <img
-                  alt="..."
-                  :src="hxr"
-                  class="shadow-lg rounded-full mx-auto max-w-120-px"
+                    alt="..."
+                    :src="hxr"
+                    class="shadow-lg rounded-full mx-auto max-w-120-px"
                 />
                 <div class="pt-6 text-center">
                   <h5 class="text-xl font-bold">韩昕睿</h5>
                   <p
-                    class="mt-1 text-sm text-blueGray-400 uppercase font-semibold"
+                      class="mt-1 text-sm text-blueGray-400 uppercase font-semibold"
                   >
                     后端开发
                   </p>
                   <div class="mt-6">
                     <a
-                      href="https://github.com/Xian-Yu0"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-flex items-center justify-center"
-                      title="查看GitHub"
+                        href="https://github.com/Xian-Yu0"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-flex items-center justify-center"
+                        title="查看GitHub"
                     >
                       <i class="fab fa-github"></i>
                     </a>
                   </div>
-                    <p class="mt-2 text-blueGray-500 text-sm border-l-4 border-lightBlue-400 pl-3 italic flex items-center">
+                  <p class="mt-2 text-blueGray-500 text-sm border-l-4 border-lightBlue-400 pl-3 italic flex items-center">
                       <span>
                         <i class="fas fa-quote-left mr-1 text-lightBlue-400"></i>
                         负者歌于途
                         <i class="fas fa-quote-right ml-1 text-lightBlue-400"></i>
                       </span>
-                    </p>
+                  </p>
                 </div>
               </div>
             </div>
 
-            
+
             <div class="w-full md:w-6/12 lg:w-3/12 lg:mb-0 mb-12 px-4">
               <div class="px-6">
                 <img
-                  alt="..."
-                  :src="zzw"
-                  class="shadow-lg rounded-full mx-auto max-w-120-px"
+                    alt="..."
+                    :src="zzw"
+                    class="shadow-lg rounded-full mx-auto max-w-120-px"
                 />
                 <div class="pt-6 text-center">
                   <h5 class="text-xl font-bold">赵泽文</h5>
                   <p
-                    class="mt-1 text-sm text-blueGray-400 uppercase font-semibold"
+                      class="mt-1 text-sm text-blueGray-400 uppercase font-semibold"
                   >
                     前端开发
                   </p>
                   <div class="mt-6">
                     <a
-                      href="https://github.com/Zevan770"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-flex items-center justify-center"
-                      title="查看GitHub"
+                        href="https://github.com/Zevan770"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-flex items-center justify-center"
+                        title="查看GitHub"
                     >
                       <i class="fab fa-github"></i>
                     </a>
                   </div>
-                    <p class="mt-2 text-blueGray-500 text-sm border-l-4 border-lightBlue-400 pl-3 italic flex items-center">
+                  <p class="mt-2 text-blueGray-500 text-sm border-l-4 border-lightBlue-400 pl-3 italic flex items-center">
                       <span>
                         <i class="fas fa-quote-left mr-1 text-lightBlue-400"></i>
                         神秘的第八个人——770
                         <i class="fas fa-quote-right ml-1 text-lightBlue-400"></i>
                       </span>
-                    </p>
+                  </p>
                 </div>
               </div>
             </div>
 
-                        <div class="w-full md:w-6/12 lg:w-3/12 lg:mb-0 mb-12 px-4">
+            <div class="w-full md:w-6/12 lg:w-3/12 lg:mb-0 mb-12 px-4">
               <div class="px-6">
                 <img
-                  alt="..."
-                  :src="tpx"
-                  class="shadow-lg rounded-full mx-auto max-w-120-px"
+                    alt="..."
+                    :src="tpx"
+                    class="shadow-lg rounded-full mx-auto max-w-120-px"
                 />
                 <div class="pt-6 text-center">
                   <h5 class="text-xl font-bold">田培瑄</h5>
                   <p
-                    class="mt-1 text-sm text-blueGray-400 uppercase font-semibold"
+                      class="mt-1 text-sm text-blueGray-400 uppercase font-semibold"
                   >
                     前端开发
                   </p>
                   <div class="mt-6">
                     <a
-                      href="https://github.com/tpxuan"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-flex items-center justify-center"
-                      title="查看GitHub"
+                        href="https://github.com/tpxuan"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="bg-lightBlue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-flex items-center justify-center"
+                        title="查看GitHub"
                     >
                       <i class="fab fa-github"></i>
                     </a>
                   </div>
-                    <p class="mt-2 text-blueGray-500 text-sm border-l-4 border-lightBlue-400 pl-3 italic flex items-center">
+                  <p class="mt-2 text-blueGray-500 text-sm border-l-4 border-lightBlue-400 pl-3 italic flex items-center">
                       <span>
                         <i class="fas fa-quote-left mr-1 text-lightBlue-400"></i>
                         我是一个软件工程师，专门用代码解决不存在的问题，顺便把简单的问题复杂化，最后再用一个注释‘// TODO: 以后修复’来掩盖一切。
                         <i class="fas fa-quote-right ml-1 text-lightBlue-400"></i>
                       </span>
-                    </p>
+                  </p>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </section>
-      
+
     </main>
     <footer-component />
   </div>
@@ -458,7 +458,7 @@ import logo from "@/assets/img/logo4.png";
 export default {
   data() {
     return {
-      dqr,      
+      dqr,
       logo,
       gyr,
       lgq,
