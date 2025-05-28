@@ -58,7 +58,7 @@ const props = defineProps({
   },
   write:{
     type: Boolean,
-    default: false
+    default: true
 
   }
 })
@@ -69,7 +69,7 @@ const isSaving = ref(false)
 const countdown = ref(10)
 const isLoading = ref(true)
 let countdownTimer = null
-const BASE_URL = 'http://127.0.0.1:8081/web/viewer.html'
+const BASE_URL = 'https://jienote.top/pdfjs/web/viewer.html'
 
 // 监听 fileUrl 变化
 watch(() => props.fileUrl, (newVal) => {
@@ -114,6 +114,7 @@ function startCountdown() {
 }
 
 function onMessage(event) {
+  console.log('收到iframe消息', event.data)
   if (event.data.type === 'save-success') {
     ElMessage.success('上传成功')
   } else if (event.data.type === 'save-fail') {
@@ -143,7 +144,7 @@ onMounted(() => {
   window.addEventListener('message', onMessage)
   // 初始值如果有，主动触发一下
   if (props.fileUrl) {
-    pdfUrl.value = `http://127.0.0.1:8081/web/viewer.html?file=${encodeURIComponent(props.fileUrl)}`
+    pdfUrl.value = `${BASE_URL}?file=${encodeURIComponent(props.fileUrl)}`
     isLoading.value = true
   }
 })

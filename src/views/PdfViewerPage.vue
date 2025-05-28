@@ -3,7 +3,7 @@
     <h1 class="title">PDF reader example Page</h1>
 
     <PdfViewer ref="pdfViewerRef"
-    fileUrl="https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf" 
+    fileUrl="https://arxiv.org/pdf/2309.06180" 
     articleId = "123456"
     />
 
