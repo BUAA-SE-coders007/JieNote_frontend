@@ -83,9 +83,19 @@
           <main class="flex-1 bg-white rounded-lg shadow p-4">
             <div v-if="selectedOrg">
               <div class="flex items-start mb-8">
-                <img :src="getAvatarUrl(selectedOrg.avatar)" class="w-24 h-24 rounded-full mr-8 border-4 border-emerald-100" style="width: 100px;margin-right: 20px;height: 100px;" />
+                <el-tooltip
+                  content="点击进入组织详情"
+                  placement="top-start"
+                  effect="light">
+                  <img :src="getAvatarUrl(selectedOrg.avatar)" class="w-24 h-24 rounded-full mr-8 border-4 border-emerald-100 cursor-pointer hover:opacity-80 transition-opacity" style="width: 100px;margin-right: 20px;height: 100px;" @click="navigateToOrgDetail(selectedOrg.id)" />
+                </el-tooltip>
                 <div class="flex-1 pt-2">
-                  <h2 class="text-2xl font-bold text-gray-900 mb-3">{{ selectedOrg.name }}</h2>
+                  <el-tooltip
+                    content="点击进入组织详情"
+                    placement="top-start"
+                    effect="light">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-3 cursor-pointer hover:text-emerald-600 transition-colors" @click="navigateToOrgDetail(selectedOrg.id)">{{ selectedOrg.name }}</h2>
+                  </el-tooltip>
                   <p class="text-gray-600 mb-3 text-base">{{ selectedOrg.intro || '这个组织还没有简介。' }}</p>
                   <div class="flex items-center space-x-6">
                     <span class="text-gray-500" style="margin-right: 20px;">
@@ -380,6 +390,18 @@ export default {
           content: content
         };
       });
+    },
+
+    navigateToOrgDetail(orgId) {
+      // TODO: 实现组织详情页面的跳转
+      console.log('Navigating to organization detail page:', orgId);
+      this.$message({
+        message: '组织详情页面开发中...',
+        type: 'info',
+        duration: 2000
+      });
+      // 后续可以添加实际的页面跳转逻辑
+      // this.$router.push(`/organization/${orgId}`);
     }
   },
   async mounted() {
