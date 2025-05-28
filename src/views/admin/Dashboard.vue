@@ -210,6 +210,7 @@
           </div>
           <div v-if="!isLoading" class="tree-container">
             <el-tree
+                @check="handleCheck"
                 @node-expand="handleNodeExpand"
                 @node-collapse="handleNodeCollapse"
                 class="modern-tree"
@@ -351,8 +352,8 @@
       <el-form label-width="80px" @submit.native.prevent>
         <!-- 名称编辑 -->
         <el-form-item label="名称">
-          <el-input :maxlength="[0, 2].includes(currentEditNode?.depth) ? 20 : null"
-                    :show-word-limit="[0, 2].includes(currentEditNode?.depth)"
+          <el-input :maxlength="[0,2].includes(currentEditNode?.depth) ? 20 : 150"
+                    :show-word-limit="[0,1,2].includes(currentEditNode?.depth)"
                     v-model="currentEditNode.label" />
         </el-form-item>
 
@@ -797,6 +798,23 @@ export default {
       }
     }
 
+    const handleCheck = (checkedNode, { checkedKeys }) => {
+      if (checkedNode.depth === 0) {
+        const isChecked = checkedKeys.includes(checkedNode.id)
+        toggleChildCheck(checkedNode, isChecked)
+      }
+    }
+
+// 递归设置子节点勾选状态
+    const toggleChildCheck = (node, checked) => {
+      if (!node.children || node.children.length === 0) return
+
+      node.children.forEach(child => {
+        treeRef.value.setChecked(child, checked, false) // false 表示不自动联动孙子节点
+        toggleChildCheck(child, checked) // 手动递归
+      })
+    }
+
     const handleNodeExpand = (data) => {
       expandedKeys.value.add(data.id)
     }
@@ -927,8 +945,7 @@ export default {
           })
         }).catch(() => {
           // 取消操作
-          showCheckbox.value = false
-          treeRef.value.setCheckedKeys([])
+          console.log("取消导出")
         })
       }
     }
@@ -1459,6 +1476,7 @@ export default {
 
 
     return {
+      handleCheck,
       findAllfolders,
       showCheckbox,
       showGraph,

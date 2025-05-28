@@ -21,7 +21,9 @@
 </template>
 
 <script>
+
 import image from "@/assets/img/team-1-800x800.jpg";
+
 
 export default {
   data() {

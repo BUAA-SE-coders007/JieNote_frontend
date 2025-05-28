@@ -40,7 +40,8 @@ export default {
     async fetchUserData() {
       const article = localStorage.getItem("article")
       const note = localStorage.getItem("note")
-      const organization = localStorage.getItem("organization")
+      const organization = 0
+      // localStorage.getItem("organization")
       const user = JSON.parse(localStorage.getItem("user"));
       this.userData = {
         articleCount: article, // 文献数量

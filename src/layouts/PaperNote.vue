@@ -57,7 +57,7 @@
 import { Back, Loading } from '@element-plus/icons-vue';
 import http from '@/utils/http';
 import CustomMdEditor from '@/components/Editor/MdEditor.vue'; // 使用 CustomMdEditor
-import { getNotes } from '@/api/note'; // 导入 getNotes API
+import { getNotes, createNote } from '@/api/note'; // 导入笔记相关 API
 import { Splitpanes, Pane } from 'splitpanes';
 import 'splitpanes/dist/splitpanes.css';
 import { ElMessage } from 'element-plus';
@@ -122,13 +122,21 @@ export default {
           this.noteId = firstNote.id;
           // CustomMdEditor 会通过 noteId prop 自动加载其内容，
           // 并通过 v-model 更新 editorContent。
-          // 如果 CustomMdEditor 内部加载内容后没有立即通过 emit 更新 modelValue，
-          // 可能需要在这里手动设置 this.editorContent = firstNote.content;
-          // 但通常 v-model 组件会处理好双向绑定。
         } else {
-          this.noteId = null; // 没有关联笔记
-          this.editorContent = ""; // 清空编辑器内容
-          ElMessage.info("当前文献没有关联笔记，您可以开始新的记录。");
+          // 没有关联笔记，创建新笔记
+          const createResponse = await createNote({
+            article_id: articleId,
+            content: "",
+            title: `note` // 使用文献标题或ID作为笔记标题
+          });
+          
+          if (createResponse && createResponse.data) {
+            this.noteId = createResponse.data.note_id; // 假设后端返回新创建笔记的ID
+            this.editorContent = ""; // 清空编辑器内容
+            // ElMessage.success("已为您创建新笔记，可以开始记录了。");
+          } else {
+            throw new Error("创建笔记失败");
+          }
         }
       } catch (error) {
         console.error("获取关联笔记失败：", error);

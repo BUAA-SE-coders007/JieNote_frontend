@@ -6,8 +6,9 @@
       :toolbars="toolbars"
       :preview="'live'"
       :language="language"
-      :style="editorStyle"
       :dragWidth="dragWidth"
+      :catalogLayout="'fixed'"
+      :previewTheme="'github'"
       @onSave="handleSave"
       @onUploadImg="handleUploadImg"
       @onChange="handleChange"
@@ -21,7 +22,7 @@
 <script>
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
-import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import { updateNote, getNotes } from '@/api/note';
 import { ElMessage } from 'element-plus';
 
@@ -34,10 +35,6 @@ export default {
     modelValue: {
       type: String,
       default: '',
-    },
-    height: {
-      type: Number,
-      default: 600,
     },
     autoSave: {
       type: Boolean,
@@ -59,14 +56,10 @@ export default {
       type: String,
       default: 'light',
     },
-    fullHeight: {
-      type: Boolean,
-      default: true,
-    },
     dragWidth: {
       type: String,
       default: '50%', // 默认编辑区和预览区等宽
-    }
+    },
   },
   emits: ['update:modelValue', 'save', 'change', 'error', 'dragWidth'],
   setup(props, { emit }) {
@@ -77,47 +70,70 @@ export default {
     const hasChanges = ref(false); // 标记是否有未保存的更改
     let autoSaveTimer = null;
 
-    // 计算编辑器样式，设置高度
-    const editorStyle = computed(() => {
-      if (props.fullHeight) {
-        return {
-          height: 'calc(100vh - 100px)',
-        };
-      }
-      return {
-        height: `${props.height}px`,
-      };
-    });
 
     // 配置工具栏
     const toolbars = [
-      'bold', 'underline', 'italic', 'strikethrough', '-',
-      'title', 'quote', 'unorderedList', 'orderedList', 'task', '-',
-      'codeRow', 'code', 'link', 'image', 'table', 'mermaid', '-',
-      'revoke', 'next', 'save', '=',
-      'preview', 'htmlPreview', 'catalog', 'fullscreen'
+      'bold',
+      'underline',
+      'italic',
+      'strikethrough',
+      '-',
+      'title',
+      'quote',
+      'unorderedList',
+      'orderedList',
+      'task',
+      '-',
+      'codeRow',
+      'code',
+      'link',
+      'image',
+      'table',
+      'mermaid',
+      'katex',
+      '-',
+      'revoke',
+      'next',
+      'save',
+      '=',
+      'preview',
+      'previewOnly',
+      'catalog',
+      'pageFullscreen',
+      'fullscreen',
     ];
+
+    const footers = ['markdownTotal', '=', 'scrollSwitch']
 
     // 设置语言
     const language = 'zh-CN';
 
     // 监听值变化和noteId变化
-    watch(() => props.modelValue, (newValue) => {
-      if (newValue !== content.value) {
-        content.value = newValue;
+    watch(
+      () => props.modelValue,
+      (newValue) => {
+        if (newValue !== content.value) {
+          content.value = newValue;
+        }
       }
-    });
-    
-    // 监听noteId变化，以便加载不同的笔记
-    watch(() => props.noteId, async (newNoteId, oldNoteId) => {
-      if (newNoteId && newNoteId !== oldNoteId) {
-        await fetchNoteContent(newNoteId);
-      }
-    });
+    );
 
-    watch(() => content.value, (newValue) => {
-      emit('update:modelValue', newValue);
-    });
+    // 监听noteId变化，以便加载不同的笔记
+    watch(
+      () => props.noteId,
+      async (newNoteId, oldNoteId) => {
+        if (newNoteId && newNoteId !== oldNoteId) {
+          await fetchNoteContent(newNoteId);
+        }
+      }
+    );
+
+    watch(
+      () => content.value,
+      (newValue) => {
+        emit('update:modelValue', newValue);
+      }
+    );
 
     const handleChange = (value) => {
       hasChanges.value = true; // 当内容改变时，标记有未保存的更改
@@ -146,12 +162,12 @@ export default {
       try {
         await updateNote(props.noteId, { content: currentContent });
         if (showNotification) {
-          ElMessage.success("笔记已保存"); // 手动保存时显示
+          ElMessage.success('笔记已保存'); // 手动保存时显示
         }
         hasChanges.value = false; // 保存成功后重置标记
       } catch (e) {
         ElMessage.error(`保存失败: ${e.message}`); // 统一错误信息
-        console.error("保存失败", e);
+        console.error('保存失败', e);
       } finally {
         updating.value = false;
       }
@@ -159,13 +175,13 @@ export default {
 
     const handleUploadImg = async (files, callback) => {
       try {
-        ElMessage.info("图片上传功能尚未实现");
+        ElMessage.info('图片上传功能尚未实现');
         // 这里后续可以接入专门的图片上传 API
         // 目前简单返回空数组，避免报错
         callback([]);
       } catch (error) {
-        ElMessage.error("图片上传失败");
-        console.error("图片上传失败", error);
+        ElMessage.error('图片上传失败');
+        console.error('图片上传失败', error);
       }
     };
 
@@ -173,7 +189,12 @@ export default {
     const fetchNoteContent = async (noteId) => {
       try {
         const response = await getNotes({ id: noteId });
-        if (response && response.status === 200 && response.data.notes && response.data.notes.length > 0) {
+        if (
+          response &&
+          response.status === 200 &&
+          response.data.notes &&
+          response.data.notes.length > 0
+        ) {
           content.value = response.data.notes[0].content || '';
           emit('update:modelValue', content.value);
           return content.value;
@@ -207,7 +228,8 @@ export default {
       }
     };
 
-    const handleBeforeUnload = (event) => { // Renamed back to 'event' as it will be used
+    const handleBeforeUnload = (event) => {
+      // Renamed back to 'event' as it will be used
       if (props.autoSave && hasChanges.value && props.noteId) {
         // 尝试在页面卸载前保存笔记 (如果当前没有正在进行的保存操作)
         // 注意: 异步操作在 beforeunload 事件中不保证完成
@@ -227,7 +249,7 @@ export default {
       if (props.noteId) {
         await fetchNoteContent(props.noteId);
       }
-      
+
       // 自动聚焦
       if (props.autoFocus && mdEditorRef.value) {
         mdEditorRef.value.focus();
@@ -240,16 +262,24 @@ export default {
       clearAutoSave(); // 组件卸载前清除定时器
       window.removeEventListener('beforeunload', handleBeforeUnload);
       // Vue 组件卸载时的保存逻辑 (例如SPA内部导航)
-      if (props.autoSave && hasChanges.value && props.noteId && !updating.value) {
+      if (
+        props.autoSave &&
+        hasChanges.value &&
+        props.noteId &&
+        !updating.value
+      ) {
         // 退出前自动保存，不显示通知
-        saveNote(content.value, false); 
+        saveNote(content.value, false);
       }
     });
 
     // 监听 autoSave 和 noteId 的变化以重新启动定时器
-    watch(() => [props.autoSave, props.noteId, props.autoSaveInterval], () => {
-      startAutoSave();
-    });
+    watch(
+      () => [props.autoSave, props.noteId, props.autoSaveInterval],
+      () => {
+        startAutoSave();
+      }
+    );
 
     const insertContent = (text) => {
       if (mdEditorRef.value) {
@@ -276,11 +306,11 @@ export default {
     return {
       content,
       toolbars,
+      footers,
       language,
       preview,
       mdEditorRef,
       updating,
-      editorStyle,
       handleChange,
       handleError,
       handleSave,
@@ -288,7 +318,7 @@ export default {
       handleDragWidth,
       insertContent,
       getValue,
-      fetchNoteContent // 导出这个方法供外部使用
+      fetchNoteContent, // 导出这个方法供外部使用
     };
   },
 };
@@ -304,10 +334,10 @@ export default {
 }
 
 /* 设置编辑区和预览区可以调整大小 */
-:deep(.md-editor-content) {
+/* :deep(.md-editor-content) {
   display: flex;
   height: 100%;
-}
+} */
 
 :deep(.md-editor-content .md-editor-input-wrapper),
 :deep(.md-editor-content .md-editor-preview-wrapper) {
@@ -324,7 +354,6 @@ export default {
   background-color: var(--md-border-hover-color);
 }
 
-/* 设置编辑器填满容器 */
 :deep(.md-editor) {
   position: relative;
   height: 100%;
@@ -334,7 +363,6 @@ export default {
 
 /* 工具栏样式 */
 :deep(.md-editor-toolbar) {
-  height: 46px;
   z-index: 10;
   background-color: var(--md-bk-color, #fff);
 }
@@ -357,5 +385,4 @@ export default {
 :deep(.md-editor-preview) ul li ul li {
   list-style-type: circle !important;
 }
-
 </style>

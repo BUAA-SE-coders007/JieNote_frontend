@@ -26,6 +26,7 @@ import Settings from "@/views/admin/Settings.vue";
 import Tables from "@/views/admin/Tables.vue";
 import Maps from "@/views/admin/Maps.vue";
 import note from "@/views/note";
+import RecycleBin from "@/views/admin/RecycleBin.vue";
 
 // views for Auth layout
 
@@ -74,6 +75,10 @@ const routes = [
       {
         path: "/database",
         component: Maps,
+      },
+      {
+        path: "/recycle-bin",
+        component: RecycleBin,
       },
       {
         path: "/landing",
