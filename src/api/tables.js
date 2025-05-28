@@ -53,6 +53,15 @@ export const getOrgMembers = (group_id) => {
   return http.get('/group/getPeopleInfo?group_id=' + group_id);
 }
 
+/**
+ * 获取组织日志
+ * @param {string} group_id - 组织 ID
+ * @returns {Promise<any>} 组织日志
+ */
+export const getOrgLogs = (group_id) => {
+  return http.get('/group/logs?group_id=' + group_id);
+}
+
 
 
 
@@ -64,5 +73,6 @@ export const getOrgMembers = (group_id) => {
 export default {
     createOrg,
     getAllOrgs,
-    getOrgMembers
+    getOrgMembers,
+    getOrgLogs,
 };
