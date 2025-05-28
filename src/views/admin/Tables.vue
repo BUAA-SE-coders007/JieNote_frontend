@@ -117,7 +117,7 @@
                   <div class="mt-4">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">活动日志</h3>
                     <ul class="space-y-2">
-                      <li v-for="log in mockLogs" :key="log.id" 
+                      <li v-for="log in orgLogs" :key="log.id" 
                           class="p-3 bg-gray-50 rounded-lg text-gray-600">
                         {{ log.time }} - {{ log.content }}
                       </li>
@@ -194,10 +194,7 @@ export default {
         { id: 201, username: 'Alice', userAvatar: 'https://randomuser.me/api/portraits/women/1.jpg', orgName: 'MyAwesomeOrg', time: '2分钟前' },
         { id: 202, username: 'Bob', userAvatar: 'https://randomuser.me/api/portraits/men/2.jpg', orgName: 'OpenSourceDream', time: '5分钟前' },
       ],
-      mockLogs: [
-        { id: 1, time: '2024-06-01', content: 'Alice 加入了组织' },
-        { id: 2, time: '2024-06-02', content: 'Bob 被提升为管理员' },
-      ]
+      orgLogs: []
     }
   },
   computed: {
@@ -226,15 +223,23 @@ export default {
           ];
           this.selectedOrg.members = this.selectedOrg.membersList.length;
         }
+
+        // Fetch organization logs
+        // const logsResponse = await tables.getOrgLogs(org.id);
+        // console.log('logsResponse')
+        // console.log(logsResponse)
+        // if (logsResponse.status === 200) {
+        //   this.orgLogs = this.processLogs(logsResponse.data.logs);
+        // }
       } catch (error) {
-        console.error(`Failed to fetch members for org ${org.id}:`, error);
+        console.error(`Failed to fetch data for org ${org.id}:`, error);
       }
     },
 
     getAvatarUrl(avatar) {
-      return `https://jienote.top/${avatar}`;
-      //console.log(avatar)
-      //return 'http://43.143.228.56:8000/images/default.png';
+      //return `https://jienote.top/${avatar}`;
+      console.log(avatar)
+      return 'http://43.143.228.56:8000/images/default.png';
       //return avatar;
     },
 
@@ -306,6 +311,75 @@ export default {
       }));
 
       this.joinedOrgs = [...adminOrgs, ...memberOrgs];
+    },
+
+    processLogs(logs) {
+      return logs.map(log => {
+        let content = '';
+        switch (log.type) {
+          case 0:
+            content = `${log.person1} 创建了组织`;
+            break;
+          case 1:
+            content = `${log.person1} 加入了组织`;
+            break;
+          case 2:
+            content = `${log.person1} 修改了组织基本信息`;
+            break;
+          case 3:
+            content = `${log.person1} 被设为管理员`;
+            break;
+          case 4:
+            content = `${log.person1} 被取消管理员权限`;
+            break;
+          case 5:
+            content = `${log.person2} 将 ${log.person1} 踢出组织`;
+            break;
+          case 6:
+            content = `${log.person1} 退出了组织`;
+            break;
+          case 7:
+            content = `${log.person1} 创建了文件夹 "${log.folder}"`;
+            break;
+          case 8:
+            content = `${log.person1} 在文件夹 "${log.folder}" 中创建了文献 "${log.article}"`;
+            break;
+          case 9:
+            content = `${log.person1} 在文件夹 "${log.folder}" 的文献 "${log.article}" 中创建了笔记 "${log.note}"`;
+            break;
+          case 10:
+            content = `${log.person1} 将文件夹 "${log.folder}" 重命名为 "${log.folder_new}"`;
+            break;
+          case 11:
+            content = `${log.person1} 在文件夹 "${log.folder}" 中将文献 "${log.article}" 重命名为 "${log.article_new}"`;
+            break;
+          case 12:
+            content = `${log.person1} 在文件夹 "${log.folder}" 的文献 "${log.article}" 中将笔记 "${log.note}" 重命名为 "${log.note_new}"`;
+            break;
+          case 13:
+            content = `${log.person1} 删除了文件夹 "${log.folder}"`;
+            break;
+          case 14:
+            content = `${log.person1} 在文件夹 "${log.folder}" 中删除了文献 "${log.article}"`;
+            break;
+          case 15:
+            content = `${log.person1} 在文件夹 "${log.folder}" 的文献 "${log.article}" 中删除了笔记 "${log.note}"`;
+            break;
+          case 16:
+            content = `${log.person1} 删除了文件夹 "${log.folder}" 下的文献 "${log.article}"`;
+            break;
+          case 17:
+            content = `${log.person1} 删除了文件夹 "${log.folder}" 的文献 "${log.article}" 下的笔记 "${log.note}"`;
+            break;
+          default:
+            content = '未知操作';
+        }
+        return {
+          id: Math.random().toString(36).substr(2, 9),
+          time: log.time,
+          content: content
+        };
+      });
     }
   },
   async mounted() {
