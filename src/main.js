@@ -1,5 +1,7 @@
 import { createApp } from "vue";
 import { createWebHistory, createRouter } from "vue-router";
+import 'flowbite';
+
 
 import PaperNote from '@/layouts/PaperNote.vue';
 // styles
@@ -39,6 +41,7 @@ import Landing from "@/views/Landing.vue";
 import Profile from "@/views/Profile.vue";
 import Index from "@/views/Index.vue";
 import ProjectIntro from "@/views/ProjectIntro.vue";
+import Organization from "@/views/Organization.vue";
 // routes
 
 const routes = [
@@ -87,6 +90,10 @@ const routes = [
       {
         path: "/profile",
         component: Profile,
+      },
+      {
+        path: "/organization",
+        component: Organization,
       },
     ],
   },

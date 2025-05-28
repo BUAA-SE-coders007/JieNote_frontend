@@ -129,6 +129,7 @@ export default {
         { label: "组织协作", to: "/collaboration", icon: "fas fa-table" },
         { label: "个人主页", to: "/profile", icon: "fas fa-user-circle" },
         { label: "关于我们", to: "/landing", icon: "fas fa-newspaper" },
+        { label: "组织页面", to: "/organization", icon: "fas fa-newspaper" },
       ],
     };
   },
