@@ -420,7 +420,8 @@ export default {
       console.log(response.data);
       console.log('获取所有组织成功')
       this.processOrgData(response.data);
-      
+
+
       if (!this.selectedOrg) {
         if (this.joinedOrgs.length > 0) {
           this.selectOrg(this.joinedOrgs[0]);
