@@ -125,9 +125,11 @@ export default {
       navItems: [
         { label: "文献库", to: "/database", icon: "fas fa-map-marked" },
         { label: "文献管理", to: "/paper-library", icon: "fas fa-book" },
+        { label: "回收站", to: "/recycle-bin", icon: "fas fa-trash-alt" },
         { label: "组织协作", to: "/collaboration", icon: "fas fa-table" },
         { label: "个人主页", to: "/profile", icon: "fas fa-user-circle" },
         { label: "关于我们", to: "/landing", icon: "fas fa-newspaper" },
+        { label: "组织页面", to: "/organization", icon: "fas fa-newspaper" },
       ],
     };
   },

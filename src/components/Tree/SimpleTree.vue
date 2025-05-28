@@ -1,92 +1,26 @@
 <template>
   <div class="flex flex-col h-screen">
     <!-- 顶部导航栏 -->
-    <nav class="relative flex flex-wrap items-center justify-between px-2 py-3 navbar-expand-lg bg-emerald-500">
-      <div class="container px-4 mx-auto flex flex-wrap items-center justify-between">
-        <div class="w-full relative flex justify-between lg:w-auto px-4 lg:static lg:block lg:justify-start">
-          <a class="text-lg font-bold leading-relaxed inline-block mr-4 py-2 whitespace-no-wrap uppercase text-white" href="#pablo">
+    <nav
+        class="relative flex flex-wrap items-center justify-between px-4 py-2 bg-white border-b border-gray-200 shadow-sm rounded-lg">
+      <div class="container mx-auto flex items-center justify-between">
+        <div class="flex items-center">
+          <a class="text-gray-800 text-xl font-semibold hover:text-emerald-600 transition-colors" href="#">
             文献管理
           </a>
-          <button class="cursor-pointer text-xl leading-none px-3 py-1 border border-solid border-transparent rounded bg-transparent block lg:hidden outline-none focus:outline-none" type="button">
-            <span class="block relative w-6 h-px rounded-sm bg-white"></span>
-            <span class="block relative w-6 h-px rounded-sm bg-white mt-1"></span>
-            <span class="block relative w-6 h-px rounded-sm bg-white mt-1"></span>
-          </button>
         </div>
-        <div class="lg:flex flex-grow items-center">
-          <ul class="flex flex-col lg:flex-row list-none ml-auto">
-            <li class="nav-item relative group">
-              <div class="flex items-center transition-all duration-300">
-                <a class="px-3 py-2 flex items-center text-xs uppercase font-bold leading-snug text-white hover:opacity-75"
-                   href="javascript:;"
-                   @click="toggleSearch">
-                  <i class="fas fa-search text-lg leading-lg text-white opacity-75"></i>
-                  <span class="ml-2">搜索</span>
-                </a>
-                <transition name="search-expand">
-                  <div v-if="showSearch" class="flex items-center bg-white rounded-full ml-2 overflow-hidden px-2 py-1">
-                  <el-input
-                        v-model="searchQuery"
-                        placeholder="输入关键词..."
-                        class="search-input"
-                        size="small"
-                        @keyup.enter="performSearch"
-                    />
-                    <el-select
-                        v-model="searchType"
-                        class="advanced-search"
-                        size="small"
-                        placeholder="高级检索"
-                        style="width: 120px"
-                    >
-                      <el-option
-                          v-for="option in searchOptions"
-                          :key="option.value"
-                          :label="option.label"
-                          :value="option.value"
-                      />
-                    </el-select>
-                  </div>
-                </transition>
-              </div>
-            </li>
-            <li class="nav-item">
-              <a class="px-3 py-2 flex items-center text-xs uppercase font-bold leading-snug text-white hover:opacity-75"
-                 href="javascript:;"
-                 @click="handleExport">
-                <i class="fas fa-download text-lg leading-lg text-white opacity-75"></i><span class="ml-2">导出</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="px-3 py-2 flex items-center text-xs uppercase font-bold leading-snug text-white hover:opacity-75"
-                 href="javascript:;"
-                 @click="createNewCategory">
-                <i class="fas fa-plus text-lg leading-lg text-white opacity-75"></i><span class="ml-2">新建</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="px-3 py-2 flex items-center text-xs uppercase font-bold leading-snug text-white hover:opacity-75"
-                 href="javascript:;"
-                 @click="handleShowGraph">
-                <i class="fas fa-project-diagram text-lg leading-lg text-white opacity-75"></i>
-                <span class="ml-2">知识图谱</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="px-3 py-2 flex items-center text-xs uppercase font-bold leading-snug text-white hover:opacity-75"
-                 href="javascript:;"
-                 @click="toggleCheckbox">
-                <i class="fas fa-check-square text-lg leading-lg text-white opacity-75"></i>
-                <span class="ml-2">{{ showCheckbox ? "取消选择" : "批量选择" }}</span>
-              </a>
-            </li>
-<!--            <li class="nav-item">-->
-<!--              <a class="px-3 py-2 flex items-center text-xs uppercase font-bold leading-snug text-white hover:opacity-75" href="#pablo" @click="refreshToken">-->
-<!--                <i class="fas fa-user text-lg leading-lg text-white opacity-75"></i><span class="ml-2">用户</span>-->
-<!--              </a>-->
-<!--            </li>-->
-           </ul>
-        </div>
+
+        <!-- 导航按钮组 -->
+        <ul class="flex space-x-4">
+          <li v-for="(item, index) in navItems" :key="index">
+            <a class="flex items-center px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+               href="javascript:;"
+               @click="() => item.action()">
+              <i :class="item.icon + ' text-gray-600 mr-1'"></i>
+              <span>{{ item.text }}</span>
+            </a>
+          </li>
+        </ul>
       </div>
     </nav>
 
@@ -100,7 +34,7 @@
         :close-on-click-modal="false"
         :destroy-on-close="false"
     >
-      <KnowledgeGraph :treeData="graphTreeData" />
+      <KnowledgeGraph :treeData="graphTreeData"/>
       <template #footer>
         <span class="dialog-footer">
           <el-button
@@ -239,7 +173,9 @@
         <div class="bg-white rounded-lg shadow p-4">
           <div v-if="isLoading" class="loading-wrapper">
             <div class="loading-content">
-              <el-icon class="is-loading"><Loading /></el-icon>
+              <el-icon class="is-loading">
+                <Loading/>
+              </el-icon>
               <span class="loading-text">正在加载知识库结构...</span>
             </div>
           </div>
@@ -285,6 +221,18 @@
                   </div>
                   <div class="node-actions">
                     <!-- 只在前两级展示添加按钮 -->
+                    <el-tooltip content="权限设置" placement="top" :enterable="false" :duration="50">
+                      <el-button
+                          size="small"
+                          round
+                          @click.stop="dialogVisible = true"
+                          class="action-btn user-btn"
+                      >
+                        <el-icon>
+                          <User />
+                        </el-icon>
+                      </el-button>
+                    </el-tooltip>
                     <el-tooltip content="属性" placement="top" :enterable="false" :duration="50">
                       <el-button
                           type="warning"
@@ -293,10 +241,13 @@
                           @click.stop="openEditDialog(node, data)"
                           class="action-btn edit-btn"
                       >
-                        <el-icon><Edit /></el-icon>
+                        <el-icon>
+                          <Edit/>
+                        </el-icon>
                       </el-button>
                     </el-tooltip>
-                    <el-tooltip v-if="node.level <2" content="添加文献" placement="top" :enterable="false" :duration="50">
+                    <el-tooltip v-if="node.level <2" content="添加文献" placement="top" :enterable="false"
+                                :duration="50">
                       <el-button
                           type="primary"
                           size="small"
@@ -304,11 +255,14 @@
                           @click.stop="append(node, data)"
                           class="action-btn add-btn"
                       >
-                        <el-icon><DocumentAdd /></el-icon>
+                        <el-icon>
+                          <DocumentAdd/>
+                        </el-icon>
                       </el-button>
                     </el-tooltip>
 
-                    <el-tooltip v-if="node.level === 2" content="添加笔记" placement="top" :enterable="false" :duration="50">
+                    <el-tooltip v-if="node.level === 2" content="添加笔记" placement="top" :enterable="false"
+                                :duration="50">
                       <el-button
                           type="primary"
                           size="small"
@@ -316,7 +270,9 @@
                           @click.stop="append(node, data)"
                           class="action-btn add-btn"
                       >
-                        <el-icon><DocumentAdd /></el-icon>
+                        <el-icon>
+                          <DocumentAdd/>
+                        </el-icon>
                       </el-button>
                     </el-tooltip>
 
@@ -328,20 +284,37 @@
                           @click.stop="remove(node, data)"
                           class="action-btn delete-btn"
                       >
-                        <el-icon><Delete /></el-icon>
+                        <el-icon>
+                          <Delete/>
+                        </el-icon>
                       </el-button>
                     </el-tooltip>
-                    <el-tooltip v-if="node.level > 1" content="阅读" placement="top" :enterable="false" :duration="50">
+                    <el-tooltip v-if="node.level === 2" content="添加到个人文件" placement="top" :enterable="false" :duration="50">
                       <el-button
                           type="success"
                           size="small"
                           round
-                          @click.stop="handleRead(node, data)"
+                          @click.stop="openMoveDialog(node)"
                           class="action-btn read-btn"
                       >
-                        <el-icon><Management /></el-icon>
+                        <el-icon>
+                          <FolderRemove />
+                        </el-icon>
                       </el-button>
                     </el-tooltip>
+<!--                    <el-tooltip v-if="node.level > 1" content="阅读" placement="top" :enterable="false" :duration="50">-->
+<!--                      <el-button-->
+<!--                          type="success"-->
+<!--                          size="small"-->
+<!--                          round-->
+<!--                          @click.stop="handleRead(node, data)"-->
+<!--                          class="action-btn read-btn"-->
+<!--                      >-->
+<!--                        <el-icon>-->
+<!--                          <Management/>-->
+<!--                        </el-icon>-->
+<!--                      </el-button>-->
+<!--                    </el-tooltip>-->
                   </div>
                 </div>
               </template>
@@ -389,7 +362,7 @@
         <el-form-item label="名称">
           <el-input :maxlength="[0,2].includes(currentEditNode?.depth) ? 20 : 150"
                     :show-word-limit="[0,1,2].includes(currentEditNode?.depth)"
-                    v-model="currentEditNode.label" />
+                    v-model="currentEditNode.label"/>
         </el-form-item>
 
         <!-- 标签管理（仅depth=1显示） -->
@@ -405,7 +378,9 @@
                 >
                   <template #item="{element, index}">
                     <div class="tag-item" :key="element.tag_id || index">
-                      <el-icon class="drag-handle"><Rank /></el-icon>
+                      <el-icon class="drag-handle">
+                        <Rank/>
+                      </el-icon>
                       <el-tag
                           closable
                           @close="removeTag(index)"
@@ -449,20 +424,28 @@
         <el-button type="primary" v-btnAntiShake="saveEdit">保存</el-button>
       </template>
     </el-dialog>
+    <PermissionSettingDialog :visible="dialogVisible" @update:visible="dialogVisible = $event" />
+    <MoveToPersonalFolderDialog
+        :visible="moveDialogVisible"
+        :item-id="selectedItemId"
+        @update:visible="moveDialogVisible = $event"
+        @moved="onMoved"
+    />
   </div>
 </template>
 
 <script>
-import { ref, nextTick, onMounted} from 'vue'
-import { useRouter } from 'vue-router'
-import { Edit, DocumentAdd, Delete,Management,Rank  } from '@element-plus/icons-vue'
+import PermissionSettingDialog from './PermissionDialog.vue'
+import {ref, nextTick, onMounted} from 'vue'
+import {useRouter} from 'vue-router'
+import {Edit, DocumentAdd, Delete, Rank, FolderRemove, User} from '@element-plus/icons-vue'
 import KnowledgeGraph from '/src/components/Tree/KnowledgeGraph.vue'
 import JSZip from 'jszip'
 import draggable from 'vuedraggable'
 import {ElMessage, ElMessageBox} from 'element-plus'
-import { Loading } from '@element-plus/icons-vue'
-import { clearAuth } from '@/utils/auth';
-import { onUnmounted } from 'vue'
+import {Loading} from '@element-plus/icons-vue'
+import {clearAuth} from '@/utils/auth';
+import {onUnmounted, computed} from 'vue'
 import {
   getSelfTree,
   selfCreateFolder,
@@ -471,27 +454,74 @@ import {
   selfFolderToRecycleBin,
   changeFolderName,
   changeArticleName,
+  createTag,
+  deleteTag,
   allTagsOrder,
   getArticleTags,
   readArticle
 } from '@/api/dashboard';
-import { createNote, updateNote, deleteNote as apiDeleteNote } from '@/api/note'; // Added getNotes, getNoteTitles
+import {createNote, updateNote, deleteNote as apiDeleteNote} from '@/api/note'; // Added getNotes, getNoteTitles
+import MoveToPersonalFolderDialog from './MoveToPersonalFolderDialog.vue'
 
 export default {
-  name: "dashboard-page",
+  props: {
+    userRole: {
+      type: String,
+      default: '组员', // 默认用户身份
+      validator: (value) => ['管理员', '组长', '组员'].includes(value)
+    }
+  },
+  name: "simple-tree",  // 保持与引用时的组件名一致
   components: {
     Edit,
     DocumentAdd,
     Delete,
     KnowledgeGraph,
-    Management,
     Loading,
     draggable,
-    Rank
+    User,
+    Rank,
+    FolderRemove,
+    PermissionSettingDialog,
+    MoveToPersonalFolderDialog
   },
 
+  data() { return { dialogVisible: false } },
 
-  setup() {
+
+  setup(props) {
+
+    const moveDialogVisible = ref(false)
+    const selectedItemId = ref(null)
+
+    const openMoveDialog = (node) => {
+      selectedItemId.value = node.id
+      moveDialogVisible.value = true
+    }
+
+    const onMoved = ({ itemId, folder }) => {
+      console.log('模拟转移完成：', itemId, folder)
+      // 后续处理逻辑，比如更新 UI、重新加载数据等
+    }
+
+    const hasDirectAccess = computed(() => ['管理员', '组长'].includes(props.userRole))
+    const submitAudit = (actionType, ...args) => {
+      console.log('提交审核记录：', {
+        actionType,
+        params: args // 接收多个参数
+      })
+
+      ElMessage.success('您的修改已提交审核，请等待管理员处理')
+
+      // 实际调用接口时（示例）：
+      // await axios.post('/api/audits', {
+      //   actionType,
+      //   parentId: args[0],
+      //   formData: args[1]
+      // })
+    }
+
+
     const router = useRouter()
 
     const showNewNoteDialog = ref(false)
@@ -527,6 +557,7 @@ export default {
       name: ''
     })
     const showSearchInput = ref(false)
+    const searchQuery = ref('')
     const graphTreeData = ref([]) // 新增图谱数据
 
     // PDF上传相关
@@ -541,6 +572,29 @@ export default {
     const showEditDialog = ref(false)
     const currentEditNode = ref(null)
     const newTag = ref('')
+
+    const navItems = computed(() => [
+      {
+        text: '导出',
+        icon: 'fas fa-download',
+        action: handleExport
+      },
+      {
+        text: '新建',
+        icon: 'fas fa-plus',
+        action: createNewCategory
+      },
+      {
+        text: '知识图谱',
+        icon: 'fas fa-project-diagram',
+        action: handleShowGraph
+      },
+      {
+        text: showCheckbox.value ? "取消选择" : "批量选择",
+        icon: 'fas fa-check-square',
+        action: toggleCheckbox
+      }
+    ]);
 
     const refreshData = async () => {
       // isLoading.value = true;
@@ -583,10 +637,15 @@ export default {
     const addTag = async () => {
       if (newTag.value.trim()) {
         try {
+          const tagData = {
+            article_id: currentEditNode.value.true_id,
+            content: newTag.value.trim()
+          };
+          const response = await createTag(tagData);
           // Assuming the backend returns the created tag with its ID
           // If not, the temporary ID logic might need adjustment or removal if not strictly necessary for UI
           currentEditNode.value.tags.push({
-            tag_id: Date.now(), // Use returned ID if available
+            tag_id: response.data?.tag_id || Date.now(), // Use returned ID if available
             tag_content: newTag.value.trim()
           });
           newTag.value = '';
@@ -600,6 +659,7 @@ export default {
     // 删除标签
     const removeTag = async (index) => {
       try {
+        await deleteTag(currentEditNode.value.tags[index].tag_id);
         currentEditNode.value.tags.splice(index, 1);
         ElMessage.success('标签删除成功');
       } catch (error) {
@@ -636,7 +696,6 @@ export default {
             article_name: currentEditNode.value.label
           };
           await changeArticleName(nodeData);
-          // 标签顺序已在 onTagDragEnd 中处理，如果需要单独保存标签内容（非顺序），则需额外逻辑
         } else if (currentEditNode.value.depth === 2) {
           let noteName = currentEditNode.value.label;
           if (!noteName.endsWith('.md')) {
@@ -645,7 +704,7 @@ export default {
           // updateNote API expects (noteId, { title, content, article_id })
           // Here we only update the title. If content/article_id can also be changed via this dialog,
           // they should be included. Assuming only title for now.
-          await updateNote(currentEditNode.value.true_id, { title: noteName });
+          await updateNote(currentEditNode.value.true_id, {title: noteName});
         }
 
         await findAllfolders(); // Refresh data
@@ -667,43 +726,6 @@ export default {
         ElMessage.warning('只能阅读文献或笔记');
       }
     }
-
-    // // 更新标签到后端
-    // const updateTags = async () => {
-    //   // const res = await fetch(`https://jienote.top/article/allTagsOrder`, {
-    //   //   method: 'POST',
-    //   //   headers: {
-    //   //     'Content-Type': 'application/json',
-    //   //     'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-    //   //   },
-    //   //   body: JSON.stringify(tags.map(t => t.tag_content))
-    //   // })
-    //   // if (res.ok) {
-    //   //   ElMessage.success('标签更新成功')
-    //   // } else {
-    //   //   ElMessage.error('标签更新失败')
-    //   // }
-    //
-    //   //向后端发送请求
-    //   const tagdata =  {
-    //     article_id: currentEditNode.value.true_id,
-    //     tag_contents: currentEditNode.value.tags.map(tag => tag.tag_content)
-    //   }
-    //   console.log(tagdata.tag_contents)
-    //   const res = await fetch(`https://jienote.top/article/allTagsOrder`, {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //       'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-    //     },
-    //     body: JSON.stringify(tagdata)
-    //   })
-    //   if (res.ok) {
-    //     //ElMessage.success('标签顺序已更新')
-    //   } else {
-    //     //ElMessage.error('标签顺序更新失败')
-    //   }
-    // }
 
     const toggleCheckbox = () => {
       showCheckbox.value = !showCheckbox.value
@@ -730,7 +752,7 @@ export default {
           return {
             id: node.id,
             label: node.label,
-            depth:node.depth,
+            depth: node.depth,
             children: children.length ? children : undefined
           }
         }
@@ -785,8 +807,6 @@ export default {
     }
 
 
-
-
     const getIconForNode = (node) => {
       // 获取节点深度
       const depth = node.depth
@@ -824,7 +844,7 @@ export default {
       }
     }
 
-    const handleCheck = (checkedNode, { checkedKeys }) => {
+    const handleCheck = (checkedNode, {checkedKeys}) => {
       if (checkedNode.depth === 0) {
         const isChecked = checkedKeys.includes(checkedNode.id)
         toggleChildCheck(checkedNode, isChecked)
@@ -881,15 +901,13 @@ export default {
     }
 
 
-
-
     const filterCheckedTreeNodes = (nodes, checkedKeys) => {
       const keySet = new Set(checkedKeys)
 
       const deepFilter = (node) => {
         if (!keySet.has(node.id)) return null
 
-        const filtered = { ...node }
+        const filtered = {...node}
         if (filtered.children) {
           filtered.children = filtered.children
               .map(child => deepFilter(child))
@@ -902,8 +920,6 @@ export default {
           .map(node => deepFilter(node))
           .filter(Boolean)
     }
-
-
 
 
     const handleShowGraph = () => {
@@ -1028,7 +1044,7 @@ export default {
                         // readArticle is configured in http.js to return blob data directly for this endpoint
                         const response = await readArticle(level2Node.true_id);
                         // Ensure we have a proper Blob object
-                        const blob = new Blob([response.data], { type: 'application/pdf' });
+                        const blob = new Blob([response.data], {type: 'application/pdf'});
                         folder.file(fileName, blob);
                         ElMessage.success(`成功获取文件: ${fileName}`);
                       } catch (error) {
@@ -1058,7 +1074,7 @@ export default {
         // 等待所有文件添加完成
         await addFilesToZip(selectedTree, zip)
 
-        const content = await zip.generateAsync({ type: 'blob' })
+        const content = await zip.generateAsync({type: 'blob'})
         const url = URL.createObjectURL(content)
         const link = document.createElement('a')
         link.href = url
@@ -1071,7 +1087,6 @@ export default {
         ElMessage.error('导出失败：' + error.message)
       }
     }
-
 
 
     const append = (node, data) => {
@@ -1126,7 +1141,10 @@ export default {
             type: 'warning',
           }
       )
-
+      if (!hasDirectAccess.value) {
+        submitAudit('delete', node.data.true_id)
+        return
+      }
       // 用户点击确定后执行删除操作
       const parent = node.parent
       const children = parent.data.children || parent.data
@@ -1169,7 +1187,7 @@ export default {
       newCategoryForm.value.name = ''
     }
 
-    const confirmNewCategory = async() => {
+    const confirmNewCategory = async () => {
       if (!newCategoryForm.value.name.trim()) {
         ElMessage({
           message: '请输入分类名称',
@@ -1216,7 +1234,6 @@ export default {
         }
 
 
-
         const newNoteData = {
           title: noteName,
           article_id: newNoteForm.value.parentData.true_id,
@@ -1253,20 +1270,23 @@ export default {
       // 搜索逻辑已经在 computed 中实现
     }
 
+    const clearSearch = () => {
+      searchQuery.value = ''
+      showSearchInput.value = false
+    }
 
     const dataSource = ref([])
 
 
     const fetchTags = async (articleId) => {
       try {
-        const { data } = await getArticleTags(articleId);
+        const {data} = await getArticleTags(articleId);
         return data.result || [];
       } catch (error) {
         console.error('获取标签失败:', error);
         return [];
       }
     };
-
 
     const findAllfolders = async () => {
       try {
@@ -1340,8 +1360,6 @@ export default {
     };
 
 
-
-
     // 处理PDF文件选择
     const handlePdfFileChange = (file) => {
       pdfUploadForm.value.file = file.raw
@@ -1356,6 +1374,7 @@ export default {
         })
         return
       }
+
 
       try {
         // 获取文件名（不包含扩展名）作为节点名称
@@ -1409,33 +1428,6 @@ export default {
       router.push("/auth/login");
     };
 
-    const showSearch = ref(false)
-    const searchQuery = ref('')
-    const searchType = ref('all')
-    const searchOptions = ref([
-      { value: 'all', label: '全部内容' },
-      { value: 'title', label: '标题' },
-      { value: 'note', label: '笔记内容' },
-      { value: 'tag', label: '标签' }
-    ])
-
-    const toggleSearch = () => {
-      showSearch.value = !showSearch.value
-      if (!showSearch.value) {
-        searchQuery.value = ''
-        searchType.value = 'all'
-      }
-    }
-
-    const performSearch = () => {
-      // 实现搜索逻辑
-      console.log('执行搜索:', {
-        query: searchQuery.value,
-        type: searchType.value
-      })
-    }
-
-
 
     return {
       handleCheck,
@@ -1461,6 +1453,7 @@ export default {
       searchQuery,
       graphTreeData,
       handleSearch,
+      clearSearch,
       getIconForNode,
       handleNodeExpand,
       handleNodeCollapse,
@@ -1490,11 +1483,11 @@ export default {
       saveEdit,
       handleRead,
       redirectToLogin,
-      showSearch,
-      searchType,
-      searchOptions,
-      toggleSearch,
-      performSearch
+      navItems,
+      moveDialogVisible,
+      selectedItemId,
+      openMoveDialog,
+      onMoved,
     }
   }
 }
@@ -2202,114 +2195,6 @@ export default {
 .tag-list-leave-to {
   opacity: 0;
   transform: translateX(30px);
-}
-
-.search-expand-enter-active,
-.search-expand-leave-active {
-  transition: all 0.3s ease;
-  max-width: 500px;
-}
-
-.search-expand-enter-from,
-.search-expand-leave-to {
-  opacity: 0;
-  max-width: 0;
-  transform: translateX(-10px);
-}
-
-.search-input {
-  :deep(.el-input__wrapper) {
-    border: none !important;
-    border-radius: 9999px !important;
-    box-shadow: none !important;
-    padding: 0 12px !important;
-    background-color: #f9fafb;
-    transition: background-color 0.2s ease;
-
-    // 新增：移除所有焦点状态样式
-    &.is-focus,
-    &:focus,
-    &:focus-visible,
-    &:active {
-      box-shadow: none !important;
-      outline: none !important;
-      border-color: #e5e7eb !important;
-    }
-  }
-
-  :deep(.el-input__inner) {
-    box-shadow: none !important;
-  }
-}
-
-.advanced-search {
-  margin-left: 4px;
-
-  // 新增：完全覆盖select组件状态
-  :deep(.el-select) {
-    .el-input__wrapper {
-      border: none !important;
-      border-radius: 9999px !important;
-      box-shadow: none !important;
-      padding: 0 10px !important;
-      background-color: #f9fafb;
-      border-left: 1px solid #e5e7eb !important;
-      transition: background-color 0.2s ease;
-
-      // 覆盖所有可能的焦点状态
-      &.is-focus,
-      &:focus,
-      &:focus-within,
-      &:focus-visible {
-        box-shadow: none !important;
-        outline: none !important;
-        border-color: #e5e7eb !important;
-      }
-    }
-
-    // 下拉箭头颜色调整
-    .el-select__caret {
-      color: #6b7280;
-    }
-
-    // 下拉菜单样式调整
-    .el-select-dropdown {
-      border-radius: 8px;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-
-      // 选项hover状态
-      .el-select-dropdown__item:hover {
-        background-color: #f3f4f6;
-      }
-
-      // 选中状态
-      .el-select-dropdown__item.selected {
-        color: #059669;
-        background-color: #f0fdf4;
-      }
-    }
-  }
-}
-
-@media (max-width: 768px) {
-  .search-expand-enter-active,
-  .search-expand-leave-active {
-    max-width: 280px;
-  }
-
-  .search-input {
-    width: 150px;
-  }
-
-  .advanced-search {
-    :deep(.el-select) {
-      width: 100px;
-
-      .el-input__wrapper {
-        padding: 0 8px !important;
-      }
-    }
-  }
 }
 
 

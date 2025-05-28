@@ -1,5 +1,7 @@
 import { createApp } from "vue";
 import { createWebHistory, createRouter } from "vue-router";
+import 'flowbite';
+
 
 import PaperNote from '@/layouts/PaperNote.vue';
 // styles
@@ -27,6 +29,7 @@ import Tables from "@/views/admin/Tables.vue";
 import Maps from "@/views/admin/Maps.vue";
 import note from "@/views/note";
 import pdfViewer from "@/views/PDFViewerPage.vue";
+import RecycleBin from "@/views/admin/RecycleBin.vue";
 
 // views for Auth layout
 
@@ -39,6 +42,7 @@ import Landing from "@/views/Landing.vue";
 import Profile from "@/views/Profile.vue";
 import Index from "@/views/Index.vue";
 import ProjectIntro from "@/views/ProjectIntro.vue";
+import Organization from "@/views/Organization.vue";
 // routes
 
 
@@ -79,6 +83,10 @@ const routes = [
         component: Maps,
       },
       {
+        path: "/recycle-bin",
+        component: RecycleBin,
+      },
+      {
         path: "/landing",
         component: Landing,
       },
@@ -87,9 +95,13 @@ const routes = [
         component: Profile,
       },
       {
-      path: "/pdf-viewer",
+        path: "/pdf-viewer",
         component: pdfViewer,
-    },
+      },
+      {
+        path: "/organization",
+        component: Organization,
+      },
     ],
   },
   {

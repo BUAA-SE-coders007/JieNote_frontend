@@ -19,73 +19,56 @@
       <span
         class="text-sm pt-2 pb-0 px-4 font-bold block w-full whitespace-nowrap bg-transparent text-blueGray-400"
       >
-        Admin Layout
+      功能页面
       </span>
       <router-link
         to="/note"
         class="text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-blueGray-700"
       >
-        笔记
+        笔记编辑
       </router-link>
       <router-link
         to="/paper-library"
         class="text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-blueGray-700"
       >
-        Dashboard
+        文献管理
       </router-link>
-      <router-link
-        to="/admin/settings"
-        class="text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-blueGray-700"
-      >
-        Settings
-      </router-link>
-      <router-link
-        to="/admin/tables"
-        class="text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-blueGray-700"
-      >
-        Tables
-      </router-link>
-      <router-link
-        to="/admin/maps"
-        class="text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-blueGray-700"
-      >
-        Maps
-      </router-link>
+     
       <div class="h-0 mx-4 my-2 border border-solid border-blueGray-100" />
       <span
         class="text-sm pt-2 pb-0 px-4 font-bold block w-full whitespace-nowrap bg-transparent text-blueGray-400"
       >
-        Auth Layout
+        认证页面
       </span>
       <router-link
         to="/auth/login"
         class="text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-blueGray-700"
       >
-        Login
+        登录
       </router-link>
       <router-link
         to="/auth/register"
         class="text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-blueGray-700"
       >
-        Register
+        注册
       </router-link>
       <div class="h-0 mx-4 my-2 border border-solid border-blueGray-100" />
       <span
         class="text-sm pt-2 pb-0 px-4 font-bold block w-full whitespace-nowrap bg-transparent text-blueGray-400"
       >
-        No Layout
+        其他页面
       </span>
       <router-link
         to="/landing"
         class="text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-blueGray-700"
       >
-        Landing
+        关于我们
       </router-link>
       <router-link
         to="/profile"
         class="text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-blueGray-700"
       >
-        Profile
+        个人主页
       </router-link>
     </div>
   </div>
