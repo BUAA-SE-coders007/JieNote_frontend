@@ -4,7 +4,7 @@
       v-model="content"
       :theme="theme"
       :toolbars="toolbars"
-      :preview="'live'"
+      :preview="true"
       :language="language"
       :dragWidth="dragWidth"
       :catalogLayout="'fixed'"
