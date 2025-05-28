@@ -24,6 +24,7 @@ import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import { updateNote, getNotes } from '@/api/note';
+import { uploadImage } from '@/api/image';
 import { ElMessage } from 'element-plus';
 
 export default {
@@ -175,13 +176,21 @@ export default {
 
     const handleUploadImg = async (files, callback) => {
       try {
-        ElMessage.info('图片上传功能尚未实现');
-        // 这里后续可以接入专门的图片上传 API
-        // 目前简单返回空数组，避免报错
-        callback([]);
+        const uploadPromises = files.map(async file => {
+          const response = await uploadImage(file);
+          return {
+           url: `https://jienote.top${response.image_url}`,  // 拼接完整的访问路径
+           alt: '',  // 保持空的alt文本
+         };
+        });
+
+        const uploadedImages = await Promise.all(uploadPromises);
+        callback(uploadedImages);
+        ElMessage.success('图片上传成功');
       } catch (error) {
-        ElMessage.error('图片上传失败');
+        ElMessage.error('图片上传失败：' + (error.message || '未知错误'));
         console.error('图片上传失败', error);
+        callback([]);
       }
     };
 
