@@ -179,7 +179,7 @@ export default {
         const uploadPromises = files.map(async file => {
           const response = await uploadImage(file);
           return {
-           url: `https://jienote.top/public/image/${response.image_url}`,  // 拼接完整的访问路径
+           url: `https://jienote.top${response.image_url}`,  // 拼接完整的访问路径
            alt: '',  // 保持空的alt文本
          };
         });
