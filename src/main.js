@@ -28,6 +28,7 @@ import Settings from "@/views/admin/Settings.vue";
 import Tables from "@/views/admin/Tables.vue";
 import Maps from "@/views/admin/Maps.vue";
 import note from "@/views/note";
+import pdfViewer from "@/views/PdfViewerPage.vue";
 import RecycleBin from "@/views/admin/RecycleBin.vue";
 
 // views for Auth layout
@@ -43,6 +44,8 @@ import Index from "@/views/Index.vue";
 import ProjectIntro from "@/views/ProjectIntro.vue";
 import Organization from "@/views/Organization.vue";
 // routes
+
+
 
 const routes = [
   {
@@ -92,6 +95,10 @@ const routes = [
         component: Profile,
       },
       {
+        path: "/pdf-viewer",
+        component: pdfViewer,
+      },
+      {
         path: "/organization",
         component: Organization,
       },
@@ -119,8 +126,9 @@ const routes = [
   {
     path: "/",
     component: Index,
-  },
+  }, 
   { path: "/:pathMatch(.*)*", redirect: "/" },
+  
 ];
 
 const router = createRouter({
