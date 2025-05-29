@@ -23,7 +23,6 @@ import { uploadImage } from '@/api/image';
 import { ElMessage } from 'element-plus';
 
 export default {
-  name: 'CustomMdEditor',
   components: {
     MdEditor,
   },

@@ -24,7 +24,7 @@
     </nav>
     <!-- 编辑器主体 -->
     <div class="note-container flex-1">
-      <CustomMdEditor
+      <JieNoteEditor
         v-model="noteContent"
         :noteId="$route.params.note_id"
         :autoSave="true"
@@ -42,12 +42,12 @@
 <script>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import CustomMdEditor from "@/components/Editor/MdEditor.vue";
+import JieNoteEditor from "@/components/Editor/JieNoteEditor.vue";
 import { ElMessage } from 'element-plus';
 
 export default {
   components: {
-    CustomMdEditor
+    JieNoteEditor
   },
   setup() {
     const noteContent = ref("");
