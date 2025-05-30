@@ -15,6 +15,14 @@
         </div>
         <div class="lg:flex flex-grow items-center">
           <ul class="flex flex-col lg:flex-row list-none ml-auto">
+            <li class="nav-item">
+              <a class="px-3 py-2 flex items-center text-xs uppercase font-bold leading-snug text-white hover:opacity-75"
+                 href="javascript:;"
+                 @click="togglePreview">
+                <i class="fas fa-eye text-lg leading-lg text-white opacity-75"></i>
+                <span class="ml-2">{{ previewEnabled ? '关闭预览' : '开启预览' }}</span>
+              </a>
+            </li>
             <li class="nav-item relative group">
               <div class="flex items-center transition-all duration-300">
                 <a class="px-3 py-2 flex items-center text-xs uppercase font-bold leading-snug text-white hover:opacity-75"
@@ -260,7 +268,37 @@
             >
               <template #default="{ node, data }">
                 <div class="modern-node" @dblclick.stop="handleNodeClick(data)">
-                  <span class="node-label">{{ getIconForNode(data) }} {{ data.label }}</span>
+                  <!-- 预览 popover -->
+                  <el-popover
+                    v-if="previewEnabled && data.depth === 2"
+                    placement="right-start"
+                    :width="400"
+                    trigger="hover"
+                    :hide-after="300"
+                    :show-arrow="true"
+                    :offset="12"
+                    :show-after="600"
+                    popper-class="preview-popover"
+                    @show="handlePreviewShow(data)"
+                  >
+                    <template #default>
+                      <div class="preview-content">
+                        <JieNotePreview
+                          v-if="currentPreviewNote && currentPreviewNote.id === data.id"
+                          :modelValue="currentPreviewNote.content"
+                          theme="light"
+                        />
+                        <div v-else class="preview-loading">
+                          <el-icon class="is-loading"><Loading /></el-icon>
+                          <span>加载中...</span>
+                        </div>
+                      </div>
+                    </template>
+                    <template #reference>
+                      <span class="node-label">{{ getIconForNode(data) }} {{ data.label }}</span>
+                    </template>
+                  </el-popover>
+                  <span v-else class="node-label">{{ getIconForNode(data) }} {{ data.label }}</span>
                   <div class="tag-container" v-if="data.depth === 1">
                     <el-tooltip
                         v-for="(tag, index) in data.tags.slice(0,3)"
@@ -378,11 +416,22 @@
           @current-change="handlePageChange"
       />
     </div>
+    <!-- 添加一个隐藏的预览组件容器，用于缓存预览内容 -->
+    <div v-show="false" ref="previewContainer">
+      <JieNotePreview
+        v-if="currentPreviewNote"
+        ref="preview"
+        :modelValue="currentPreviewNote.content"
+        theme="light"
+      />
+    </div>
+
+    <!-- 编辑弹窗 -->
     <el-dialog
-        v-model="showEditDialog"
-        :title="`编辑`"
-        width="500px"
-        :close-on-click-modal="false"
+      v-model="showEditDialog"
+      :title="`编辑`"
+      width="500px"
+      :close-on-click-modal="false"
     >
       <el-form label-width="80px" @submit.native.prevent>
         <!-- 名称编辑 -->
@@ -453,13 +502,14 @@
 </template>
 
 <script>
-import { ref, nextTick, onMounted} from 'vue'
+import { ref, nextTick, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Edit, DocumentAdd, Delete,Management,Rank  } from '@element-plus/icons-vue'
+import { Edit, DocumentAdd, Delete, Management, Rank } from '@element-plus/icons-vue'
 import KnowledgeGraph from '/src/components/Tree/KnowledgeGraph.vue'
+import JieNotePreview from '@/components/Editor/JieNotePreview.vue'
 import JSZip from 'jszip'
 import draggable from 'vuedraggable'
-import {ElMessage, ElMessageBox} from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
 import { clearAuth } from '@/utils/auth';
 import { onUnmounted } from 'vue'
@@ -475,7 +525,7 @@ import {
   getArticleTags,
   readArticle
 } from '@/api/dashboard';
-import { createNote, updateNote, deleteNote as apiDeleteNote } from '@/api/note'; // Added getNotes, getNoteTitles
+import { createNote, updateNote, deleteNote as apiDeleteNote, getNotes } from '@/api/note';
 
 export default {
   name: "dashboard-page",
@@ -487,11 +537,43 @@ export default {
     Management,
     Loading,
     draggable,
-    Rank
+    Rank,
+    JieNotePreview
   },
 
 
   setup() {
+    // 预览相关的状态
+    const previewEnabled = ref(false)
+    const currentPreviewNote = ref(null)
+    const previewCache = ref(new Map()) // 用于缓存预览内容
+    
+    // 处理预览显示
+    const handlePreviewShow = async (data) => {
+      // 如果缓存中已有内容，直接使用缓存
+      if (previewCache.value.has(data.id)) {
+        currentPreviewNote.value = previewCache.value.get(data.id);
+        return;
+      }
+
+      try {
+        const response = await getNotes({ id: data.true_id });
+        if (response.data && response.data.notes && response.data.notes.length > 0) {
+          const note = {
+            id: data.id,
+            content: response.data.notes[0].content || ''
+          };
+          // 更新缓存
+          previewCache.value.set(data.id, note);
+          currentPreviewNote.value = note;
+        } else {
+          ElMessage.warning('笔记内容为空');
+        }
+      } catch (error) {
+        console.error('预览加载失败:', error);
+        ElMessage.error('预览加载失败：' + (error.message || '请稍后重试'));
+      }
+    }
     const router = useRouter()
 
     const showNewNoteDialog = ref(false)
@@ -773,19 +855,32 @@ export default {
       }
     }
 
-    const handleNodeClick = (data) => {
-      // 根据节点类型决定操作
+    const handleNodeClick = async (data) => {
+      // 如果预览模式已启用且点击了笔记节点，则不执行其他操作
+      if (previewEnabled.value && data.depth === 2) {
+        return;
+      }
+
+      // 常规点击处理逻辑保持不变
       if (data.depth === 1) { // 文献节点
         router.push(`/paper-note?article_id=${data.true_id}`);
       } else if (data.depth === 2) { // 笔记节点
         router.push(`/note/${data.true_id}`);
       } else {
-        // 其他类型节点保持原有点击逻辑（展开/折叠）
         if (expandedKeys.value.has(data.id)) {
           handleNodeCollapse(data)
         } else {
           handleNodeExpand(data)
         }
+      }
+    }
+
+    const togglePreview = () => {
+      previewEnabled.value = !previewEnabled.value;
+      // 切换预览时清除缓存
+      if (!previewEnabled.value) {
+        previewCache.value.clear();
+        currentPreviewNote.value = null;
       }
     }
 
@@ -1443,6 +1538,10 @@ export default {
 
 
     return {
+      previewEnabled,
+      currentPreviewNote,
+      togglePreview,
+      handlePreviewShow,
       handleCheck,
       findAllfolders,
       showCheckbox,
@@ -2318,4 +2417,97 @@ export default {
 }
 
 
+.preview-popover {
+  max-width: 400px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  backdrop-filter: blur(8px);
+  transition: opacity 0.3s, transform 0.3s;
+  
+  .el-popover__content {
+    padding: 0;
+    overflow: hidden;
+  }
+  
+  .preview-content {
+    max-height: 600px;
+    height: 100%;
+    padding: 16px;
+    overflow-y: auto;
+    
+    // 自定义滚动条样式
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background-color: #d1d5db;
+      border-radius: 3px;
+      
+      &:hover {
+        background-color: #9ca3af;
+      }
+    }
+    
+    &::-webkit-scrollbar-track {
+      background-color: #f3f4f6;
+      border-radius: 3px;
+    }
+  }
+  
+  .preview-loading {
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+    padding: 24px;
+    color: #6b7280;
+    
+    .is-loading {
+      font-size: 24px;
+      animation: rotating 2s linear infinite;
+      color: #059669;
+    }
+    
+    span {
+      font-size: 14px;
+    }
+  }
+  
+  // 添加进入和离开动画
+  &.el-popover.el-popper {
+    &[data-popper-placement^='top'] {
+      transform-origin: bottom;
+    }
+    &[data-popper-placement^='bottom'] {
+      transform-origin: top;
+    }
+    &[data-popper-placement^='left'] {
+      transform-origin: right;
+    }
+    &[data-popper-placement^='right'] {
+      transform-origin: left;
+    }
+  }
+}
+
+// 移动端适配
+@media (max-width: 768px) {
+  .preview-popover {
+    max-width: 300px;
+    
+    .preview-content {
+      max-height: 400px;
+      padding: 12px;
+    }
+    
+    .preview-loading {
+      min-height: 150px;
+      padding: 16px;
+    }
+  }
+}
 </style>
