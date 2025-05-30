@@ -268,7 +268,37 @@
             >
               <template #default="{ node, data }">
                 <div class="modern-node" @dblclick.stop="handleNodeClick(data)">
-                  <span class="node-label">{{ getIconForNode(data) }} {{ data.label }}</span>
+                  <!-- 预览 popover -->
+                  <el-popover
+                    v-if="previewEnabled && data.depth === 2"
+                    placement="right-start"
+                    :width="400"
+                    trigger="hover"
+                    :hide-after="300"
+                    :show-arrow="true"
+                    :offset="12"
+                    :show-after="600"
+                    popper-class="preview-popover"
+                    @show="handlePreviewShow(data)"
+                  >
+                    <template #default>
+                      <div class="preview-content">
+                        <JieNotePreview
+                          v-if="currentPreviewNote && currentPreviewNote.id === data.id"
+                          :modelValue="currentPreviewNote.content"
+                          theme="light"
+                        />
+                        <div v-else class="preview-loading">
+                          <el-icon class="is-loading"><Loading /></el-icon>
+                          <span>加载中...</span>
+                        </div>
+                      </div>
+                    </template>
+                    <template #reference>
+                      <span class="node-label">{{ getIconForNode(data) }} {{ data.label }}</span>
+                    </template>
+                  </el-popover>
+                  <span v-else class="node-label">{{ getIconForNode(data) }} {{ data.label }}</span>
                   <div class="tag-container" v-if="data.depth === 1">
                     <el-tooltip
                         v-for="(tag, index) in data.tags.slice(0,3)"
@@ -386,32 +416,15 @@
           @current-change="handlePageChange"
       />
     </div>
-    <!-- 预览弹窗 -->
-    <el-dialog
-      v-model="showPreviewDialog"
-      title="笔记预览"
-      width="80%"
-      top="5vh"
-      :close-on-click-modal="false"
-      custom-class="preview-modal"
-      :destroy-on-close="true"
-    >
+    <!-- 添加一个隐藏的预览组件容器，用于缓存预览内容 -->
+    <div v-show="false" ref="previewContainer">
       <JieNotePreview
         v-if="currentPreviewNote"
+        ref="preview"
         :modelValue="currentPreviewNote.content"
         theme="light"
-        style="height: 70vh; overflow-y: auto;"
       />
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button
-            type="primary"
-            @click="showPreviewDialog = false"
-            class="modal-close-btn"
-          >关闭预览</el-button>
-        </span>
-      </template>
-    </el-dialog>
+    </div>
 
     <!-- 编辑弹窗 -->
     <el-dialog
@@ -496,7 +509,7 @@ import KnowledgeGraph from '/src/components/Tree/KnowledgeGraph.vue'
 import JieNotePreview from '@/components/Editor/JieNotePreview.vue'
 import JSZip from 'jszip'
 import draggable from 'vuedraggable'
-import { ElMessage, ElMessageBox, ElLoading } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
 import { clearAuth } from '@/utils/auth';
 import { onUnmounted } from 'vue'
@@ -532,8 +545,35 @@ export default {
   setup() {
     // 预览相关的状态
     const previewEnabled = ref(false)
-    const showPreviewDialog = ref(false)
     const currentPreviewNote = ref(null)
+    const previewCache = ref(new Map()) // 用于缓存预览内容
+    
+    // 处理预览显示
+    const handlePreviewShow = async (data) => {
+      // 如果缓存中已有内容，直接使用缓存
+      if (previewCache.value.has(data.id)) {
+        currentPreviewNote.value = previewCache.value.get(data.id);
+        return;
+      }
+
+      try {
+        const response = await getNotes({ id: data.true_id });
+        if (response.data && response.data.notes && response.data.notes.length > 0) {
+          const note = {
+            id: data.id,
+            content: response.data.notes[0].content || ''
+          };
+          // 更新缓存
+          previewCache.value.set(data.id, note);
+          currentPreviewNote.value = note;
+        } else {
+          ElMessage.warning('笔记内容为空');
+        }
+      } catch (error) {
+        console.error('预览加载失败:', error);
+        ElMessage.error('预览加载失败：' + (error.message || '请稍后重试'));
+      }
+    }
     const router = useRouter()
 
     const showNewNoteDialog = ref(false)
@@ -816,32 +856,8 @@ export default {
     }
 
     const handleNodeClick = async (data) => {
-      // 检查是否启用了预览模式
-      if (previewEnabled.value && data.depth === 2) { // 只预览笔记节点
-        const loading = ElLoading.service({
-          lock: true,
-          text: '加载笔记内容...',
-          background: 'rgba(0, 0, 0, 0.7)'
-        });
-        
-        try {
-          // 获取完整的笔记内容
-          const response = await getNotes({ id: data.true_id });
-          if (response.data && response.data.notes && response.data.notes.length > 0) {
-            currentPreviewNote.value = {
-              ...data,
-              content: response.data.notes[0].content || ''
-            };
-            showPreviewDialog.value = true;
-          } else {
-            ElMessage.warning('笔记内容为空');
-          }
-        } catch (error) {
-          console.error('预览加载失败:', error);
-          ElMessage.error('预览加载失败：' + (error.message || '请稍后重试'));
-        } finally {
-          loading.close();
-        }
+      // 如果预览模式已启用且点击了笔记节点，则不执行其他操作
+      if (previewEnabled.value && data.depth === 2) {
         return;
       }
 
@@ -861,8 +877,10 @@ export default {
 
     const togglePreview = () => {
       previewEnabled.value = !previewEnabled.value;
+      // 切换预览时清除缓存
       if (!previewEnabled.value) {
-        showPreviewDialog.value = false;
+        previewCache.value.clear();
+        currentPreviewNote.value = null;
       }
     }
 
@@ -1521,9 +1539,9 @@ export default {
 
     return {
       previewEnabled,
-      showPreviewDialog,
       currentPreviewNote,
       togglePreview,
+      handlePreviewShow,
       handleCheck,
       findAllfolders,
       showCheckbox,
@@ -2399,94 +2417,96 @@ export default {
 }
 
 
-.preview-modal {
-  // 基础样式
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 20px 40px rgba(16, 185, 129, 0.2);
-  border: 1px solid rgba(5, 150, 105, 0.2);
-  background: rgba(255, 255, 255, 0.98);
-
-  // 头部样式
-  :deep(.el-dialog__header) {
-    background: linear-gradient(135deg, #059669 0%, #047857 100%);
-    margin: 0;
-    padding: 16px 24px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-
-    .el-dialog__title {
-      color: white;
-      font-size: 18px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-    }
-
-    .el-dialog__headerbtn {
-      top: 16px;
-      right: 20px;
-
-      .el-dialog__close {
-        color: rgba(255, 255, 255, 0.9);
-        font-size: 20px;
-        transition: all 0.3s ease;
-
-        &:hover {
-          color: white;
-          transform: scale(1.1);
-        }
-      }
-    }
+.preview-popover {
+  max-width: 400px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  backdrop-filter: blur(8px);
+  transition: opacity 0.3s, transform 0.3s;
+  
+  .el-popover__content {
+    padding: 0;
+    overflow: hidden;
   }
-
-  // 内容区域样式
-  :deep(.el-dialog__body) {
-    padding: 24px;
-    background: #ffffff;
-  }
-
-  // 底部样式
-  :deep(.el-dialog__footer) {
-    border-top: 1px solid #e5e7eb;
-    padding: 16px 24px;
-    background: #f8fafc;
-
-    .modal-close-btn {
-      padding: 8px 24px;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #059669 0%, #047857 100%);
-      border: none;
-      color: white;
-      font-weight: 500;
-      transition: all 0.3s ease;
-
+  
+  .preview-content {
+    max-height: 600px;
+    height: 100%;
+    padding: 16px;
+    overflow-y: auto;
+    
+    // 自定义滚动条样式
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background-color: #d1d5db;
+      border-radius: 3px;
+      
       &:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 6px rgba(5, 150, 105, 0.2);
+        background-color: #9ca3af;
       }
-
-      &:active {
-        transform: translateY(0);
-      }
+    }
+    
+    &::-webkit-scrollbar-track {
+      background-color: #f3f4f6;
+      border-radius: 3px;
+    }
+  }
+  
+  .preview-loading {
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+    padding: 24px;
+    color: #6b7280;
+    
+    .is-loading {
+      font-size: 24px;
+      animation: rotating 2s linear infinite;
+      color: #059669;
+    }
+    
+    span {
+      font-size: 14px;
+    }
+  }
+  
+  // 添加进入和离开动画
+  &.el-popover.el-popper {
+    &[data-popper-placement^='top'] {
+      transform-origin: bottom;
+    }
+    &[data-popper-placement^='bottom'] {
+      transform-origin: top;
+    }
+    &[data-popper-placement^='left'] {
+      transform-origin: right;
+    }
+    &[data-popper-placement^='right'] {
+      transform-origin: left;
     }
   }
 }
 
 // 移动端适配
 @media (max-width: 768px) {
-  .preview-modal {
-    width: 95% !important;
-    margin: 10px auto;
-
-    :deep(.el-dialog__body) {
-      padding: 16px;
+  .preview-popover {
+    max-width: 300px;
+    
+    .preview-content {
+      max-height: 400px;
+      padding: 12px;
     }
-
-    :deep(.el-dialog__footer) {
-      padding: 12px 16px;
-
-      .modal-close-btn {
-        width: 100%;
-      }
+    
+    .preview-loading {
+      min-height: 150px;
+      padding: 16px;
     }
   }
 }
