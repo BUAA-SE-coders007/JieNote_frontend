@@ -249,6 +249,7 @@ export default {
     onMounted(() => {
       initDiagram()
       updateDiagram()
+      console.log(props)
       window.addEventListener('resize', () => diagram.requestUpdate())
     })
 

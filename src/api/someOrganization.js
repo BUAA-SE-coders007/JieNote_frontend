@@ -24,15 +24,15 @@ export const genGroupInviteCode = (params) => {
  * @param {File} [data.group_avatar] - 组织头像文件（可选）
  * @returns {Promise<any>} 操作结果
  */
-export const modifyGroupBasicInfo = (data) => {
+export const modifyGroupBasicInfo = (params, file) => {
     const formData = new FormData();
-    if (data.group_avatar) formData.append('group_avatar', data.group_avatar);
+    if (file) formData.append('group_avatar', file);
 
     return http.post('/group/modifyBasicInfo', formData, {
         params: {
-            group_id: data.group_id,
-            group_name: data.group_name,
-            group_desc: data.group_desc
+            group_id: params.group_id,
+            group_name: params.group_name,
+            group_desc: params.group_desc
         },
         headers: {
             'Content-Type': 'multipart/form-data'
@@ -74,9 +74,19 @@ export const leaveGroup = (data) => {
 };
 
 /**
+ * 解散组织
+ * @param {Object} params - 请求体数据
+ * @param {number} params.group_id - 组织ID
+ * @returns {Promise<any>} 操作结果
+ */
+export const dibandMyGroup = (params) => {
+    return http.delete('/group/disband', {params});
+};
+
+/**
  * 获取组织基本信息
  * @param {Object} params - 查询参数
- * @param {number} params.group_id - 组织ID
+ * @param {String} params.group_id - 组织ID
  * @returns {Promise<any>} 组织基本信息
  */
 export const getGroupBasicInfo = (params) => {

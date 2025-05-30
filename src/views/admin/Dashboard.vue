@@ -636,6 +636,11 @@ export default {
             article_name: currentEditNode.value.label
           };
           await changeArticleName(nodeData);
+          const tagData = {
+            article_id: currentEditNode.value.true_id,
+            tag_contents: currentEditNode.value.tags.map(tag => tag.tag_content)
+          };
+          await allTagsOrder(tagData);
           // 标签顺序已在 onTagDragEnd 中处理，如果需要单独保存标签内容（非顺序），则需额外逻辑
         } else if (currentEditNode.value.depth === 2) {
           let noteName = currentEditNode.value.label;
