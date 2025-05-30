@@ -64,8 +64,22 @@ export const getOrgLogs = (group_id) => {
 
 
 
-
-
+/**
+ * 用邀请码加入组织
+ * @param {string} inviteCode - 邀请码
+ * @returns {Promise<any>} 组织信息
+ */
+export const joinOrgByInviteCode = (inviteCode) => {
+    return http.post(
+        '/group/enterGroup',
+        { inviteCode: inviteCode },
+        {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }
+    );
+}
 
 
 
@@ -75,4 +89,5 @@ export default {
     getAllOrgs,
     getOrgMembers,
     getOrgLogs,
+    joinOrgByInviteCode,
 };

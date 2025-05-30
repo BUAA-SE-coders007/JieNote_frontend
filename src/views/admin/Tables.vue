@@ -20,9 +20,10 @@
             </li>
             <li class="nav-item">
               <a class="px-3 py-2 flex items-center text-xs uppercase font-bold leading-snug text-white hover:opacity-75"
-                 href="javascript:;">
-                <i class="fas fa-user text-lg leading-lg text-white opacity-75"></i>
-                <span class="ml-2">用户</span>
+                 href="javascript:;"
+                 @click="showJoinOrgDialog = true">
+                <i class="fas fa-user-plus text-lg leading-lg text-white opacity-75"></i>
+                <span class="ml-2">加入组织</span>
               </a>
             </li>
           </ul>
@@ -170,6 +171,19 @@
         <el-button type="primary" @click="createOrg">创建</el-button>
       </template>
     </el-dialog>
+
+    <!-- 加入组织弹窗 -->
+    <el-dialog v-model="showJoinOrgDialog" title="加入组织" width="400px">
+      <el-form :model="joinOrgForm" label-width="80px">
+        <el-form-item label="邀请码">
+          <el-input v-model="joinOrgForm.inviteCode" placeholder="请输入组织邀请码" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showJoinOrgDialog = false">取消</el-button>
+        <el-button type="primary" @click="joinOrg">加入</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -186,6 +200,10 @@ export default {
     return {
       searchText: '',
       showCreateOrgDialog: false,
+      showJoinOrgDialog: false,
+      joinOrgForm: {
+        inviteCode: ''
+      },
       newOrgForm: { 
         name: '', 
         intro: '', 
@@ -247,9 +265,9 @@ export default {
     },
 
     getAvatarUrl(avatar) {
-      //return `https://jienote.top/${avatar}`;
-      console.log(avatar)
-      return 'http://43.143.228.56:8000/images/default.png';
+      return `https://jienote.top/${avatar}`;
+      //console.log(avatar)
+      //return 'http://43.143.228.56:8000/images/default.png';
       //return avatar;
     },
 
@@ -272,17 +290,22 @@ export default {
 
       try {
         const res = await tables.createOrg(formData);
-        this.createdOrgs.push({
-          id: res.group_id,
-          name: this.newOrgForm.name,
-          avatar: this.newOrgForm.avatar || 'http://43.143.228.56:8000/images/default.png',
-          members: 1,
-          intro: this.newOrgForm.intro,
-          membersList: [],
-          role: 'leader'
-        });
+        // 关闭弹窗并清空表单
         this.showCreateOrgDialog = false;
         this.newOrgForm = { name: '', intro: '', avatar: '', avatarFile: null };
+        
+        // 重新获取所有组织数据
+        const response = await tables.getAllOrgs();
+        if (response.status === 200) {
+          this.processOrgData(response.data);
+          // 自动选中新创建的组织
+          const newOrg = this.createdOrgs.find(org => org.id === res.group_id);
+          if (newOrg) {
+            this.selectOrg(newOrg);
+          }
+        } else {
+          this.$message.error('创建组织成功，但刷新数据失败');
+        }
       } catch (error) {
         this.$message.error('创建组织失败');
         console.error('Failed to create organization:', error);
@@ -407,6 +430,44 @@ export default {
       });
       // 后续可以添加实际的页面跳转逻辑
       // this.$router.push(`/organization/${orgId}`);
+    },
+
+    async joinOrg() {
+      if (!this.joinOrgForm.inviteCode) {
+        this.$message.warning('请输入邀请码');
+        return;
+      }
+
+      try {
+        const response = await tables.joinOrgByInviteCode(this.joinOrgForm.inviteCode);
+        console.log('Response:', response);
+        if (response.status === 200) {
+          this.$message.success('成功加入组织');
+          this.showJoinOrgDialog = false;
+          this.joinOrgForm.inviteCode = '';
+          
+          // 刷新组织列表
+          const orgsResponse = await tables.getAllOrgs();
+          if (orgsResponse.status === 200) {
+            this.processOrgData(orgsResponse.data);
+          }
+        } else {
+          this.$message.error(response.message || '加入组织失败');
+        }
+      } catch (error) {
+        console.error('Join org error:', error);
+        if (error.response) {
+          // 服务器返回了错误响应
+          const errorMsg = error.response.data?.message || error.response.data?.error || '加入组织失败';
+          this.$message.error(errorMsg);
+        } else if (error.request) {
+          // 请求发出但没有收到响应
+          this.$message.error('网络错误，请检查网络连接');
+        } else {
+          // 请求配置出错
+          this.$message.error('请求错误，请稍后重试');
+        }
+      }
     }
   },
   async mounted() {
