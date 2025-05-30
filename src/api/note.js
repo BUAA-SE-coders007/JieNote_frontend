@@ -11,6 +11,7 @@ import http from '@/utils/http';
  * @param {number} [params.page] - 页码
  * @param {number} [params.page_size] - 每页大小
  * @param {number} [params.article_id] - 文献 ID
+ * @param {number} [params.query] - 查询
  * @returns {Promise<any>} 笔记列表数据
  */
 export const getNotes = (params = {}) => {
