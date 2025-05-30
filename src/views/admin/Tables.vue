@@ -235,12 +235,12 @@ export default {
         }
 
         // Fetch organization logs
-        // const logsResponse = await tables.getOrgLogs(org.id);
-        // console.log('logsResponse')
-        // console.log(logsResponse)
-        // if (logsResponse.status === 200) {
-        //   this.orgLogs = this.processLogs(logsResponse.data.logs);
-        // }
+        const logsResponse = await tables.getOrgLogs(org.id);
+        console.log('logsResponse')
+        console.log(logsResponse)
+        if (logsResponse.status === 200) {
+          this.orgLogs = this.processLogs(logsResponse.data.logs);
+        }
       } catch (error) {
         console.error(`Failed to fetch data for org ${org.id}:`, error);
       }
@@ -386,10 +386,15 @@ export default {
         }
         return {
           id: Math.random().toString(36).substr(2, 9),
-          time: log.time,
+          time: this.formatTime(log.time),
           content: content
         };
       });
+    },
+
+    formatTime(timeStr) {
+      if (!timeStr) return '';
+      return timeStr.replace('T', ' ');
     },
 
     navigateToOrgDetail(orgId) {
