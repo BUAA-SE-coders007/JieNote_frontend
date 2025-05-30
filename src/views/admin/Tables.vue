@@ -84,19 +84,9 @@
           <main class="flex-1 bg-white rounded-lg shadow p-4">
             <div v-if="selectedOrg">
               <div class="flex items-start mb-8">
-                <el-tooltip
-                  content="点击进入组织详情"
-                  placement="top-start"
-                  effect="light">
-                  <img :src="getAvatarUrl(selectedOrg.avatar)" class="w-24 h-24 rounded-full mr-8 border-4 border-emerald-100 cursor-pointer hover:opacity-80 transition-opacity" style="width: 100px;margin-right: 20px;height: 100px;" @click="navigateToOrgDetail(selectedOrg.id)" />
-                </el-tooltip>
+                <img :src="getAvatarUrl(selectedOrg.avatar)" class="w-24 h-24 rounded-full mr-8 border-4 border-emerald-100" style="width: 100px;margin-right: 20px;height: 100px;" @click="navigateToOrgDetail(selectedOrg.id)" />
                 <div class="flex-1 pt-2">
-                  <el-tooltip
-                    content="点击进入组织详情"
-                    placement="top-start"
-                    effect="light">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-3 cursor-pointer hover:text-emerald-600 transition-colors" @click="navigateToOrgDetail(selectedOrg.id)">{{ selectedOrg.name }}</h2>
-                  </el-tooltip>
+                  <h2 class="text-2xl font-bold text-gray-900 mb-3 cursor-pointer hover:text-emerald-600" @click="navigateToOrgDetail(selectedOrg.id)">{{ selectedOrg.name }}</h2>
                   <p class="text-gray-600 mb-3 text-base">{{ selectedOrg.intro || '这个组织还没有简介。' }}</p>
                   <div class="flex items-center space-x-6">
                     <span class="text-gray-500" style="margin-right: 20px;">
@@ -107,6 +97,13 @@
                       <i class="fas fa-user-tag mr-2"></i>
                       身份：{{ selectedOrg.role === 'leader' ? '创建者' : selectedOrg.role === 'admin' ? '管理员' : '成员' }}
                     </span>
+                    <el-button
+                      type="primary"
+                      class="ml-auto bg-emerald-500 hover:bg-emerald-600 border-emerald-500 hover:border-emerald-600"
+                      @click="navigateToOrgDetail(selectedOrg.id)">
+                      <i class="fas fa-external-link-alt mr-2"></i>
+                      进入组织
+                    </el-button>
                   </div>
                 </div>
               </div>
@@ -127,12 +124,14 @@
                 <el-tab-pane label="日志" name="logs">
                   <div class="mt-4">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">活动日志</h3>
-                    <ul class="space-y-2">
-                      <li v-for="log in orgLogs" :key="log.id" 
-                          class="p-3 bg-gray-50 rounded-lg text-gray-600">
-                        {{ log.time }} - {{ log.content }}
-                      </li>
-                    </ul>
+                    <div class="logs-container">
+                      <ul class="space-y-2">
+                        <li v-for="log in orgLogs" :key="log.id" 
+                            class="p-3 bg-gray-50 rounded-lg text-gray-600">
+                          {{ log.time }} - {{ log.content }}
+                        </li>
+                      </ul>
+                    </div>
                   </div>
                 </el-tab-pane>
               </el-tabs>
@@ -847,5 +846,29 @@ export default {
   height: 178px;
   display: block;
   object-fit: cover;
+}
+
+.logs-container {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 4px;
+  margin-right: -4px;
+}
+
+.logs-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.logs-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.logs-container::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+}
+
+.logs-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.7);
 }
 </style>
