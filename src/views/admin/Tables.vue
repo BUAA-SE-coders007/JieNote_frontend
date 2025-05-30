@@ -422,6 +422,8 @@ export default {
     navigateToOrgDetail(orgId) {
       // TODO: 实现组织详情页面的跳转
       console.log('Navigating to organization detail page:', orgId);
+      localStorage.setItem('current_group_id',orgId)
+      this.$router.push('/organization')
       this.$message({
         message: '组织详情页面开发中...',
         type: 'info',
