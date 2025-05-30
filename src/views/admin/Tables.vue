@@ -20,9 +20,10 @@
             </li>
             <li class="nav-item">
               <a class="px-3 py-2 flex items-center text-xs uppercase font-bold leading-snug text-white hover:opacity-75"
-                 href="javascript:;">
-                <i class="fas fa-user text-lg leading-lg text-white opacity-75"></i>
-                <span class="ml-2">用户</span>
+                 href="javascript:;"
+                 @click="showJoinOrgDialog = true">
+                <i class="fas fa-user-plus text-lg leading-lg text-white opacity-75"></i>
+                <span class="ml-2">加入组织</span>
               </a>
             </li>
           </ul>
@@ -39,7 +40,7 @@
               <div class="org-sidebar-header">
                 <span class="text-lg font-bold text-gray-800">我的组织 - 组织管理</span>
               </div>
-              <div class="org-sidebar-list">
+              <div class="org-sidebar-list overflow-y-auto" style="max-height: calc(110vh - 200px);">
                 <div v-if="filteredJoinedOrgs.length === 0 && filteredCreatedOrgs.length === 0" class="text-gray-500 text-center py-4">暂无组织</div>
                 <div v-else>
                   <div v-if="filteredJoinedOrgs.length > 0" class="mt-4">
@@ -83,19 +84,9 @@
           <main class="flex-1 bg-white rounded-lg shadow p-4">
             <div v-if="selectedOrg">
               <div class="flex items-start mb-8">
-                <el-tooltip
-                  content="点击进入组织详情"
-                  placement="top-start"
-                  effect="light">
-                  <img :src="getAvatarUrl(selectedOrg.avatar)" class="w-24 h-24 rounded-full mr-8 border-4 border-emerald-100 cursor-pointer hover:opacity-80 transition-opacity" style="width: 100px;margin-right: 20px;height: 100px;" @click="navigateToOrgDetail(selectedOrg.id)" />
-                </el-tooltip>
+                <img :src="getAvatarUrl(selectedOrg.avatar)" class="w-24 h-24 rounded-full mr-8 border-4 border-emerald-100" style="width: 100px;margin-right: 20px;height: 100px;" @click="navigateToOrgDetail(selectedOrg.id)" />
                 <div class="flex-1 pt-2">
-                  <el-tooltip
-                    content="点击进入组织详情"
-                    placement="top-start"
-                    effect="light">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-3 cursor-pointer hover:text-emerald-600 transition-colors" @click="navigateToOrgDetail(selectedOrg.id)">{{ selectedOrg.name }}</h2>
-                  </el-tooltip>
+                  <h2 class="text-2xl font-bold text-gray-900 mb-3 cursor-pointer hover:text-emerald-600" @click="navigateToOrgDetail(selectedOrg.id)">{{ selectedOrg.name }}</h2>
                   <p class="text-gray-600 mb-3 text-base">{{ selectedOrg.intro || '这个组织还没有简介。' }}</p>
                   <div class="flex items-center space-x-6">
                     <span class="text-gray-500" style="margin-right: 20px;">
@@ -106,6 +97,13 @@
                       <i class="fas fa-user-tag mr-2"></i>
                       身份：{{ selectedOrg.role === 'leader' ? '创建者' : selectedOrg.role === 'admin' ? '管理员' : '成员' }}
                     </span>
+                    <el-button
+                      type="primary"
+                      class="ml-auto bg-emerald-500 hover:bg-emerald-600 border-emerald-500 hover:border-emerald-600"
+                      @click="navigateToOrgDetail(selectedOrg.id)">
+                      <i class="fas fa-external-link-alt mr-2"></i>
+                      进入组织
+                    </el-button>
                   </div>
                 </div>
               </div>
@@ -126,12 +124,14 @@
                 <el-tab-pane label="日志" name="logs">
                   <div class="mt-4">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">活动日志</h3>
-                    <ul class="space-y-2">
-                      <li v-for="log in orgLogs" :key="log.id" 
-                          class="p-3 bg-gray-50 rounded-lg text-gray-600">
-                        {{ log.time }} - {{ log.content }}
-                      </li>
-                    </ul>
+                    <div class="logs-container">
+                      <ul class="space-y-2">
+                        <li v-for="log in orgLogs" :key="log.id" 
+                            class="p-3 bg-gray-50 rounded-lg text-gray-600">
+                          {{ log.time }} - {{ log.content }}
+                        </li>
+                      </ul>
+                    </div>
                   </div>
                 </el-tab-pane>
               </el-tabs>
@@ -170,6 +170,19 @@
         <el-button type="primary" @click="createOrg">创建</el-button>
       </template>
     </el-dialog>
+
+    <!-- 加入组织弹窗 -->
+    <el-dialog v-model="showJoinOrgDialog" title="加入组织" width="400px">
+      <el-form :model="joinOrgForm" label-width="80px">
+        <el-form-item label="邀请码">
+          <el-input v-model="joinOrgForm.inviteCode" placeholder="请输入组织邀请码" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showJoinOrgDialog = false">取消</el-button>
+        <el-button type="primary" @click="joinOrg">加入</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -186,6 +199,10 @@ export default {
     return {
       searchText: '',
       showCreateOrgDialog: false,
+      showJoinOrgDialog: false,
+      joinOrgForm: {
+        inviteCode: ''
+      },
       newOrgForm: { 
         name: '', 
         intro: '', 
@@ -235,21 +252,21 @@ export default {
         }
 
         // Fetch organization logs
-        // const logsResponse = await tables.getOrgLogs(org.id);
-        // console.log('logsResponse')
-        // console.log(logsResponse)
-        // if (logsResponse.status === 200) {
-        //   this.orgLogs = this.processLogs(logsResponse.data.logs);
-        // }
+        const logsResponse = await tables.getOrgLogs(org.id);
+        console.log('logsResponse')
+        console.log(logsResponse)
+        if (logsResponse.status === 200) {
+          this.orgLogs = this.processLogs(logsResponse.data.logs);
+        }
       } catch (error) {
         console.error(`Failed to fetch data for org ${org.id}:`, error);
       }
     },
 
     getAvatarUrl(avatar) {
-      //return `https://jienote.top/${avatar}`;
-      console.log(avatar)
-      return 'http://43.143.228.56:8000/images/default.png';
+      return `https://jienote.top/${avatar}`;
+      //console.log(avatar)
+      //return 'http://43.143.228.56:8000/images/default.png';
       //return avatar;
     },
 
@@ -272,17 +289,22 @@ export default {
 
       try {
         const res = await tables.createOrg(formData);
-        this.createdOrgs.push({
-          id: res.group_id,
-          name: this.newOrgForm.name,
-          avatar: this.newOrgForm.avatar || 'http://43.143.228.56:8000/images/default.png',
-          members: 1,
-          intro: this.newOrgForm.intro,
-          membersList: [],
-          role: 'leader'
-        });
+        // 关闭弹窗并清空表单
         this.showCreateOrgDialog = false;
         this.newOrgForm = { name: '', intro: '', avatar: '', avatarFile: null };
+        
+        // 重新获取所有组织数据
+        const response = await tables.getAllOrgs();
+        if (response.status === 200) {
+          this.processOrgData(response.data);
+          // 自动选中新创建的组织
+          const newOrg = this.createdOrgs.find(org => org.id === res.group_id);
+          if (newOrg) {
+            this.selectOrg(newOrg);
+          }
+        } else {
+          this.$message.error('创建组织成功，但刷新数据失败');
+        }
       } catch (error) {
         this.$message.error('创建组织失败');
         console.error('Failed to create organization:', error);
@@ -386,10 +408,15 @@ export default {
         }
         return {
           id: Math.random().toString(36).substr(2, 9),
-          time: log.time,
+          time: this.formatTime(log.time),
           content: content
         };
       });
+    },
+
+    formatTime(timeStr) {
+      if (!timeStr) return '';
+      return timeStr.replace('T', ' ');
     },
 
     navigateToOrgDetail(orgId) {
@@ -404,6 +431,44 @@ export default {
       });
       // 后续可以添加实际的页面跳转逻辑
       // this.$router.push(`/organization/${orgId}`);
+    },
+
+    async joinOrg() {
+      if (!this.joinOrgForm.inviteCode) {
+        this.$message.warning('请输入邀请码');
+        return;
+      }
+
+      try {
+        const response = await tables.joinOrgByInviteCode(this.joinOrgForm.inviteCode);
+        console.log('Response:', response);
+        if (response.status === 200) {
+          this.$message.success('成功加入组织');
+          this.showJoinOrgDialog = false;
+          this.joinOrgForm.inviteCode = '';
+          
+          // 刷新组织列表
+          const orgsResponse = await tables.getAllOrgs();
+          if (orgsResponse.status === 200) {
+            this.processOrgData(orgsResponse.data);
+          }
+        } else {
+          this.$message.error(response.message || '加入组织失败');
+        }
+      } catch (error) {
+        console.error('Join org error:', error);
+        if (error.response) {
+          // 服务器返回了错误响应
+          const errorMsg = error.response.data?.message || error.response.data?.error || '加入组织失败';
+          this.$message.error(errorMsg);
+        } else if (error.request) {
+          // 请求发出但没有收到响应
+          this.$message.error('网络错误，请检查网络连接');
+        } else {
+          // 请求配置出错
+          this.$message.error('请求错误，请稍后重试');
+        }
+      }
     }
   },
   async mounted() {
@@ -783,5 +848,46 @@ export default {
   height: 178px;
   display: block;
   object-fit: cover;
+}
+
+.logs-container {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 4px;
+  margin-right: -4px;
+}
+
+.logs-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.logs-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.logs-container::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+}
+
+.logs-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.7);
+}
+
+.org-sidebar-list::-webkit-scrollbar {
+  width: 2px;
+}
+
+.org-sidebar-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.org-sidebar-list::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.2);
+  border-radius: 1px;
+}
+
+.org-sidebar-list::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.4);
 }
 </style>
