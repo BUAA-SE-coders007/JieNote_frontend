@@ -1,5 +1,13 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <div>
+  <div
+      v-if="isLoading"
+      v-loading="true"
+      element-loading-text="加载组织页面中..."
+      element-loading-background="rgba(255, 255, 255, 1)"
+      style="height: 100vh; width: 100vw; position: fixed; top: 0; left: 0; z-index: 9999;"
+  ></div>
+    <div v-show="!isLoading" class="min-h-screen bg-gray-50 dark:bg-gray-900">
     <!-- 导航栏保持不变 -->
     <el-header class="main-header">
       <el-row type="flex" justify="space-between" align="middle" class="header-content">
@@ -10,7 +18,7 @@
                 class="organization-logo"
                 :src="logoUrl"
                 fit="contain"
-                style="width: 40px; height: 40px; margin-right: 12px"> <!-- 替换原Tailwind尺寸 -->
+                style="width: 100px; height: 100px; border-radius: 50%;"> <!-- 替换原Tailwind尺寸 -->
             </el-image>
             <div class="organization-meta">
               <h1 class="organization-name">{{ organizationName }}
@@ -94,7 +102,7 @@
     <div class="flex max-w-screen-xl px-4 mx-auto mt-4 gap-4">
       <!-- 左侧树结构 -->
       <div class="flex-1 p-4 overflow-auto">
-        <simple-tree :user-role="currentUserRole"/>
+        <simple-tree :user-role="currentUserRole" :group_id="group_id"/>
       </div>
 
       <!-- 修改后的成员列表侧边栏 -->
@@ -210,47 +218,81 @@
     </div>
     <el-dialog
         v-model="showInviteDialog"
-        title="组织邀请码"
+        title="邀请组织成员"
         width="500px"
         :close-on-click-modal="false"
         custom-class="dark:bg-gray-800"
         :append-to-body="true"
+        @closed="resetInviteForm"
     >
-      <div class="space-y-4">
-        <!-- 邀请码展示区域 -->
-        <div class="relative group">
-          <div class="flex items-center justify-between px-4 py-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
-            <span class="font-mono text-gray-800 dark:text-gray-200">{{ inviteCode }}</span>
-            <el-tooltip effect="dark" content="复制邀请码" placement="top">
-              <el-button
-                  type="success"
-                  size="small"
-                  class="!px-2 !py-1 hover:!bg-green-500/90"
-                  @click="copyCode"
-              >
-                <el-icon class="text-base">
-                  <DocumentCopy/>
-                </el-icon>
-              </el-button>
-            </el-tooltip>
-          </div>
-          <!-- 复制反馈提示 -->
-          <transition name="el-fade-in">
-            <div
-                v-if="copyFeedback"
-                class="absolute -bottom-6 left-0 text-xs"
-                :class="{
-            'text-green-500': copyFeedback.type === 'success',
-            'text-red-500': copyFeedback.type === 'error'
-          }"
+      <div class="space-y-6">
+        <!-- 新增邮箱输入区域 -->
+        <div class="email-input-area">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            成员邮箱
+          </label>
+          <div class="flex gap-2">
+            <el-input
+                v-model="inviteEmail"
+                placeholder="请输入成员邮箱"
+                class="flex-1"
+                @keyup.enter="generateInviteCode"
+            />
+            <el-button
+                type="primary"
+                :disabled="!inviteEmail"
+                @click="generateInviteCode"
             >
-              {{ copyFeedback.message }}
+              生成邀请码
+            </el-button>
+          </div>
+          <p v-if="emailError" class="text-red-500 text-xs mt-1">{{ emailError }}</p>
+        </div>
+
+        <!-- 邀请码展示区域 -->
+        <div v-if="inviteCode" class="invite-code-area">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            专属邀请码
+          </label>
+          <div class="relative group">
+            <div class="flex items-center justify-between px-4 py-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
+              <div class="flex-1 min-w-0 overflow-x-auto whitespace-nowrap scroll-container mr-2">
+                <span class="font-mono text-gray-800 dark:text-gray-200">{{ inviteCode }}</span>
+              </div>
+              <el-tooltip effect="dark" content="复制邀请码" placement="top">
+                <el-button
+                    type="success"
+                    size="small"
+                    class="!px-2 !py-1 hover:!bg-green-500/90"
+                    @click="copyCode"
+                >
+                  <el-icon class="text-base">
+                    <DocumentCopy/>
+                  </el-icon>
+                </el-button>
+              </el-tooltip>
             </div>
-          </transition>
+            <!-- 复制反馈提示 -->
+            <transition name="el-fade-in">
+              <div
+                  v-if="copyFeedback"
+                  class="absolute -bottom-6 left-0 text-xs"
+                  :class="{
+                'text-green-500': copyFeedback.type === 'success',
+                'text-red-500': copyFeedback.type === 'error'
+              }"
+              >
+                {{ copyFeedback.message }}
+              </div>
+            </transition>
+          </div>
         </div>
 
         <p class="text-sm text-gray-500 dark:text-gray-400">
           ✨ 将此邀请码发送给需要加入组织的成员，他们可以通过此码加入组织
+        </p>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+          注意：每个邀请码只能使用一次，且与邮箱绑定
         </p>
       </div>
     </el-dialog>
@@ -366,6 +408,7 @@
       </div>
     </el-dialog>
   </div>
+  </div>
 </template>
 
 <script>
@@ -378,8 +421,11 @@ import {
   leaveGroup,
   modifyAdminList,
   modifyGroupBasicInfo,
-  removeGroupMember
+  removeGroupMember,
+    dibandMyGroup
 } from "@/api/someOrganization";
+import {getUserProfile} from "@/api/profile";
+import team2 from "@/assets/img/team-2-800x800.jpg";
 
 export default {
   components: {
@@ -422,7 +468,10 @@ export default {
   },
   data() {
     return {
-      group_id: localStorage.getItem('current_group_id') || 0,
+      isLoading: true, // 添加加载状态
+      inviteEmail: '',
+      emailError: '',
+      group_id: localStorage.getItem('current_group_id') || 21,
       showMessageDialog: false,
       messages: [
         {
@@ -454,7 +503,7 @@ export default {
       memberCount: 5,
       organizationDescription: '致力于打造高效协作的技术团队',
       showInviteDialog: false,
-      inviteCode: 'ORG-5X2A-9BCC', // 实际应从接口获取
+      inviteCode: '', // 实际应从接口获取
       copyFeedback: null,
       currentUserRole: '组长', // 默认为组长
       showContextMenu: false,
@@ -496,14 +545,42 @@ export default {
     }
   },
   methods: {
+    async fetchUser() {
+      try {
+        const response = await getUserProfile();
+        const userData = response.data;
+        console.log(userData.avatar)
+        this.userName = userData.username || `user_${userData.id}`
+        this.userAvatar = (() => {
+          if (!userData.avatar) {
+            return team2;
+          }
+          if (userData.avatar.startsWith('http://') || userData.avatar.startsWith('https://')) {
+            return userData.avatar; // 已经是完整 URL，直接使用
+          }
+          // 否则，拼接 IP 地址
+          const path = userData.avatar.startsWith('/') ? userData.avatar.substring(1) : userData.avatar;
+          return `https://jienote.top/${path}`;
+        })()
+        console.log('fetchUser name:', this.userName);
+        console.log('fetchUser name:', this.userAvatar);
+      } catch (error) {
+        console.error("获取用户信息失败：", error);
+      }
+    },
+
     async fetchGroupInfo() {
       try {
-        const res = await getGroupBasicInfo({group_id: this.group_id})
-        this.organizationName = res.name
-        this.organizationDescription = res.desc
-        this.logoUrl = res.avatar
+        const res = await getGroupBasicInfo({
+          group_id: this.group_id // 字符串转整数
+        });
+        console.log(res)
+        this.organizationName = res.data.name;
+        this.organizationDescription = res.data.desc;
+        this.logoUrl = `https://jienote.top/${res.data.avatar}`;
       } catch (error) {
-        ElMessage.error('获取组织信息失败')
+        console.error('获取组织信息失败:', error);
+        ElMessage.error(`获取组织信息失败: ${error.response?.data?.message || error.message}`);
       }
     },
 
@@ -546,24 +623,44 @@ export default {
 
     async saveOrgInfo() {
       try {
-        const formData = new FormData()
-        formData.append('group_id', this.group_id)
-        formData.append('group_name', this.tempOrgInfo.name)
-        formData.append('group_desc', this.tempOrgInfo.description)
+        const params = {
+          group_id: this.group_id,
+          group_name: this.tempOrgInfo.name,
+          group_desc: this.tempOrgInfo.description
+        };
 
-        if (this.$refs.fileInput.files[0]) {
-          formData.append('group_avatar', this.$refs.fileInput.files[0])
+        const avatarFile = this.$refs.fileInput.files[0] || null;
+
+        const response = await modifyGroupBasicInfo(params, avatarFile);
+        const res = response.data;
+
+        // 直接更新本地数据，不需要重新加载整个页面
+        this.organizationName = res.name || this.tempOrgInfo.name;
+        this.organizationDescription = res.desc || this.tempOrgInfo.description;
+
+        this.showOrgEditDialog = false;
+        ElMessage.success('组织信息已更新');
+
+        // 如果有新头像，重新获取组织信息
+        if (avatarFile) {
+          this.isLoading = true;
+          try {
+            await this.fetchGroupInfo();
+          } catch (error) {
+            console.error('获取组织信息失败:', error);
+          } finally {
+            this.isLoading = false;
+          }
         }
 
-        await modifyGroupBasicInfo(formData)
-        this.organizationName = this.tempOrgInfo.name
-        this.organizationDescription = this.tempOrgInfo.description
-        this.showOrgEditDialog = false
-        ElMessage.success('组织信息已更新')
+        // 移除这行：this.isLoading = true;
+        // 移除这行：await this.initData()
       } catch (error) {
-        ElMessage.error('保存失败，请稍后重试')
+        console.error('更新失败:', error);
+        ElMessage.error(`保存失败: ${error.response?.data?.message || '请稍后重试'}`);
       }
     },
+
     openContextMenu(event, member) {
       if (this.currentUserRole === '组员') return
 
@@ -592,6 +689,7 @@ export default {
             m.id === this.selectedMember.id ? {...m, role: '管理员'} : m
         )
         this.closeContextMenu()
+        ElMessage.success('设置管理员成功')
       } catch (error) {
         ElMessage.error('设置管理员失败')
       }
@@ -607,6 +705,7 @@ export default {
             m.id === this.selectedMember.id ? {...m, role: '组员'} : m
         )
         this.closeContextMenu()
+        ElMessage.success('取消管理员成功')
       } catch (error) {
         ElMessage.error('取消管理员失败')
       }
@@ -619,6 +718,7 @@ export default {
         })
         this.members = this.members.filter(m => m.id !== this.selectedMember.id)
         this.closeContextMenu()
+        ElMessage.success('移除成员成功')
       } catch (error) {
         ElMessage.error('移除成员失败')
       }
@@ -655,50 +755,63 @@ export default {
             })
           })
     },
-    // openMessage() {
-    //   this.showMessageDialog = true
-    //   const triggerBtn = this.$el.querySelector('.disband-btn')
-    //       .finally(() => {
-    //         // 强制移除焦点状态
-    //         this.$nextTick(() => {
-    //           triggerBtn?.blur()
-    //           document.activeElement?.blur()
-    //         })
-    //       })
-    // },
-    async copyCode(event) {
-      try {// 添加event参数
-        const target = event.currentTarget  // 获取按钮元素
-        const res = await genGroupInviteCode({
-          group_id: this.group_id,
-          user_email: localStorage.getItem('user_email')
-        })
-        this.inviteCode = res.inviteCode
-
-        navigator.clipboard.writeText(this.inviteCode)
-            .then(() => {
-              ElMessage({
-                type: 'success',
-                message: '复制成功！邀请码已存入剪贴板',
-                duration: 3000,
-                customClass: 'dark:!bg-gray-700 dark:!text-gray-200'
-              })
-            })
-            .catch(() => {
-              ElMessage({
-                type: 'error',
-                message: '复制失败，请手动选择文本复制',
-                duration: 3000,
-                customClass: 'dark:!bg-gray-700 dark:!text-gray-200'
-              })
-            })
-            .finally(() => {
-              target.blur()  // 强制移除焦点
-              this.$refs.copyBtnRef?.blur()  // 双重保障
-            })
-      } catch (error) {
-        ElMessage.error('获取邀请码失败')
+    async generateInviteCode() {
+      // 邮箱格式验证
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(this.inviteEmail)) {
+        this.emailError = '请输入有效的邮箱地址';
+        return;
       }
+      this.emailError = '';
+
+      try {
+        // 调用API生成邀请码
+        const response = await genGroupInviteCode({
+          group_id: this.group_id,
+          user_email: this.inviteEmail
+        });
+
+        // 更新邀请码
+        console.log(response)
+        this.inviteCode = response.data.inviteCode;
+        console.log(this.inviteCode)
+        ElMessage.success('邀请码已生成');
+      } catch (error) {
+        ElMessage.error('生成邀请码失败: ' + (error.message || '请稍后再试'));
+        console.error('生成邀请码错误:', error);
+      }
+    },
+
+    // 复制邀请码（修改原copyCode方法）
+    async copyCode() {
+      if (!this.inviteCode) {
+        ElMessage.warning('请先生成邀请码');
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(this.inviteCode);
+        // 使用 Element UI 的提示组件
+        ElMessage({
+          type: 'success',
+          message: '复制成功！邀请码已存入剪贴板',
+          duration: 3000,
+          customClass: 'dark:!bg-gray-700 dark:!text-gray-200'
+        });
+      } catch (err) {
+        ElMessage({
+          type: 'error',
+          message: '复制失败，请手动选择文本复制',
+          duration: 3000,
+          customClass: 'dark:!bg-gray-700 dark:!text-gray-200'
+        });
+      }
+    },
+
+    resetInviteForm() {
+      this.inviteEmail = '';
+      this.emailError = '';
+      this.inviteCode = '';
+      this.copyFeedback = null;
     },
 
     confirmLeave() {
@@ -731,13 +844,12 @@ export default {
 
     async disbandGroup() {
       try {
-        // 假设解散接口为removeGroupMember特殊调用
-        await removeGroupMember({
+        await dibandMyGroup({
           group_id: this.group_id,
-          user_id: 'all' // 根据实际API调整
         })
         this.members = []
-        // this.$router.push('/groups')
+        ElMessage.success('解散组织成功')
+        this.$router.push('/collaboration')
       } catch (error) {
         ElMessage.error('解散组织失败')
       }
@@ -747,14 +859,17 @@ export default {
       try {
         await leaveGroup({group_id: this.group_id})
         // 跳转到组织选择页或其他处理
-        // this.$router.push('/groups')
+        ElMessage.success('退出组织成功')
+        this.$router.push('/collaboration')
       } catch (error) {
         ElMessage.error('退出组织失败')
       }
     },
     async fetchMembers() {
       try {
-        const res = await getGroupPeopleInfo({group_id: this.group_id})
+        const response = await getGroupPeopleInfo({group_id: this.group_id})
+        console.log(response)
+        let res = response.data
 
         // 合并所有成员并分配角色
         const mergedMembers = [
@@ -762,7 +877,7 @@ export default {
           ...(res.leader ? [{
             id: res.leader.id,
             name: res.leader.name,
-            avatar: res.leader.avatar,
+            avatar: `https://jienote.top/${res.leader.avatar}`,
             role: '组长'
           }] : []),
 
@@ -770,7 +885,7 @@ export default {
           ...(res.admins || []).map(admin => ({
             id: admin.id,
             name: admin.name,
-            avatar: admin.avatar,
+            avatar: `https://jienote.top/${admin.avatar}`,
             role: '管理员'
           })),
 
@@ -778,7 +893,7 @@ export default {
           ...(res.members || []).map(member => ({
             id: member.id,
             name: member.name,
-            avatar: member.avatar,
+            avatar: `https://jienote.top/${member.avatar}`,
             role: '组员'
           }))
         ]
@@ -803,7 +918,8 @@ export default {
     async fetchUserRole() {
       try {
         const res = await getMyGroupLevel({group_id: this.group_id})
-        this.currentUserRole = this.mapRole(res.role_level)
+        console.log(res)
+        this.currentUserRole = this.mapRole(res.data.level)
       } catch (error) {
         ElMessage.error('获取权限失败')
       }
@@ -811,18 +927,26 @@ export default {
 
     mapRole(level) {
       return {
-        3: '组长',
+        3: '组员',
         2: '管理员',
-        1: '组员'
-      }[level] || '组员'
+        1: '组长'
+      }[level] || '组长'
     },
 
     async initData() {
-      await this.fetchGroupInfo()
-      await this.fetchMembers()
-      await this.fetchUserRole()
+      try {
+        this.isLoading = true; // 开始加载
+        await this.fetchUser();
+        await this.fetchGroupInfo();
+        await this.fetchMembers();
+        await this.fetchUserRole();
+      } catch (error) {
+        console.error('初始化数据失败:', error);
+        ElMessage.error('加载组织数据失败');
+      } finally {
+        this.isLoading = false; // 无论成功失败都结束加载
+      }
     },
-
   }
 }
 </script>
@@ -977,7 +1101,7 @@ export default {
 }
 
 .main-header {
-  height: 20%;
+  height: 120px;
   border-bottom: 1px solid var(--el-border-color);
   background: var(--el-bg-color);
   padding: 0 !important;
@@ -999,7 +1123,7 @@ export default {
   display: flex;
   align-items: center;
   height: 100%;
-  gap: 12px;
+  gap: 20px;
   min-width: 0; /* 添加最小宽度约束 */
 }
 
@@ -1204,5 +1328,32 @@ export default {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     border-color: var(--el-color-primary);
   }
+}
+
+.scroll-container {
+  scrollbar-width: thin;
+  scrollbar-color: #c5c5c5 #f0f0f0;
+}
+
+.scroll-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.scroll-container::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 3px;
+}
+
+.scroll-container::-webkit-scrollbar-thumb {
+  background-color: #c5c5c5;
+  border-radius: 3px;
+}
+
+.dark .scroll-container::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.dark .scroll-container::-webkit-scrollbar-thumb {
+  background-color: #4b5563;
 }
 </style>

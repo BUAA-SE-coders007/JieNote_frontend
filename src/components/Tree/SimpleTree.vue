@@ -33,7 +33,7 @@
         custom-class="graph-modal"
         :close-on-click-modal="false"
         :destroy-on-close="false"
-    >
+     >
       <KnowledgeGraph :treeData="graphTreeData"/>
       <template #footer>
         <span class="dialog-footer">
@@ -454,13 +454,11 @@ import {
   selfFolderToRecycleBin,
   changeFolderName,
   changeArticleName,
-  createTag,
-  deleteTag,
   allTagsOrder,
   getArticleTags,
   readArticle
-} from '@/api/dashboard';
-import {createNote, updateNote, deleteNote as apiDeleteNote} from '@/api/note'; // Added getNotes, getNoteTitles
+} from '@/api/group_tree';
+import {createNote, updateNote, deleteNote as apiDeleteNote} from '@/api/group_note'; // Added getNotes, getNoteTitles
 import MoveToPersonalFolderDialog from './MoveToPersonalFolderDialog.vue'
 
 export default {
@@ -469,6 +467,10 @@ export default {
       type: String,
       default: '组员', // 默认用户身份
       validator: (value) => ['管理员', '组长', '组员'].includes(value)
+    },
+    group_id: {
+      type: Number,
+      default: 1
     }
   },
   name: "simple-tree",  // 保持与引用时的组件名一致
@@ -637,15 +639,10 @@ export default {
     const addTag = async () => {
       if (newTag.value.trim()) {
         try {
-          const tagData = {
-            article_id: currentEditNode.value.true_id,
-            content: newTag.value.trim()
-          };
-          const response = await createTag(tagData);
           // Assuming the backend returns the created tag with its ID
           // If not, the temporary ID logic might need adjustment or removal if not strictly necessary for UI
           currentEditNode.value.tags.push({
-            tag_id: response.data?.tag_id || Date.now(), // Use returned ID if available
+            tag_id: Date.now(), // Use returned ID if available
             tag_content: newTag.value.trim()
           });
           newTag.value = '';
@@ -659,7 +656,6 @@ export default {
     // 删除标签
     const removeTag = async (index) => {
       try {
-        await deleteTag(currentEditNode.value.tags[index].tag_id);
         currentEditNode.value.tags.splice(index, 1);
         ElMessage.success('标签删除成功');
       } catch (error) {
@@ -696,6 +692,11 @@ export default {
             article_name: currentEditNode.value.label
           };
           await changeArticleName(nodeData);
+          const tagData = {
+            article_id: currentEditNode.value.true_id,
+            tag_contents: currentEditNode.value.tags.map(tag => tag.tag_content)
+          };
+          await allTagsOrder(tagData);
         } else if (currentEditNode.value.depth === 2) {
           let noteName = currentEditNode.value.label;
           if (!noteName.endsWith('.md')) {
@@ -812,7 +813,7 @@ export default {
       const depth = node.depth
 
       // 调试信息
-      console.log(`Node: ${node.label}, ID: ${node.id}, Depth: ${node.depth}, Has children: ${node.children && node.children.length > 0}, Is expanded: ${expandedKeys.value.has(node.id)}`)
+      // console.log(`Node: ${node.label}, ID: ${node.id}, Depth: ${node.depth}, Has children: ${node.children && node.children.length > 0}, Is expanded: ${expandedKeys.value.has(node.id)}`)
 
       // 根据节点深度和状态返回对应图标
       if (depth === 0) {
@@ -1200,6 +1201,7 @@ export default {
         const folderName = newCategoryForm.value.name.trim();
         const newFolderData = {
           folder_name: folderName,
+          group_id: props.group_id,
         };
 
         // API call using the imported function
@@ -1295,7 +1297,8 @@ export default {
 
         const response = await getSelfTree({
           page_number: currentPage.value,
-          page_size: pageSize.value
+          page_size: pageSize.value,
+          group_id: props.group_id
         });
 
         const data = response.data;
@@ -1415,6 +1418,9 @@ export default {
       } catch (error) {
         console.error('上传PDF失败:', error);
         ElMessage.error('上传PDF失败: ' + error.message);
+      } finally
+      {
+        await refreshData()
       }
     }
 
