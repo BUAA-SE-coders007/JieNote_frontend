@@ -40,7 +40,7 @@
               <div class="org-sidebar-header">
                 <span class="text-lg font-bold text-gray-800">我的组织 - 组织管理</span>
               </div>
-              <div class="org-sidebar-list">
+              <div class="org-sidebar-list overflow-y-auto" style="max-height: calc(110vh - 200px);">
                 <div v-if="filteredJoinedOrgs.length === 0 && filteredCreatedOrgs.length === 0" class="text-gray-500 text-center py-4">暂无组织</div>
                 <div v-else>
                   <div v-if="filteredJoinedOrgs.length > 0" class="mt-4">
@@ -870,5 +870,22 @@ export default {
 
 .logs-container::-webkit-scrollbar-thumb:hover {
   background-color: rgba(156, 163, 175, 0.7);
+}
+
+.org-sidebar-list::-webkit-scrollbar {
+  width: 2px;
+}
+
+.org-sidebar-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.org-sidebar-list::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.2);
+  border-radius: 1px;
+}
+
+.org-sidebar-list::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.4);
 }
 </style>
