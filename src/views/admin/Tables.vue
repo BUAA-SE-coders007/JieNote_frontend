@@ -32,15 +32,15 @@
     </nav>
 
     <div class="flex-1 overflow-y-auto bg-gray-100">
-      <div class="container-fluid px-4 py-4">
-        <div class="flex">
+      <div class="container-fluid px-4 py-4 h-full">
+        <div class="flex h-full">
           <!-- 侧边栏 -->
-          <aside class="w-[400px] flex-shrink-0 flex-grow-0 bg-white rounded-lg shadow mr-4">
-            <div class="p-4">
+          <aside class="w-[400px] flex-shrink-0 flex-grow-0 bg-white rounded-lg shadow mr-4 flex flex-col">
+            <div class="p-4 flex flex-col h-full">
               <div class="org-sidebar-header">
                 <span class="text-lg font-bold text-gray-800">我的组织 - 组织管理</span>
               </div>
-              <div class="org-sidebar-list overflow-y-auto" style="max-height: calc(110vh - 200px);">
+              <div class="org-sidebar-list overflow-y-auto flex-1">
                 <div v-if="filteredJoinedOrgs.length === 0 && filteredCreatedOrgs.length === 0" class="text-gray-500 text-center py-4">暂无组织</div>
                 <div v-else>
                   <div v-if="filteredJoinedOrgs.length > 0" class="mt-4">
