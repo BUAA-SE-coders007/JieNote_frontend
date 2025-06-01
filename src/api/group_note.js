@@ -2,34 +2,6 @@ import http from '@/utils/http';
 
 /**
  * 笔记相关 API
- */
-
-/**
- * 获取笔记列表
- * @param {Object} params - 查询参数
- * @param {number} [params.id] - 笔记 ID
- * @param {number} [params.page] - 页码
- * @param {number} [params.page_size] - 每页大小
- * @param {number} [params.article_id] - 文献 ID
- * @returns {Promise<any>} 笔记列表数据
- */
-export const getNotes = (params = {}) => {
-    return http.get('/notes/get', { params });
-};
-
-/**
- * 获取笔记标题列表
- * @param {Object} params - 查询参数
- * @param {number} [params.id] - 笔记 ID
- * @param {number} [params.page] - 页码
- * @param {number} [params.page_size] - 每页大小
- * @param {number} [params.article_id] - 文献 ID
- * @returns {Promise<any>} 笔记标题列表数据
- */
-export const getNoteTitles = (params = {}) => {
-    return http.get('/notes/title', { params });
-};
-
 /**
  * 创建笔记
  * @param {Object} data - 笔记数据
@@ -70,10 +42,19 @@ export const deleteNote = (noteId) => {
     return http.delete(`/notes/${noteId}`);
 };
 
-export default {
-    getNotes,
-    getNoteTitles,
-    createNote,
-    updateNote,
-    deleteNote
+/**
+ * 获取笔记编辑权限
+ * @param {number|string} noteId - 笔记 ID
+ * @returns {Promise<any>} 编辑权限结果
+ */
+export const getEditPermission = (noteId) => {
+    return http.get('/group/ifEditNote', { params: { note_id: noteId } });
 };
+
+export default {
+  createNote,
+  updateNote,
+  deleteNote,
+  getEditPermission,
+};
+
