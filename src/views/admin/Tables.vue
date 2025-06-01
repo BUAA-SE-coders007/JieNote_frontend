@@ -424,11 +424,11 @@ export default {
       console.log('Navigating to organization detail page:', orgId);
       localStorage.setItem('current_group_id',orgId)
       this.$router.push('/organization')
-      this.$message({
-        message: '组织详情页面开发中...',
-        type: 'info',
-        duration: 2000
-      });
+      // this.$message({
+      //   message: '组织详情页面开发中...',
+      //   type: 'info',
+      //   duration: 2000
+      // });
       // 后续可以添加实际的页面跳转逻辑
       // this.$router.push(`/organization/${orgId}`);
     },
