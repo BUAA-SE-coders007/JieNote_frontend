@@ -9,10 +9,11 @@
         </div>
       </div>
 
-      <div class="time-info">
-        <div class="time-item" v-if = "props.lastModified">
+      <!-- 使用v-show根据屏幕宽度控制显示 -->
+      <div class="time-info" v-show="!isMobile">
+        <div class="time-item">
           <el-icon class="icon"><Calendar /></el-icon>
-          <span >最近修改：{{ displayLastModified }}</span>
+          <span>最近修改：{{ displayLastModified }}</span>
         </div>
         <div class="time-item">
           <el-icon class="icon"><Clock /></el-icon>
@@ -92,11 +93,19 @@ const BASE_URL = 'https://jienote.top/pdfjs/web/viewer.html'
 // 新增当前时间响应式变量
 const currentTime = ref('');
 
+// 新增屏幕宽度检测
+const isMobile = ref(window.innerWidth < 600);
+
 // 时间格式化函数
 function formatDate(date) {
   const d = new Date(date);
   return d.toISOString().split('T')[0] + ' ' + d.toTimeString().split(' ')[0];
 }
+
+// 窗口大小变化事件处理
+const handleResize = () => {
+  isMobile.value = window.innerWidth < 600;
+};
 
 // 实时更新当前时间（每秒更新）
 onMounted(() => {
@@ -104,6 +113,9 @@ onMounted(() => {
   const timer = setInterval(() => {
     currentTime.value = formatDate(new Date());
   }, 1000);
+  
+  // 初始化窗口大小监听
+  window.addEventListener('resize', handleResize);
   
   // 其他初始化逻辑
   window.addEventListener('message', onMessage)
@@ -114,6 +126,7 @@ onMounted(() => {
   
   onUnmounted(() => {
     clearInterval(timer);
+    window.removeEventListener('resize', handleResize);
     window.removeEventListener('message', onMessage)
     clearInterval(countdownTimer)
   })
@@ -218,6 +231,11 @@ defineExpose({
   font-size: 1.125rem;
   font-weight: 600;
   color: #1f2937;
+  
+  /* 在移动视图下调整字体大小 */
+  @media (max-width: 600px) {
+    font-size: 1rem;
+  }
 }
 
 .time-info {
@@ -226,6 +244,11 @@ defineExpose({
   gap: 24px;
   font-size: 0.875rem;
   color: #6b7280;
+  
+  /* 在移动视图下隐藏 */
+  @media (max-width: 600px) {
+    display: none;
+  }
 }
 
 .time-item {
@@ -257,6 +280,11 @@ defineExpose({
   background-color: #ffffff;
   border: 1px solid #e5e7eb;
   color: #3b82f6;
+  
+  /* 在移动视图下增加宽度 */
+  @media (max-width: 600px) {
+    padding: 8px 24px;
+  }
 }
 
 .save-btn:hover {
@@ -295,4 +323,5 @@ defineExpose({
   border-top: 1px solid #e5e7eb;
   background-color: #f9fafb;
 }
-</style>    
+</style>
+    
