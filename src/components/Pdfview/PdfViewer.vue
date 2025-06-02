@@ -1,18 +1,38 @@
+
 <template>
   <div class="pdf-iframe-viewer">
     <div class="toolbar">
-        <div class="left-tools">
-        <span class="title">📄 {{ props.fileName }}</span>
-        <span class="info">最近修改：{{ displayLastModified }}</span>
+      <div class="left-tools">
+        <div class="file-header">
+          <span class="file-icon">📄</span>
+          <span class="file-name">{{ props.fileName }}</span>
+        </div>
       </div>
-      <div
-        v-if="pdfUrl && write"
-        class="save-btn"
-        :class="{ disabled: isSaving }"
-        @click="handleSave"
-      >
-        <el-icon><Document /></el-icon>
-        {{ isSaving ? `保存中(${countdown})` : '保存' }}
+
+      <div class="time-info">
+        <div class="time-item" v-if = "props.lastModified">
+          <el-icon class="icon"><Calendar /></el-icon>
+          <span >最近修改：{{ displayLastModified }}</span>
+        </div>
+        <div class="time-item">
+          <el-icon class="icon"><Clock /></el-icon>
+          <span>当前时间：{{ currentTime }}</span>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <div
+          v-if="pdfUrl && write"
+          class="save-btn"
+          :class="{ 'is-loading': isSaving }"
+          @click="handleSave"
+        >
+          <el-icon class="icon"><Document /></el-icon>
+          <span v-show="!isSaving">保存</span>
+          <span v-show="isSaving">
+            保存中 <span class="spinner">.</span><span class="spinner">.</span><span class="spinner">.</span>
+          </span>
+        </div>
       </div>
     </div>
 
@@ -34,10 +54,10 @@
 
 <script setup>
 /* eslint-disable no-unused-vars */
-import { ref, watch, onMounted, onUnmounted, defineExpose, defineProps, computed } from 'vue';
-import { ElMessage } from 'element-plus'
-import { Document } from '@element-plus/icons-vue'
-import {getToken} from '@/utils/auth.js'
+import { ref, watch, onMounted, onUnmounted, computed, defineProps, defineExpose } from 'vue';
+import { ElMessage, ElIcon } from 'element-plus';
+import { Document, Calendar, Clock } from '@element-plus/icons-vue';
+import { getToken } from '@/utils/auth.js';
 
 const props = defineProps({
   fileUrl: {
@@ -46,7 +66,7 @@ const props = defineProps({
   },
   fileName: {
     type: String,
-    default: 'undefined'
+    default: ''
   },
   lastModified: {
     type: String,
@@ -56,20 +76,48 @@ const props = defineProps({
     type: String,
     default: ''
   },
-  write:{
+  write: {
     type: Boolean,
     default: true
-
   }
 })
 
 const pdfUrl = ref('')
 const pdfIframe = ref(null)
 const isSaving = ref(false)
-const countdown = ref(10)
 const isLoading = ref(true)
 let countdownTimer = null
 const BASE_URL = 'https://jienote.top/pdfjs/web/viewer.html'
+
+// 新增当前时间响应式变量
+const currentTime = ref('');
+
+// 时间格式化函数
+function formatDate(date) {
+  const d = new Date(date);
+  return d.toISOString().split('T')[0] + ' ' + d.toTimeString().split(' ')[0];
+}
+
+// 实时更新当前时间（每秒更新）
+onMounted(() => {
+  currentTime.value = formatDate(new Date());
+  const timer = setInterval(() => {
+    currentTime.value = formatDate(new Date());
+  }, 1000);
+  
+  // 其他初始化逻辑
+  window.addEventListener('message', onMessage)
+  if (props.fileUrl) {
+    pdfUrl.value = `${BASE_URL}?file=${encodeURIComponent(props.fileUrl)}`
+    isLoading.value = true
+  }
+  
+  onUnmounted(() => {
+    clearInterval(timer);
+    window.removeEventListener('message', onMessage)
+    clearInterval(countdownTimer)
+  })
+});
 
 // 监听 fileUrl 变化
 watch(() => props.fileUrl, (newVal) => {
@@ -85,13 +133,18 @@ function handleSave() {
 
   const token = getToken()
   sendMessageToIframe({ type: 'save', token: token, articleId: props.articleId })
-  startCountdown()
+  isSaving.value = true;
+  
+  // 10秒后自动取消加载状态
+  countdownTimer = setTimeout(() => {
+    isSaving.value = false;
+  }, 10000);
 }
 
 function sendMessageToIframe(data) {
   if (pdfIframe.value && pdfIframe.value.contentWindow) {
-    console.log('发送消息到iframe', data)
     pdfIframe.value.contentWindow.postMessage(data, '*')
+    console.log('发送消息给iframe', data)
   } else {
     ElMessage.warning('PDF 渲染未完成，请稍后再试')
   }
@@ -101,146 +154,145 @@ function handleIframeLoad() {
   isLoading.value = false
 }
 
-function startCountdown() {
-  isSaving.value = true
-  countdown.value = 10
-  countdownTimer = setInterval(() => {
-    countdown.value--
-    if (countdown.value <= 0) {
-      clearInterval(countdownTimer)
-      isSaving.value = false
-    }
-  }, 1000)
-}
-
 function onMessage(event) {
+  // if (event.origin !== 'https://jienote.top') return
   console.log('收到iframe消息', event.data)
   if (event.data.type === 'save-success') {
     ElMessage.success('上传成功')
+    isSaving.value = false;
   } else if (event.data.type === 'save-fail') {
     ElMessage.error('上传失败：' + event.data.error)
+    isSaving.value = false;
   }
-}
-
-// 格式化时间
-function formatDate(date) {
-  const d = new Date(date)
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  const hour = String(d.getHours()).padStart(2, '0')
-  const minute = String(d.getMinutes()).padStart(2, '0')
-  return `${year}-${month}-${day} ${hour}:${minute}`
 }
 
 // 计算展示的修改时间
 const displayLastModified = computed(() => {
   return props.lastModified
-    ? props.lastModified
+    ? formatDate(props.lastModified)
     : formatDate(new Date())
-})
-
-onMounted(() => {
-  window.addEventListener('message', onMessage)
-  // 初始值如果有，主动触发一下
-  if (props.fileUrl) {
-    pdfUrl.value = `${BASE_URL}?file=${encodeURIComponent(props.fileUrl)}`
-    isLoading.value = true
-  }
-})
-
-onUnmounted(() => {
-  window.removeEventListener('message', onMessage)
-  clearInterval(countdownTimer)
 })
 
 defineExpose({
   pdfUrl,
 })
-
 </script>
 
 <style scoped>
 .pdf-iframe-viewer {
-  max-width: 1200px;
-  width: 90%;
-  margin: 20px auto;
-  display: flex;
-  flex-direction: column;
-  background-color: #f6f8fa;
-  border: 1px solid #d0d7de;
-  border-radius: 8px;
+  max-width: 1440px;
+  margin: 32px auto;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(17, 24, 39, 0.1);
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(140, 149, 159, 0.15);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 .toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 20px;
-  background-color: #f6f8fa;
-  border-bottom: 1px solid #d0d7de;
+  padding: 24px 32px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .left-tools {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  align-items: center;
+  gap: 8px;
 }
 
-.left-tools .title {
-  font-size: 18px;
+.file-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.file-icon {
+  font-size: 1.25rem;
+  color: #1f2937;
+}
+
+.file-name {
+  font-size: 1.125rem;
   font-weight: 600;
-  color: #24292f;
-  font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
-  margin-bottom: 4px;
+  color: #1f2937;
 }
 
-.left-tools .info {
-  font-size: 13px;
-  color: #57606a;
-  font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
-  line-height: 1.2;
+.time-info {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.time-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.time-item .icon {
+  font-size: 1rem;
+  color: #9ca3af;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 16px;
 }
 
 .save-btn {
-  padding: 8px 14px;
-  background-color: #2da44e;
-  color: white;
-  border-radius: 6px;
-  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
-  user-select: none;
-  transition: background-color 0.2s;
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  color: #3b82f6;
 }
 
 .save-btn:hover {
-  background-color: #218739;
+  background-color: #e9f2ff;
+  border-color: #bfdbfe;
 }
 
-.save-btn.disabled {
-  background-color: #8c959f;
-  cursor: not-allowed;
+.save-btn.is-loading {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.save-btn .spinner {
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
 }
 
 .iframe-loading {
-  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 500px;
-  font-size: 18px;
-  color: #656d76;
+  min-height: 400px;
+  font-size: 1.125rem;
+  color: #6b7280;
+  background-color: #f9fafb;
 }
 
 .pdf-iframe {
-  flex: 1;
   width: 100%;
-  min-height: 600px;
-  border: none;
-  display: block;
+  min-height: 700px;
+  border-top: 1px solid #e5e7eb;
+  background-color: #f9fafb;
 }
-</style>
+</style>    

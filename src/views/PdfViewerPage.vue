@@ -3,8 +3,10 @@
     <h1 class="title">PDF reader example Page</h1>
 
     <PdfViewer ref="pdfViewerRef"
-    fileUrl="https://arxiv.org/pdf/2309.06180" 
-    articleId = "123456"
+    fileUrl="https://jienote.top//lhcos-data/a3b0228b-8b03-43be-9d55-26162c3ec9c6.pdf" 
+    articleId = "285"
+    write = false
+    fileName="test.pdf"
     />
 
     
