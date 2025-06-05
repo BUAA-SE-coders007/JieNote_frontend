@@ -18,7 +18,7 @@
     <div class="modern-form-container">
       <el-form :model="localPermissions" class="modern-form">
         <el-form-item
-            v-for="user in finalUserList"
+            v-for="user in userList"
             :key="user.id"
             :label="user.name"
             label-width="72px"
@@ -46,8 +46,11 @@
 </template>
 
 <script>
-import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import {
+  getPermissions,
+  definePermission
+} from '@/api/define' // 假设权限API已封装在group.js中
 
 export default {
   name: 'PermissionSettingDialog',
@@ -56,53 +59,16 @@ export default {
     groupId: Number,
     itemId: Number,
     itemType: Number,
-    userList: Array,
-    existingPermissions: Object,
   },
   emits: ['update:visible', 'saved'],
   data() {
     return {
       visibleInternal: false,
-      localPermissions: {},
-      mockUsers: [
-        { id: 101, name: '张三' },
-        { id: 102, name: '李四' },
-        { id: 103, name: '王五' },
-        { id: 104, name: '张三' },
-        { id: 105, name: '李四' },
-        { id: 106, name: '王五' },
-        { id: 107, name: '张三' },
-        { id: 108, name: '李四' },
-        { id: 109, name: '王五' },
-        { id: 110, name: '张三' },
-        { id: 111, name: '李四' },
-        { id: 112, name: '王五' },
-      ],
-      mockPermissions: {
-        101: 1,
-        102: 2,
-        103: 0,
-        104: 1,
-        105: 2,
-        106: 0,
-        107: 1,
-        108: 2,
-        109: 0,
-        110: 1,
-        111: 2,
-        112: 0,
-      },
+      userList: [],          // 用户列表（从API获取）
+      localPermissions: {},  // 当前权限设置
+      initialPermissions: {},// 初始权限状态（用于比较变化）
+      loading: false,        // 加载状态
     }
-  },
-  computed: {
-    finalUserList() {
-      return this.userList?.length ? this.userList : this.mockUsers
-    },
-    finalPermissions() {
-      return this.existingPermissions && Object.keys(this.existingPermissions).length
-          ? this.existingPermissions
-          : this.mockPermissions
-    },
   },
   watch: {
     visible: {
@@ -110,30 +76,91 @@ export default {
       handler(val) {
         this.visibleInternal = val
         if (val) {
-          this.initializePermissions()
+          this.fetchPermissions()
         }
       },
     },
   },
   methods: {
-    initializePermissions() {
-      this.localPermissions = {}
-      for (const user of this.finalUserList) {
-        this.localPermissions[user.id] = this.finalPermissions[user.id] ?? 1
+    // 获取权限数据
+    async fetchPermissions() {
+      console.log(this.groupId)
+      console.log(this.itemType)
+      console.log(this.itemId)
+      this.loading = true
+      try {
+        // 调用封装好的获取权限接口
+        const response = await getPermissions({
+          group_id: this.groupId,
+          item_type: this.itemType,
+          item_id: this.itemId
+        })
+
+        console.log(response)
+
+        // 处理API返回的数据
+        const { unaccessible = [], read_only = [], writeable = [] } = response.data
+
+        // 合并所有用户并去重
+        const allUsers = [...unaccessible, ...read_only, ...writeable]
+        const uniqueUsers = []
+        const seen = new Set()
+
+        allUsers.forEach(user => {
+          if (!seen.has(user.user_id)) {
+            seen.add(user.user_id)
+            uniqueUsers.push({
+              id: user.user_id,
+              name: user.user_name,
+            })
+          }
+        })
+
+        this.userList = uniqueUsers
+        console.log(this.userList)
+
+        // 构建权限映射
+        const permissionsMap = {}
+        unaccessible.forEach(user => permissionsMap[user.user_id] = 0)
+        read_only.forEach(user => permissionsMap[user.user_id] = 1)
+        writeable.forEach(user => permissionsMap[user.user_id] = 2)
+
+        // 初始化权限设置
+        this.localPermissions = {}
+        this.userList.forEach(user => {
+          this.localPermissions[user.id] = permissionsMap[user.id] ?? 1 // 默认权限为可查看
+        })
+
+        // 保存初始状态用于比较变化
+        this.initialPermissions = { ...this.localPermissions }
+
+      } catch (error) {
+        ElMessage.error('获取权限数据失败')
+        console.error('获取权限失败:', error)
+      } finally {
+        this.loading = false
       }
     },
+
     handleClose() {
       this.$emit('update:visible', false)
     },
+
     async handleSave() {
+      if (this.loading) return
+
       const changed = []
-      for (const user of this.finalUserList) {
-        const newPerm = this.localPermissions[user.id]
-        const oldPerm = this.finalPermissions[user.id] ?? 1
+
+      // 找出变化的权限
+      for (const user of this.userList) {
+        const userId = user.id
+        const newPerm = this.localPermissions[userId]
+        const oldPerm = this.initialPermissions[userId] ?? 1
+
         if (newPerm !== oldPerm) {
           changed.push({
             group_id: this.groupId,
-            user_id: user.id,
+            user_id: userId,
             item_type: this.itemType,
             item_id: this.itemId,
             permission: newPerm,
@@ -141,30 +168,21 @@ export default {
         }
       }
 
-      if (!changed.length) {
+      if (changed.length === 0) {
         ElMessage.info('没有权限变化')
         return
       }
 
       try {
-        await Promise.all(
-            changed.map((item) =>
-                axios.post(
-                    'http://127.0.0.1:4523/m1/6178223-5870624-default/group/permissionDefine',
-                    item,
-                    {
-                      headers: {
-                        Authorization: 'Bearer your_token_here', // 请替换
-                      },
-                    }
-                )
-            )
-        )
+        // 批量更新权限
+        console.log(changed)
+        await Promise.all(changed.map(item => definePermission(item)))
         ElMessage.success('权限设置已保存')
         this.$emit('saved')
         this.handleClose()
-      } catch (e) {
-        ElMessage.error('保存失败')
+      } catch (error) {
+        ElMessage.error('保存权限失败')
+        console.error('保存权限失败:', error)
       }
     },
   },
@@ -207,16 +225,17 @@ export default {
   text-align: center;
 }
 
-/* 新增滚动容器，最多展示6个人高度，超出滚动 */
 .modern-form-container {
-  max-height: 306px; /* 6项*51px左右，适配紧凑样式 */
-  overflow-y: auto;
+  max-height: 306px;
+  /* 移除 overflow-y: auto */
   margin-bottom: 0;
-  /* 保留圆角，防止溢出时显示丑陋 */
   border-radius: 9px;
-  /* 可选：让滚动条更美观 */
-  scrollbar-width: thin;
-  scrollbar-color: #b6c4d8 #f1f3f7;
+  position: relative; /* 添加定位上下文 */
+}
+
+/* 添加自定义下拉菜单样式 */
+:deep(.modern-select .el-select-dropdown) {
+  z-index: 9999 !important; /* 确保下拉菜单在最上层 */
 }
 
 /* 自定义滚动条美化（webkit浏览器） */

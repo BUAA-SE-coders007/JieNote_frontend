@@ -221,11 +221,11 @@
                   </div>
                   <div class="node-actions">
                     <!-- 只在前两级展示添加按钮 -->
-                    <el-tooltip content="权限设置" placement="top" :enterable="false" :duration="50">
+                    <el-tooltip v-if="hasDirectAccess" content="权限设置" placement="top" :enterable="false" :duration="50">
                       <el-button
                           size="small"
                           round
-                          @click.stop="dialogVisible = true"
+                          @click.stop="openPermissionDialog(node)"
                           class="action-btn user-btn"
                       >
                         <el-icon>
@@ -424,7 +424,7 @@
         <el-button type="primary" v-btnAntiShake="saveEdit">保存</el-button>
       </template>
     </el-dialog>
-    <PermissionSettingDialog :visible="dialogVisible" @update:visible="dialogVisible = $event" />
+    <PermissionSettingDialog :visible="dialogVisible" :group-id="group_id" :item-id="selectedItemId"  :item-type="selectItemType" @update:visible="dialogVisible = $event" />
     <MoveToPersonalFolderDialog
         :visible="moveDialogVisible"
         :item-id="selectedItemId"
@@ -450,16 +450,15 @@ import {
   getSelfTree,
   selfCreateFolder,
   uploadToSelfFolder,
-  selfArticleToRecycleBin,
-  selfFolderToRecycleBin,
   changeFolderName,
   changeArticleName,
   allTagsOrder,
   getArticleTags,
   readArticle
 } from '@/api/group_tree';
-import {createNote, updateNote, deleteNote as apiDeleteNote} from '@/api/group_note'; // Added getNotes, getNoteTitles
+import {createNote, updateNote} from '@/api/group_note'; // Added getNotes, getNoteTitles
 import MoveToPersonalFolderDialog from './MoveToPersonalFolderDialog.vue'
+import {deleteItemPermanently,applyToDelete} from '@/api/define'
 
 export default {
   props: {
@@ -488,17 +487,24 @@ export default {
     MoveToPersonalFolderDialog
   },
 
-  data() { return { dialogVisible: false } },
 
 
   setup(props) {
 
+    const dialogVisible = ref(false)
     const moveDialogVisible = ref(false)
     const selectedItemId = ref(null)
+    const selectItemType = ref(null)
 
     const openMoveDialog = (node) => {
-      selectedItemId.value = node.id
+      selectedItemId.value = node.data.true_id
       moveDialogVisible.value = true
+    }
+
+    const openPermissionDialog = (node) => {
+      selectedItemId.value = node.data.true_id
+      selectItemType.value = node.data.depth + 1
+      dialogVisible.value = true
     }
 
     const onMoved = ({ itemId, folder }) => {
@@ -507,20 +513,25 @@ export default {
     }
 
     const hasDirectAccess = computed(() => ['管理员', '组长'].includes(props.userRole))
-    const submitAudit = (actionType, ...args) => {
+    const submitAudit = async (id,type) => {
       console.log('提交审核记录：', {
-        actionType,
-        params: args // 接收多个参数
+        id,
+        type
       })
+      try {
+        const response = await applyToDelete({
+          group_id: props.group_id,
+          item_id: id,
+          item_type: type
 
-      ElMessage.success('您的修改已提交审核，请等待管理员处理')
+        })
+        console.log(response)
+        ElMessage.success('您的修改已提交审核，请等待管理员处理')
+      }catch (error) {
+        console.log(error)
+        ElMessage.error('您的修改已提交审核，请等待管理员处理')
+      }
 
-      // 实际调用接口时（示例）：
-      // await axios.post('/api/audits', {
-      //   actionType,
-      //   parentId: args[0],
-      //   formData: args[1]
-      // })
     }
 
 
@@ -1143,7 +1154,7 @@ export default {
           }
       )
       if (!hasDirectAccess.value) {
-        submitAudit('delete', node.data.true_id)
+        await submitAudit(node.data.true_id,node.data.depth+1)
         return
       }
       // 用户点击确定后执行删除操作
@@ -1157,11 +1168,20 @@ export default {
       // 判断节点类型
       try {
         if (parent.parent === null) { // 一级分类 (Folder)
-          await selfFolderToRecycleBin(node.data.true_id);
+          await deleteItemPermanently({
+            item_type: 1, // 1 表示文件夹
+            item_id: node.data.true_id
+          });
         } else if (node.level === 2) { // 二级分类 (Article)
-          await selfArticleToRecycleBin(node.data.true_id);
+          await deleteItemPermanently({
+            item_type: 2, // 1 表示文件夹
+            item_id: node.data.true_id
+          });
         } else { // 三级分类 (Note)
-          await apiDeleteNote(node.data.true_id);
+          await deleteItemPermanently({
+            item_type: 3, // 1 表示文件夹
+            item_id: node.data.true_id
+          });
         }
 
         // 统一处理删除成功后的逻辑
@@ -1492,8 +1512,12 @@ export default {
       navItems,
       moveDialogVisible,
       selectedItemId,
+      selectItemType,
       openMoveDialog,
       onMoved,
+      openPermissionDialog,
+      dialogVisible,
+      hasDirectAccess
     }
   }
 }

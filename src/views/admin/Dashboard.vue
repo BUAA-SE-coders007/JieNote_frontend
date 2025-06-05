@@ -108,7 +108,53 @@
         :close-on-click-modal="false"
         :destroy-on-close="false"
     >
-      <KnowledgeGraph :treeData="graphTreeData" />
+      <div class="graph-selector">
+        <div v-if="availableArticles.length === 0" class="no-articles-hint">
+          未找到文献，请确保选择了文献节点（depth=1）
+        </div>
+        <el-select
+            v-model="selectedArticleId"
+            placeholder="请选择文献生成知识图谱"
+            class="article-select"
+            clearable
+            :teleported="false"
+        >
+          <el-option
+              v-for="article in availableArticles"
+              :key="article.true_id"
+              :label="article.label"
+              :value="article.true_id"
+          />
+        </el-select>
+        <el-button
+            type="primary"
+            @click="generateArticleGraph"
+            :disabled="!selectedArticleId"
+            class="generate-btn"
+        >
+          <span>生成知识图谱</span>
+        </el-button>
+      </div>
+      <div v-if="generatingGraph && !graphDone" class="generating-hint">
+        <el-icon class="is-loading"><Loading /></el-icon>
+        <span>正在生成知识图谱，请稍候...</span>
+      </div>
+      <div class="graph-controls">
+        <el-button-group v-show="graphDone">
+          <el-button @click="zoomOut" size="small" title="缩小">
+            <el-icon><ZoomOut /></el-icon>
+          </el-button>
+          <el-button @click="resetZoom" size="small" title="重置">
+            <el-icon><FullScreen /></el-icon>
+          </el-button>
+          <el-button @click="zoomIn" size="small" title="放大">
+            <el-icon><ZoomIn /></el-icon>
+          </el-button>
+        </el-button-group>
+      </div>
+      <!-- 显示mermaid代码 -->
+      <div v-show="graphDone" ref="mermaidContainer" class="mermaid-graph"></div>
+      <KnowledgeGraph v-if="!generatingGraph && !graphDone" :treeData="graphTreeData" />
       <template #footer>
         <span class="dialog-footer">
           <el-button
@@ -525,7 +571,9 @@ import {
   getArticleTags,
   readArticle
 } from '@/api/dashboard';
-import { createNote, updateNote, deleteNote as apiDeleteNote, getNotes } from '@/api/note';
+import { createNote, updateNote, deleteNote as apiDeleteNote,getNotes } from '@/api/note';
+import { generateKnowledgeGraph } from '@/api/dashboard';
+import mermaid from 'mermaid';
 
 export default {
   name: "dashboard-page",
@@ -582,6 +630,8 @@ export default {
       parentNode: null,
       parentData: null
     })
+
+    const mermaidContainer = ref(null); // 添加Mermaid容器引用
 
     const defaultExpandedKeys = ref([])
 
@@ -829,7 +879,20 @@ export default {
           .filter(Boolean)
     }
 
+    const initMermaid = () => {
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'default',
+        securityLevel: 'loose', // 允许更灵活的语法
+        flowchart: {
+          useMaxWidth: false,
+          htmlLabels: true
+        }
+      });
+    };
+
     onMounted(async () => {
+      initMermaid();
       try {
         await findAllfolders()
         // 数据加载完成后设置默认展开
@@ -1003,37 +1066,243 @@ export default {
           .filter(Boolean)
     }
 
+    const selectedArticleId = ref(null);
+    const mermaidGraph = ref('');
+    const generatingGraph = ref(false);
+    const graphDone = ref(false);
+    const availableArticles = ref([]);
 
+    // 生成单篇文献知识图谱的方法
+    const MAX_RETRIES = 2;
+    let retryCount = 0;
+    const scale = ref(1);
+    const maxScale = ref(3);
+    const minScale = ref(0.5);
+    const scaleStep = ref(0.1);
+
+// 添加缩放函数
+    const zoomIn = () => {
+      if (scale.value < maxScale.value) {
+        scale.value = Math.min(maxScale.value, scale.value + scaleStep.value);
+        applyZoom();
+      }
+    };
+
+    const zoomOut = () => {
+      if (scale.value > minScale.value) {
+        scale.value = Math.max(minScale.value, scale.value - scaleStep.value);
+        applyZoom();
+      }
+    };
+
+    const resetZoom = () => {
+      scale.value = 1;
+      applyZoom();
+    };
+
+    const applyZoom = () => {
+      nextTick(() => {
+        const svgElement = mermaidContainer.value?.querySelector('svg');
+        if (svgElement) {
+          svgElement.style.transform = `scale(${scale.value})`;
+          svgElement.style.transformOrigin = 'top left';
+        }
+      });
+    };
+
+    const fixMermaidSyntax = (code) => {
+      // 1. 修复子图名称：用双引号包裹所有子图名称
+      code = code.replace(/subgraph\s+([^\n]+)/g, (match, p1) => {
+        // 如果名称已经包含引号，则不再添加
+        if (p1.startsWith('"') && p1.endsWith('"')) {
+          return `subgraph ${p1}`;
+        }
+        return `subgraph "${p1}"`;
+      });
+
+      // 2. 确保所有节点标签都使用双引号
+      code = code.replace(/\[([^\]]+)\]/g, '["$1"]');
+
+      // 3. 转义双引号内的特殊字符
+      code = code.replace(/\["([^"]+)"/g, (match, p1) => {
+        const escaped = p1.replace(/"/g, '\\"');
+        return `["${escaped}"`;
+      });
+
+      // 4. 添加必要的换行符
+      code = code.replace(/([;}\]])[\s]*([A-Za-z#])/g, '$1\n$2');
+
+      return code;
+    };
+
+    const generateArticleGraph = async () => {
+      if (!selectedArticleId.value) return;
+
+      try {
+        generatingGraph.value = true;
+        console.log("正在为文献生成知识图谱:", selectedArticleId.value);
+
+        const response = await generateKnowledgeGraph(selectedArticleId.value);
+        retryCount = 0;
+        console.log(response.data.mermaid_code)
+
+        if (response.data && response.data.mermaid_code) {
+          const fixedCode = fixMermaidSyntax(response.data.mermaid_code);
+          console.log("修复后的Mermaid代码:", fixedCode);
+          // 等待DOM更新
+          await nextTick();
+
+          // 清空容器
+          if (mermaidContainer.value) {
+            mermaidContainer.value.innerHTML = '';
+          }
+
+          // 渲染Mermaid图表
+          const { svg } = await mermaid.render('mermaid-graph', fixedCode);
+
+          // 创建临时容器插入 SVG
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = svg;
+
+          // 获取 SVG 元素
+          const svgElement = tempDiv.querySelector('svg');
+
+          if (svgElement) {
+            // 插入到真实 DOM
+            console.log(svgElement);
+            mermaidContainer.value.appendChild(svgElement);
+
+            // 等待 DOM 更新完成
+            await nextTick();
+
+            // 现在可以安全设置完成状态
+            graphDone.value = true;
+            ElMessage.success("生成图谱成功");
+          } else {
+            console.error('Mermaid 返回的 SVG 无效:', svg);
+            throw new Error('Mermaid 渲染失败：未生成 SVG 元素');
+          }
+
+        } else {
+          throw new Error("返回的知识图谱数据为空");
+        }
+      } catch (error) {
+        console.error('生成知识图谱失败:', error);
+
+        // 如果是500错误且未达到最大重试次数
+        if (error.response?.status === 500 && retryCount < MAX_RETRIES) {
+          retryCount++;
+          console.log(`尝试重试 (${retryCount}/${MAX_RETRIES})...`);
+
+          // 延迟后重试
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          return generateArticleGraph();
+        }
+
+        // 处理其他错误
+        let errorMessage = '生成知识图谱失败';
+
+        if (error.response) {
+          switch (error.response.status) {
+            case 404:
+              errorMessage = '该文献下没有笔记，无法生成知识图谱';
+              break;
+            case 500:
+              errorMessage = 'AI请求繁忙，请稍后再试';
+              break;
+            case 429:
+              errorMessage = '请求过于频繁，请稍后再试';
+              break;
+            default:
+              errorMessage = `请求失败: ${error.response.status} ${error.response.statusText}`;
+          }
+        } else if (error.request) {
+          errorMessage = '服务器无响应，请检查网络连接';
+        } else {
+          errorMessage = error.message || '未知错误';
+        }
+
+        ElMessage.error(errorMessage);
+      } finally {
+        ElMessage.success("生成图谱成功");
+        graphDone.value = true;
+        generatingGraph.value = false;
+        // 调试代码
+        setTimeout(() => {
+          if (mermaidContainer.value) {
+            console.log('容器尺寸:',
+                mermaidContainer.value.offsetWidth,
+                'x',
+                mermaidContainer.value.offsetHeight
+            );
+
+            const svg = mermaidContainer.value.querySelector('svg');
+            if (svg) {
+              console.log('SVG 尺寸:',
+                  svg.clientWidth,
+                  'x',
+                  svg.clientHeight,
+                  '\nViewBox:', svg.getAttribute('viewBox')
+              );
+            } else {
+              console.warn('容器内没有 SVG 元素');
+            }
+          }
+        }, 100);
+      }
+    };
 
 
     const handleShowGraph = () => {
-      if (!showCheckbox.value) {
-        showCheckbox.value = true
-        ElMessage({
-          message: '请选择要生成知识图谱的文件',
-          type: 'info'
-        })
-      } else {
-        const rawCheckedNodes = treeRef.value.getCheckedNodes(false, true)
-        const checkedKeys = treeRef.value.getCheckedKeys(false)
-        const checkedNodes = filterCheckedTreeNodes(rawCheckedNodes, checkedKeys)
-        console.log(checkedNodes)
-        if (checkedNodes.length === 0) {
-          ElMessage({
-            message: '请至少选择一个文件',
-            type: 'warning'
-          })
-          return
+      // 重置状态
+      selectedArticleId.value = null;
+      mermaidGraph.value = '';
+      availableArticles.value = []; // 清空旧数据
+
+      // 收集所有depth=1的文献节点（修复后的方法）
+      const collectArticles = (nodes) => {
+        for (const node of nodes) {
+          // 如果是文献节点（depth=1）直接添加
+          if (node.depth === 1) {
+            availableArticles.value.push({
+              true_id: node.true_id,
+              label: node.label
+            });
+          }
+
+          // 递归处理子节点
+          if (node.children && node.children.length > 0) {
+            collectArticles(node.children);
+          }
         }
-        nextTick(() => {
-          graphTreeData.value = buildGraphTree(dataSource.value, checkedKeys)
-          console.log(graphTreeData)
-          showGraph.value = true
-          showCheckbox.value = false
-          treeRef.value.setCheckedKeys([])
-        })
+      };
+
+      console.log("可用文献列表:", availableArticles.value);
+      if (!showCheckbox.value) {
+        showCheckbox.value = true;
+        ElMessage.info('请选择要生成知识图谱的文件');
+        return;
       }
-    }
+
+      const rawCheckedNodes = treeRef.value.getCheckedNodes(false, true);
+      const checkedKeys = treeRef.value.getCheckedKeys(false);
+      const checkedNodes = filterCheckedTreeNodes(rawCheckedNodes, checkedKeys);
+
+      if (checkedNodes.length === 0) {
+        ElMessage.warning('请至少选择一个文件');
+        return;
+      }
+
+      // 收集文献节点
+      collectArticles(checkedNodes);
+
+      nextTick(() => {
+        graphTreeData.value = buildGraphTree(dataSource.value, checkedKeys);
+        showGraph.value = true;
+        showCheckbox.value = false;
+        treeRef.value.setCheckedKeys([]);
+      });
+    };
 
     const handleExport = () => {
       if (!showCheckbox.value) {
@@ -1598,7 +1867,17 @@ export default {
       searchType,
       searchOptions,
       toggleSearch,
-      performSearch
+      performSearch,
+      selectedArticleId,
+      mermaidGraph,
+      generatingGraph,
+      availableArticles,
+      generateArticleGraph,
+      mermaidContainer,
+      graphDone,
+      zoomOut,
+      zoomIn,
+      resetZoom
     }
   }
 }
@@ -2415,6 +2694,78 @@ export default {
     }
   }
 }
+
+.graph-selector {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+
+  .article-select {
+    flex: 1;
+  }
+
+  .generate-btn {
+    flex-shrink: 0;
+  }
+}
+
+
+.generating-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 400px;
+  color: #606266;
+  font-size: 16px;
+
+  .is-loading {
+    animation: rotating 2s linear infinite;
+    font-size: 24px;
+  }
+}
+
+@keyframes rotating {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.mermaid-graph {
+  display: block;
+  width: 100%;
+  height: 60vh; /* 使用视口高度单位 */
+  min-height: 400px;
+  background-color: white;
+  border: 1px solid #eee;
+  overflow: auto; /* 添加滚动条 */
+  position: relative;
+
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    min-height: 300px;
+    font-family: 'Microsoft YaHei', sans-serif;
+    background-color: white;
+    transition: transform 0.3s ease; /* 添加平滑过渡效果 */
+  }
+}
+
+.graph-controls {
+  position: absolute;
+  top: 10px;
+  right: 40px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 5px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
 
 
 .preview-popover {

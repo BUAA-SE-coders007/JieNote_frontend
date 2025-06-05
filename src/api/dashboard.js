@@ -159,6 +159,17 @@ export const getSelfTree = (params = {}) => {
   return http.get('/article/selfTree', { params });
 };
 
+/**
+ * 生成单篇文献的知识图谱
+ * @param {number} articleId - 文献ID
+ * @returns {Promise} 包含mermaid代码的Promise
+ */
+export const generateKnowledgeGraph = (articleId) => {
+  return http.get('/chat/graph', {
+    params: { article_id: articleId }
+  });
+};
+
 export default {
   getSelfFolders,
   selfCreateFolder,
@@ -174,4 +185,5 @@ export default {
   getArticlesInFolder,
   readArticle,
   getSelfTree,
+  generateKnowledgeGraph,
 };
