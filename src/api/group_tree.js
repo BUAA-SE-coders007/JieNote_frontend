@@ -34,6 +34,18 @@ export const uploadToSelfFolder = (folderId, formData) => {
 };
 
 /**
+ * 将文献转存到个人文件夹
+ * @param {Object} params - 查询参数
+ * @param {string} params.folder_id - 目标文件夹ID
+ * @param {string} params.article_id - 文献ID
+ * @param {boolean} params.is_group - 是否为群组文献（这里固定为true）
+ * @returns {Promise<any>} 操作结果
+ */
+export const copyToPersonalFolder = (params) => {
+    return http.put('/database/copy', null, { params })
+}
+
+/**
  * 将组织文献移到回收站
  * @param {number} articleId - 文献 ID
  * @returns {Promise<any>} 删除结果
@@ -143,4 +155,5 @@ export default {
     getArticlesInFolder,
     readArticle,
     getSelfTree,
+    copyToPersonalFolder
 };

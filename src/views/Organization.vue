@@ -23,6 +23,7 @@
             <div class="organization-meta">
               <h1 class="organization-name">{{ organizationName }}
                 <el-icon
+                    v-if="showEditButton"
                     class="cursor-pointer ml-2 hover:text-blue-500 transition-colors"
                     @click="openOrgEditDialog"
                 >
@@ -296,53 +297,69 @@
         </p>
       </div>
     </el-dialog>
-    <el-dialog
-        v-model="showMessageDialog"
-        title="待处理操作"
-        width="680px"
-        custom-class="message-dialog dark:bg-gray-800"
-    >
-      <div class="message-list space-y-3">
-        <div
-            v-for="message in messages"
-            :key="message.id"
-            class="message-item group relative p-4 bg-white dark:bg-gray-700 rounded-lg transition-all duration-300"
-        >
-          <div class="flex items-center justify-between">
-            <div class="message-content">
-              <div class="flex items-baseline gap-2">
-              <span class="user-name font-medium text-gray-800 dark:text-gray-200">
-                {{ message.user }}
-              </span>
-                <span class="action-type text-sm text-blue-500">
-                {{ message.action }}了
-              </span>
-                <span class="file-name text-gray-600 dark:text-gray-300 font-mono text-sm">
-                {{ message.fileName }}
-              </span>
+      <el-dialog
+          v-model="showMessageDialog"
+          title="待处理的删除申请"
+          width="680px"
+          custom-class="message-dialog dark:bg-gray-800"
+      >
+        <div class="message-list space-y-3">
+          <div
+              v-for="message in messages"
+              :key="message.id"
+              class="message-item group relative p-4 bg-white dark:bg-gray-700 rounded-lg transition-all duration-300"
+          >
+            <div class="flex items-center">
+              <!-- 申请者头像 -->
+              <el-avatar :size="40" :src="message.avatar" class="mr-3" />
+
+              <div class="flex-1 min-w-0">
+                <div class="flex items-baseline gap-2 flex-wrap">
+                <span class="user-name font-medium text-gray-800 dark:text-gray-200 truncate">
+                  {{ message.user }}
+                </span>
+                  <span class="action-type text-sm text-blue-500 whitespace-nowrap">
+                  申请删除
+                </span>
+                  <span class="item-type text-sm text-gray-600 dark:text-gray-300 capitalize">
+                  {{ message.itemTypeText }}
+                </span>
+                </div>
+
+                <!-- 显示具体项目名称 -->
+                <div class="item-name text-gray-800 dark:text-gray-200 font-medium truncate mt-1">
+                  {{ message.itemName }}
+                </div>
+
+                <!-- 显示完整路径 -->
+                <div class="item-path text-xs text-gray-500 dark:text-gray-400 truncate mt-1">
+                  路径: {{ message.itemPath }}
+                </div>
               </div>
-              <div class="timestamp text-xs text-gray-400 mt-1">
-                {{ message.time }}
+
+              <!-- 操作按钮 -->
+              <div class="message-actions flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity ml-4">
+                <el-button
+                    size="small"
+                    type="success"
+                    class="!px-3 !h-8 shadow-sm"
+                    @click="handleApprove(message)"
+                >✓ 同意</el-button>
+                <el-button
+                    size="small"
+                    type="danger"
+                    class="!px-3 !h-8 shadow-sm"
+                    @click="handleReject(message)"
+                >✕ 拒绝</el-button>
               </div>
-            </div>
-            <div class="message-actions flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <el-button
-                  size="small"
-                  type="success"
-                  class="!px-3 !h-8 shadow-sm"
-                  @click="handleApprove(message.id)"
-              >✓ 同意</el-button>
-              <el-button
-                  size="small"
-                  type="danger"
-                  class="!px-3 !h-8 shadow-sm"
-                  @click="handleReject(message.id)"
-              >✕ 拒绝</el-button>
             </div>
           </div>
+
+          <div v-if="messages.length === 0" class="text-center py-8 text-gray-500">
+            暂无待处理的删除申请
+          </div>
         </div>
-      </div>
-    </el-dialog>
+      </el-dialog>
     <el-dialog
         v-if="showEditButton"
         v-model="showOrgEditDialog"
@@ -426,6 +443,10 @@ import {
 } from "@/api/someOrganization";
 import {getUserProfile} from "@/api/profile";
 import team2 from "@/assets/img/team-2-800x800.jpg";
+import {
+  getAllDeleteApplications,
+  replyToDelete
+} from "@/api/define";
 
 export default {
   components: {
@@ -445,7 +466,7 @@ export default {
       return ['组长', '管理员'].includes(this.currentUserRole)
     },
     unreadCount() {
-      return this.messages.filter(m => m.status === 'pending').length
+      return this.messages.length;
     },
     counterClass() {
       const count = this.tempOrgInfo.description.length;
@@ -459,7 +480,7 @@ export default {
       return ['组长', '管理员'].includes(this.currentUserRole)
     },
     showEditButton() {
-      return ['组长'].includes(this.currentUserRole)
+      return ['组长', '管理员','组员'].includes(this.currentUserRole)
     },
     sortedMembers() {
       const order = {'组长': 1, '管理员': 2, '组员': 3};
@@ -474,20 +495,20 @@ export default {
       group_id: localStorage.getItem('current_group_id') || 21,
       showMessageDialog: false,
       messages: [
-        {
-          id: 1,
-          user: '张三',
-          action: '修改',
-          fileName: '项目计划书.pdf',
-          status: 'pending'
-        },
-        {
-          id: 2,
-          user: '李四',
-          action: '上传',
-          fileName: '设计稿.jpg',
-          status: 'pending'
-        }
+        // {
+        //   id: 1,
+        //   user: '张三',
+        //   action: '修改',
+        //   fileName: '项目计划书.pdf',
+        //   status: 'pending'
+        // },
+        // {
+        //   id: 2,
+        //   user: '李四',
+        //   action: '上传',
+        //   fileName: '设计稿.jpg',
+        //   status: 'pending'
+        // }
       ],
       showOrgEditDialog: false,
       tempOrgInfo: {
@@ -584,21 +605,97 @@ export default {
       }
     },
 
-    handleMessageClick() {
-      this.showMessageDialog = true
+    async fetchDeleteApplications() {
+      try {
+        const response = await getAllDeleteApplications(this.group_id);
+        const applications = response.data.applications || [];
+
+        // 转换数据格式以适应前端显示
+        this.messages = applications.map(app => {
+          // 根据item_type确定项目类型和名称
+          let itemTypeText, itemName, itemPath;
+          switch (app.item_type) {
+            case 1:
+              itemTypeText = '文件夹';
+              itemName = app.folder.split('/').pop() || '未命名文件夹';
+              itemPath = app.folder;
+              break;
+            case 2:
+              itemTypeText = '文章';
+              itemName = app.article || '未命名文章';
+              itemPath = app.folder ? `${app.folder}/${itemName}` : itemName;
+              break;
+            case 3:
+              itemTypeText = '笔记';
+              itemName = app.note || '未命名笔记';
+              itemPath = app.folder ? `${app.folder}/${itemName}` : itemName;
+              break;
+            default:
+              itemTypeText = '未知类型';
+              itemName = '未知项目';
+              itemPath = '';
+          }
+
+          return {
+            id: `${app.item_type}_${app.item_id}`, // 使用组合ID确保唯一性
+            user: app.applier_name,
+            avatar: app.applier_avatar ? `https://jienote.top/${app.applier_avatar}` : team2,
+            item_type: app.item_type,
+            item_id: app.item_id,
+            itemTypeText,
+            itemName,
+            itemPath
+          };
+        });
+      } catch (error) {
+        console.error('获取删除申请失败:', error);
+        ElMessage.error('获取删除申请失败');
+      }
+    },
+
+    async handleMessageClick() {
+      this.showMessageDialog = true;
+      await this.fetchDeleteApplications(); // 打开对话框时获取数据
+
       // 在下一个事件循环移除焦点
       this.$nextTick(() => {
-        this.$refs.messageButtonRef?.$el?.blur()
-        document.activeElement?.blur()
-      })
+        this.$refs.messageButtonRef?.$el?.blur();
+        document.activeElement?.blur();
+      });
     },
-    handleApprove(id) {
-      this.messages = this.messages.filter(m => m.id !== id)
-      ElMessage.success('已同意该操作')
+    async handleApprove(message) {
+      try {
+        await replyToDelete({
+          item_type: message.item_type,
+          item_id: message.item_id,
+          agree: true
+        });
+
+        // 从列表中移除已处理的消息
+        this.messages = this.messages.filter(m => m.id !== message.id);
+        ElMessage.success('已同意删除');
+      } catch (error) {
+        console.error('处理同意操作失败:', error);
+        ElMessage.error('处理操作失败');
+      }
     },
-    handleReject(id) {
-      this.messages = this.messages.filter(m => m.id !== id)
-      ElMessage.warning('已拒绝该操作')
+
+    // 拒绝删除申请
+    async handleReject(message) {
+      try {
+        await replyToDelete({
+          item_type: message.item_type,
+          item_id: message.item_id,
+          agree: false
+        });
+
+        // 从列表中移除已处理的消息
+        this.messages = this.messages.filter(m => m.id !== message.id);
+        ElMessage.warning('已拒绝删除');
+      } catch (error) {
+        console.error('处理拒绝操作失败:', error);
+        ElMessage.error('处理操作失败');
+      }
     },
     openOrgEditDialog() {
       this.tempOrgInfo = {
@@ -940,6 +1037,8 @@ export default {
         await this.fetchGroupInfo();
         await this.fetchMembers();
         await this.fetchUserRole();
+        await this.fetchDeleteApplications();
+        console.log('未读消息数:', this.unreadCount);
       } catch (error) {
         console.error('初始化数据失败:', error);
         ElMessage.error('加载组织数据失败');
