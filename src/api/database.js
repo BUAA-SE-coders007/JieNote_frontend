@@ -42,9 +42,31 @@ export const copyArticleToFolder = (params = {}) => {
   return http.put('/database/copy', null, { params });
 };
 
+/**
+ * 获取个性推荐文献
+ * @param {Object} params
+ * @param {string|number} params.size - 推荐数量
+ * @returns {Promise<any>} 推荐文献列表
+ */
+export const getRecommendLiterature = (params = {}) => {
+  return http.get('/database/recommend', { params });
+};
+
+/**
+ * 生成文献简介
+ * @param {Object} params - 查询参数
+ * @param {string} params.article_id - 文献ID（必需）
+ * @returns {Promise<any>} 文献简介
+ */
+export const generateArticleIntro = (params = {}) => {
+  return http.get('/chat/intro', { params });
+};
+
 export default {
   searchLiterature,
   getLiteratureList,
   getSelfFolders,
-  copyArticleToFolder
+  copyArticleToFolder,
+  getRecommendLiterature,
+  generateArticleIntro
 };

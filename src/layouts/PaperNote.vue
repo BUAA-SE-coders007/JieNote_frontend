@@ -39,13 +39,19 @@
         <pane :size="43" min-size="20">
           <!-- 笔记编辑区域 -->
           <div class="note-container">
-            <CustomMdEditor
+            <JieNoteEditor
               class="md-editor"
               v-model="editorContent"
               :note-id="noteId"
               :autoSave="true"
-              :autoSaveInterval="30000" 
+              :autoSaveInterval="30000"
               :fullHeight="true"
+              :theme="'light'"
+              :showCodeRowNumber="true"
+              :preview="true"
+              :previewTheme="'default'"
+              :codeTheme="'atom'"
+              :scrollAuto="true"
             />
           </div>
         </pane>
@@ -57,7 +63,7 @@
 <script>
 import { Back, Loading } from '@element-plus/icons-vue';
 import http from '@/utils/http';
-import CustomMdEditor from '@/components/Editor/MdEditor.vue'; // 使用 CustomMdEditor
+import JieNoteEditor from '@/components/Editor/JieNoteEditor.vue';
 import { getNotes, createNote } from '@/api/note'; // 导入笔记相关 API
 import { Splitpanes, Pane } from 'splitpanes';
 import 'splitpanes/dist/splitpanes.css';
@@ -69,7 +75,7 @@ export default {
   components: {
     Back,
     Loading,
-    CustomMdEditor, // 注册 CustomMdEditor
+    JieNoteEditor,
     Splitpanes,
     Pane,
   },
@@ -122,7 +128,7 @@ export default {
         if (response && response.data && response.data.notes && response.data.notes.length > 0) {
           const firstNote = response.data.notes[0];
           this.noteId = firstNote.id;
-          // CustomMdEditor 会通过 noteId prop 自动加载其内容，
+          //  会通过 noteId prop 自动加载其内容，
           // 并通过 v-model 更新 editorContent。
         } else {
           // 没有关联笔记，创建新笔记
