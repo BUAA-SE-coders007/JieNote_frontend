@@ -571,7 +571,7 @@ import {
   getArticleTags,
   readArticle
 } from '@/api/dashboard';
-import { createNote, updateNote, deleteNote as apiDeleteNote } from '@/api/note';
+import { createNote, updateNote, deleteNote as apiDeleteNote,getNotes } from '@/api/note';
 import { generateKnowledgeGraph } from '@/api/dashboard';
 import mermaid from 'mermaid';
 
