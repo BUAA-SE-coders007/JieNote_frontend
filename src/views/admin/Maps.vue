@@ -36,10 +36,8 @@
                   </div>
                   <div class="literature-intro-text">
                     <span v-if="article.intro">{{ article.intro }}</span>
-                    <span v-else>
-                      加载中...
-                      <span v-if="!article.loadingIntro" @click="fetchArticleIntro(article)">点击加载简介</span>
-                    </span>
+                    <span v-else-if="article.loadingIntro">正在加载简介...</span>
+                    <span v-else>暂无简介</span>
                   </div>
                 </div>
                 <span
@@ -199,10 +197,16 @@ function handlePageSizeChange() {
   currentPage.value = 1; // 重置到第一页
 }
 
-// 跳转到指定页码
 function goToPage(page) {
   if (page < 1 || page > totalPages.value) return;
   currentPage.value = page;
+
+  // 自动加载当前页文献简介
+  for (const article of paginatedArticles.value) {
+    if (!article.intro) {
+      fetchArticleIntro(article);
+    }
+  }
 }
 watch(
   () => route.query.search,
@@ -270,6 +274,13 @@ async function fetchLiteratureList() {
       intro: article.intro || null, // 初始化简介字段
       loadingIntro: false, // 初始化加载状态
     }));
+
+    // 自动加载当前页文献简介
+    for (const article of paginatedArticles.value) {
+      if (!article.intro) {
+        fetchArticleIntro(article);
+      }
+    }
   } catch (e) {
     ElMessage.error('文献列表加载失败');
   } finally {
