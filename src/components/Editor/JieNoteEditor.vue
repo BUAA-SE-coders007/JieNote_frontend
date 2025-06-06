@@ -18,7 +18,7 @@
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
 import { ref, onMounted, onBeforeUnmount, watch, defineProps, defineEmits, defineExpose } from 'vue';
-import { updateNote, getNotes } from '@/api/note';
+import NoteAPI from '@/api/note_unified';
 import { uploadImage } from '@/api/image';
 import { ElMessage } from 'element-plus';
 import {
@@ -41,6 +41,10 @@ const props = defineProps({
   modelValue: {
     type: String,
     default: '',
+  },
+  is_group: {
+    type: Boolean,
+    default: false,
   },
 });
 
@@ -111,13 +115,18 @@ const saveNote = async (currentContent, showNotification = false) => {
   updating.value = true;
 
   try {
-    await updateNote(props.noteId, { content: currentContent });
+    await NoteAPI.updateNote({
+      note_id: props.noteId,
+      content: currentContent,
+      isGroup: props.is_group
+    });
+
     if (showNotification) {
-      ElMessage.success('笔记已保存'); // 手动保存时显示
+      ElMessage.success('笔记已保存');
     }
-    hasChanges.value = false; // 保存成功后重置标记
+    hasChanges.value = false;
   } catch (e) {
-    ElMessage.error(`保存失败: ${e.message}`); // 统一错误信息
+    ElMessage.error(`保存失败: ${e.message}`);
     console.error('保存失败', e);
   } finally {
     updating.value = false;
@@ -147,13 +156,12 @@ const handleUploadImg = async (files, callback) => {
 // 获取笔记内容
 const fetchNoteContent = async (noteId) => {
   try {
-    const response = await getNotes({ id: noteId });
-    if (
-      response &&
-      response.status === 200 &&
-      response.data.notes &&
-      response.data.notes.length > 0
-    ) {
+    const response = await NoteAPI.getNotes({
+      id: noteId,
+      isGroup: props.is_group
+    });
+    
+    if (response?.data?.notes?.[0]) {
       content.value = response.data.notes[0].content || '';
       emit('update:modelValue', content.value);
       return content.value;

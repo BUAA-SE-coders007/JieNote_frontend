@@ -41,20 +41,26 @@ class NoteAPI {
         note_content: content
       })
     } else {
-      return http.put(`/notes/${note_id}`, {
-        content,
-        title
+      return http.put(`/notes/${note_id}`, null, {
+        params: {
+          content,
+          title
+        }
       })
     }
   }
 
   /**
    * 删除笔记
-   * @param {number|string} noteId 笔记ID
+   * @param {Object} params 删除参数
+   * @param {number|string} params.note_id 笔记ID
+   * @param {boolean} [params.isGroup] 是否是组织笔记
    * @returns {Promise} 返回删除结果
    */
-  static async deleteNote(noteId) {
-    return http.delete(`/notes/${noteId}`)
+  static async deleteNote(params) {
+    const { note_id } = params
+    // 目前两种笔记都使用相同的删除接口，如果将来接口分开，可以通过 isGroup 判断
+    return http.delete(`/notes/${note_id}`)
   }
 
   /**
@@ -65,10 +71,41 @@ class NoteAPI {
    * @param {number} [params.page] 页码(可选)
    * @param {number} [params.page_size] 每页数量(可选)
    * @param {string} [params.query] 搜索关键词(可选)
+   * @param {boolean} [params.isGroup] 是否获取组织笔记
    * @returns {Promise} 返回笔记列表数据
    */
   static async getNotes(params) {
-    return http.get('/notes/get', { params })
+    const { ...queryParams } = params
+    // 目前个人笔记和组织笔记使用相同的获取接口，如果将来接口分开，可以通过 isGroup 判断
+    return http.get('/notes/get', { params: queryParams })
+  }
+
+  /**
+   * 获取笔记标题列表
+   * @param {Object} params 查询参数
+   * @param {number} [params.id] 指定笔记ID(可选)
+   * @param {number} [params.article_id] 指定文献ID(可选)
+   * @param {number} [params.page] 页码(可选)
+   * @param {number} [params.page_size] 每页数量(可选)
+   * @param {boolean} [params.isGroup] 是否获取组织笔记
+   * @returns {Promise} 返回笔记标题列表
+   */
+  static async getNoteTitles(params) {
+    const { ...queryParams } = params
+    // 目前个人笔记和组织笔记使用相同的获取接口，如果将来接口分开，可以通过 isGroup 判断
+    return http.get('/notes/title', { params: queryParams })
+  }
+
+  /**
+   * 检查组织笔记编辑权限
+   * @param {number|string} noteId 笔记ID
+   * @returns {Promise<boolean>} 是否有编辑权限
+   */
+  static async checkGroupNoteEditPermission(noteId) {
+    const response = await http.get('/group/ifEditNote', {
+      params: { note_id: noteId }
+    })
+    return response.editable
   }
 }
 
