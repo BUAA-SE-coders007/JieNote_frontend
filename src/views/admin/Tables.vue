@@ -851,7 +851,8 @@ export default {
 }
 
 .logs-container {
-  max-height: 400px;
+  height: 48vh;
+  max-height: calc(100% - 10px);
   overflow-y: auto;
   padding-right: 4px;
   margin-right: -4px;
