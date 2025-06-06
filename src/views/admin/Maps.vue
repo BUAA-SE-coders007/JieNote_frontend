@@ -427,23 +427,27 @@ defineExpose({
   flex-shrink: 0;
 }
 .literature-title-text {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 60vw;
-  display: inline-block;
-  font-size: 17px;
-  font-weight: 600;
-  color: #1e293b;
+  font-size: 20px;
+  font-weight: bold;
+  color: #1f2937;
+  font-family: 'Arial', sans-serif;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
+
 .literature-author-text {
-  margin-top: 0px;
-  font-size: 15px;
-  color: #64748b;
-  display: flex;
-  align-items: center;
-  font-weight: 400;
-  letter-spacing: 0.5px;
+  font-size: 16px;
+  font-style: italic;
+  color: #2563eb;
+  font-family: 'Georgia', serif;
+  margin-top: 4px;
+}
+
+.literature-intro-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #4b5563;
+  font-family: 'Courier New', monospace;
+  margin-top: 8px;
 }
 .literature-action-icon {
   margin-left: auto;
