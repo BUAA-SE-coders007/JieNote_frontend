@@ -101,10 +101,9 @@ class NoteAPI {
    * @returns {Promise<boolean>} 是否有编辑权限
    */
   static async checkGroupNoteEditPermission(noteId) {
-    const response = await http.get('/group/ifEditNote', {
+    return http.get('/group/ifEditNote', {
       params: { note_id: noteId }
-    })
-    return response.editable
+    });
   }
 }
 
