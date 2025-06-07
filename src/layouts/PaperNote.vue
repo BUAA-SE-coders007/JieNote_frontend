@@ -247,7 +247,7 @@ export default {
   position: relative;
   border: 1px solid #e2e8f0;
   border-radius: 0.375rem;
-  margin: 0.5rem;
+  margin: 0.25rem;
   overflow: hidden;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
 }
@@ -325,7 +325,9 @@ export default {
     font-size: 1rem;
   }
 
-  .pdf-container,
+  .pdf-container {
+    height: calc(100vh - 80px);
+  }
   .note-container {
     height: calc(100vh - 50px);
   }
