@@ -56,19 +56,27 @@
           <!-- 笔记编辑区域 -->
           <div class="note-container">
             <!-- 笔记编辑器 -->
-            <JieNoteEditor
-              class="md-editor"
-              v-model="editorContent"
-              :note-id="noteId"
-              :autoSave="true"
-              :autoSaveInterval="30000"
-              :fullHeight="true"
-              :theme="'light'"
-              :showCodeRowNumber="true"
-              :preview="true"
-              :previewTheme="'default'"
-              :codeTheme="'atom'"
-              :scrollAuto="true"
+            <template v-if="editorPropsReady">
+              <JieNoteEditor
+                class="md-editor"
+                v-model="editorContent"
+                :note-id="noteId"
+                :is_group="is_group"
+                :autoSave="true"
+                :autoSaveInterval="30000"
+                :fullHeight="true"
+                :theme="'light'"
+                :showCodeRowNumber="true"
+                :preview="true"
+                :previewTheme="'default'"
+                :codeTheme="'atom'"
+                :scrollAuto="true"
+              />
+            </template>
+            <div v-else class="editor-loading-placeholder">
+              <el-icon class="is-loading"><Loading /></el-icon>
+              <span>正在准备笔记编辑器...</span>
+            </div>
             />
           </div>
         </pane>
@@ -110,6 +118,8 @@ export default {
       pdfPaneSize: 35, // PDF面板尺寸
       notePaneSize: 65, // 笔记面板尺寸
       notesList: [], // 存储文献下的所有笔记
+      is_group: false, // 新增：标识是否为群组笔记
+      editorPropsReady: false, // 新增：编辑器属性就绪状态
     }
   },
   methods: {
@@ -169,9 +179,9 @@ export default {
           }
         }
 
-        // 加载笔记内容
+        // 设置笔记ID
         if (targetNoteId) {
-          await this.loadNoteContent(targetNoteId);
+          this.noteId = targetNoteId;
         }
       } catch (error) {
         console.error("页面初始化失败：", error);
@@ -179,36 +189,15 @@ export default {
       }
     },
 
-    // 加载笔记内容
-    async loadNoteContent(noteIdToLoad) {
-      try {
-        const note = await NoteAPI.getNotes({ id: noteIdToLoad });
-        if (note?.data?.notes?.[0]) {
-          this.noteId = noteIdToLoad;
-          this.editorContent = note.data.notes[0].content;
-        } else {
-          throw new Error("获取笔记内容失败");
-        }
-      } catch (error) {
-        console.error("加载笔记内容失败：", error);
-        ElMessage.error("加载笔记内容失败！");
-        this.noteId = null;
-        this.editorContent = "";
-      }
-    },
-
     // 处理笔记切换
     async handleNoteChange(newNoteId) {
       try {
-        await Promise.all([
-          this.loadNoteContent(newNoteId),
-          this.$router.replace({
-            query: {
-              ...this.$route.query,
-              note_id: newNoteId
-            }
-          })
-        ]);
+        await this.$router.replace({
+          query: {
+            ...this.$route.query,
+            note_id: newNoteId
+          }
+        });
       } catch (error) {
         console.error("切换笔记失败：", error);
         ElMessage.error("切换笔记失败！");
@@ -251,7 +240,7 @@ export default {
     },
 
   },
-  mounted() {
+  async mounted() {
     // 初始化面板尺寸
     const savedSizes = this.loadPaneSizes();
     if (savedSizes) {
@@ -265,7 +254,14 @@ export default {
     this.is_group = this.$route.query.is_group === 'true';
 
     if (currentArticleId) {
-      this.initializePage(currentArticleId, specificNoteId);
+      try {
+        await this.initializePage(currentArticleId, specificNoteId);
+        // 只有当页面初始化完成后，才设置编辑器属性就绪状态
+        this.editorPropsReady = true;
+      } catch (error) {
+        console.error("PaperNote mounted: initializePage failed", error);
+        ElMessage.error("页面加载失败，请检查网络连接！");
+      }
     } else {
       ElMessage.error("请先选择要阅读的文献");
       this.$router.push(this.is_group ? "/organization" : "/paper-library");
@@ -275,6 +271,23 @@ export default {
 </script>
 
 <style scoped lang="scss">
+/* 编辑器加载占位符样式 */
+.editor-loading-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background-color: #f8f9fa;
+  color: #606266;
+  font-size: 14px;
+
+  .el-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+  }
+}
+
 /* 笔记选择器样式 */
 .header-note-selector {
   margin-left: auto;
