@@ -238,7 +238,7 @@
 
               <div class="w-full lg:w-4/12 px-4">
                 <h5 class="text-xl font-semibold pb-4 text-center">
-                  文献阅读
+                  文献笔记
                 </h5>
                 <div
                     class="hover:-mt-4 relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded-lg ease-linear transition-all duration-150"
@@ -261,14 +261,14 @@
                   <img
                       alt="..."
                       class="align-middle border-none max-w-full h-auto rounded-lg"
-                      :src="login"
+                      :src="database"
                   />
                 </div>
               </div>
 
               <div class="w-full lg:w-4/12 px-4">
                 <h5 class="text-xl font-semibold pb-4 text-center">
-                  Markdown笔记
+                  回收站
                 </h5>
                 <div
                     class="hover:-mt-4 relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded-lg ease-linear transition-all duration-150"
@@ -276,7 +276,7 @@
                   <img
                       alt="..."
                       class="align-middle border-none max-w-full h-auto rounded-lg"
-                      :src="landing"
+                      :src="bin"
                   />
                 </div>
               </div>
@@ -291,7 +291,7 @@
                   <img
                       alt="..."
                       class="align-middle border-none max-w-full h-auto rounded-lg"
-                      :src="profile"
+                      :src="profile2"
                   />
                 </div>
               </div>
@@ -418,9 +418,12 @@ import componentInfo2 from "@/assets/img/component-info-2.png";
 import componentMenu from "@/assets/img/component-menu.png";
 import componentBtnPink from "@/assets/img/component-btn-pink.png";
 import documentation from "@/assets/img/documentation.png";
-import login from "@/assets/img/login.jpg";
-import profile from "@/assets/img/profile.jpg";
-import landing from "@/assets/img/landing.jpg";
+import login from "@/assets/img/文献管理.png";
+import database from "@/assets/img/文献库.png";
+import profile from "@/assets/img/组织2.png";
+import profile2 from "@/assets/img/个人主页.png";
+import bin from "@/assets/img/回收站.png";
+import landing from "@/assets/img/文献笔记.png";
 import BarChart from "@/components/Cards/BarChart.vue";
 export default {
   data() {
@@ -434,6 +437,9 @@ export default {
       componentBtnPink,
       documentation,
       login,
+      database,
+      profile2,
+      bin,
       profile,
       landing,
       tableData: {

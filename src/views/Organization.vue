@@ -89,8 +89,7 @@
               </div>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item>个人主页</el-dropdown-item>
-                  <el-dropdown-item divided>退出登录</el-dropdown-item>
+                  <el-dropdown-item @click="goToProfile">个人主页</el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
@@ -575,6 +574,10 @@ export default {
     }
   },
   methods: {
+    goToProfile() {
+      this.$router.push('/profile');
+    },
+
     async fetchUser() {
       try {
         const response = await getUserProfile();
@@ -608,6 +611,8 @@ export default {
         this.organizationName = res.data.name;
         this.organizationDescription = res.data.desc;
         this.logoUrl = `https://jienote.top/${res.data.avatar}`;
+        this.creationDate = res.data.time.replace('T', ' ');
+        console.log(this.creationDate);
       } catch (error) {
         console.error('获取组织信息失败:', error);
         ElMessage.error(`获取组织信息失败: ${error.response?.data?.message || error.message}`);
