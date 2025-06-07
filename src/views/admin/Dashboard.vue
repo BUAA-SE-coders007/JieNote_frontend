@@ -313,7 +313,7 @@
                 ref="treeRef"
             >
               <template #default="{ node, data }">
-                <div class="modern-node" @dblclick.stop="handleNodeDblClick(data)">
+                <div class="modern-node" @dblclick.stop="handleItemNavigation(data)">
                   <!-- 预览 popover -->
                   <el-popover
                     v-if="previewEnabled && data.depth === 2"
@@ -422,7 +422,7 @@
                           type="success"
                           size="small"
                           round
-                          @click.stop="handleRead(node, data)"
+                          @click.stop="handleItemNavigation(node, data)"
                           class="action-btn read-btn"
                       >
                         <el-icon><Management /></el-icon>
@@ -816,10 +816,11 @@ export default {
       }
     }
 
-    const handleRead = (node, data) => {
-      // 检查是否是文献节点或笔记节点
-      console.log("handleRead, node.level:", node.level, "depth:", data.depth)
-      if (node.level === 2 && data.depth === 1) {  // PDF nodes: level 2 in tree, depth 1 in data
+    const handleItemNavigation = (node) => {
+      const data = node.data;
+      
+      // 检查节点类型并执行相应的导航逻辑
+      if (data.depth === 1) { // 文献节点
         router.push({
           name: 'paper-note',
           query: {
@@ -827,18 +828,24 @@ export default {
             is_group: false
           }
         });
-      } else if (node.level === 3 && data.depth === 2) {  // 笔记节点：level 3 in tree, depth 2 in data
-        // 从父节点(文献节点)获取article_id
-        const articleId = node.parent.data.true_id;
+      } else if (data.depth === 2) { // 笔记节点
+        // 确保父节点及其数据存在
+        if (!node.parent || !node.parent.data) {
+          console.error('无法获取父节点信息');
+          ElMessage.error('导航失败：无法获取文献信息');
+          return;
+        }
+
         router.push({
           name: 'paper-note',
           query: {
-            article_id: articleId,
+            article_id: node.parent.data.true_id,
             note_id: data.true_id,
             is_group: false
           }
         });
       } else {
+        console.warn('未知的节点类型:', data.depth);
         ElMessage.warning('只能阅读文献或笔记');
       }
     }
@@ -957,30 +964,6 @@ export default {
     }
 
     // 处理双击事件
-    const handleNodeDblClick = async (node) => {
-      // 直接处理跳转逻辑
-      const data = node.data;
-      if (data.depth === 1) { // 文献节点
-        router.push({
-          name: 'paper-note',
-          query: {
-            article_id: data.true_id,
-            is_group: false
-          }
-        });
-      } else if (data.depth === 2) { // 笔记节点
-        // 从父节点(文献节点)获取article_id
-        const articleId = node.parent.data.true_id;
-        router.push({
-          name: 'paper-note',
-          query: {
-            article_id: articleId,
-            note_id: data.true_id,
-            is_group: false
-          }
-        });
-      }
-    }
 
     // 处理普通点击事件
     const handleNodeClick = (data) => {
@@ -1877,7 +1860,7 @@ export default {
       showNewNoteDialog,
       newNoteForm,
       handleNodeClick,
-      handleNodeDblClick,
+      handleItemNavigation,
       toggleCheckbox,
       append,
       remove,
@@ -1919,7 +1902,6 @@ export default {
       removeTag,
       onTagDragEnd,
       saveEdit,
-      handleRead,
       redirectToLogin,
       showSearch,
       searchType,
