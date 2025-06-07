@@ -27,7 +27,6 @@ import Dashboard from "@/views/admin/Dashboard.vue";
 import Settings from "@/views/admin/Settings.vue";
 import Tables from "@/views/admin/Tables.vue";
 import Maps from "@/views/admin/Maps.vue";
-import note from "@/views/note";
 import pdfViewer from "@/views/PdfViewerPage.vue";
 import RecycleBin from "@/views/admin/RecycleBin.vue";
 
@@ -66,14 +65,6 @@ const routes = [
     redirect: "/paper-library",
     component: Admin,
     children: [
-      {
-        path: "/note",
-        component: note,
-      },
-      {
-        path: "/note/:note_id",
-        component: note,
-      },
       {
         path: "/paper-library",
         component: Dashboard,
@@ -129,6 +120,7 @@ const routes = [
   },
   {
     path: "/paper-note",
+    name: "paper-note",
     component: PaperNote,
   },
   {
