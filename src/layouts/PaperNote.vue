@@ -113,71 +113,105 @@ export default {
     }
   },
   methods: {
-    // 处理笔记切换
-    async handleNoteChange(newNoteId) {
+    // 页面初始化方法
+    async initializePage(articleId, specificNoteId = null) {
+      this.articleId = articleId;
+      
       try {
-        // 更新路由但保持其他查询参数不变
-        await this.$router.replace({
-          query: {
-            ...this.$route.query,
-            note_id: newNoteId
-          }
-        });
+        // 并行获取所需数据
+        const [pdfResponse, notesResponse] = await Promise.all([
+          getArticleUrl(articleId),
+          getNotes({ article_id: articleId }),
+          this.fetchDocumentTitle(articleId),
+        ]);
 
-        const note = await NoteAPI.getNotes({ id: newNoteId });
-        if (note && note.data && note.data.notes && note.data.notes.length > 0) {
+        // 处理 PDF URL
+        if (pdfResponse?.data?.article_url) {
+          this.pdfUrl = pdfResponse.data.article_url;
+        } else {
+          console.error("PDF URL not found in response:", pdfResponse);
+          ElMessage.error("获取 PDF 链接失败！");
+          this.pdfUrl = null;
+        }
+
+        // 更新笔记列表
+        this.notesList = notesResponse?.data?.notes || [];
+        
+        // 确定要加载的笔记ID
+        let targetNoteId = null;
+        
+        if (this.notesList.length > 0) {
+          if (specificNoteId && this.notesList.some(note => note.id === specificNoteId)) {
+            targetNoteId = specificNoteId;
+          } else {
+            targetNoteId = this.notesList[0].id;
+          }
+        } else {
+          // 创建新笔记
+          const createResponse = await NoteAPI.createNote({
+            article_id: articleId,
+            content: "",
+            title: `笔记 ${new Date().toLocaleString()}`,
+            isGroup: this.is_group
+          });
+          
+          if (createResponse?.data?.note_id) {
+            const newNote = {
+              id: createResponse.data.note_id,
+              title: `笔记 ${new Date().toLocaleString()}`,
+              content: ""
+            };
+            this.notesList.push(newNote);
+            targetNoteId = newNote.id;
+            ElMessage.success("已为您创建新笔记，可以开始记录了。");
+          } else {
+            throw new Error("创建笔记失败");
+          }
+        }
+
+        // 加载笔记内容
+        if (targetNoteId) {
+          await this.loadNoteContent(targetNoteId);
+        }
+      } catch (error) {
+        console.error("页面初始化失败：", error);
+        ElMessage.error("页面加载失败，请检查网络连接！");
+      }
+    },
+
+    // 加载笔记内容
+    async loadNoteContent(noteIdToLoad) {
+      try {
+        const note = await NoteAPI.getNotes({ id: noteIdToLoad });
+        if (note?.data?.notes?.[0]) {
+          this.noteId = noteIdToLoad;
           this.editorContent = note.data.notes[0].content;
-          this.noteId = newNoteId;
         } else {
           throw new Error("获取笔记内容失败");
         }
       } catch (error) {
-        console.error("切换笔记失败：", error);
-        ElMessage.error("切换笔记失败！");
+        console.error("加载笔记内容失败：", error);
+        ElMessage.error("加载笔记内容失败！");
+        this.noteId = null;
+        this.editorContent = "";
       }
     },
 
-    async fetchPdf(articleId, specificNoteId = null) {
-      this.articleId = articleId; // 存储 articleId
+    // 处理笔记切换
+    async handleNoteChange(newNoteId) {
       try {
-        const [pdfResponse, notesResponse] = await Promise.all([
-          getArticleUrl(articleId),
-          getNotes({ article_id: articleId })
+        await Promise.all([
+          this.loadNoteContent(newNoteId),
+          this.$router.replace({
+            query: {
+              ...this.$route.query,
+              note_id: newNoteId
+            }
+          })
         ]);
-
-        // 获取文档标题
-        await this.fetchDocumentTitle(articleId);
-
-        // 更新笔记列表
-        if (notesResponse && notesResponse.data && notesResponse.data.notes) {
-          this.notesList = notesResponse.data.notes;
-        }
-
-        // 处理笔记选择逻辑
-        if (this.notesList.length > 0) {
-          if (specificNoteId) {
-            // 如果有指定笔记ID，加载该笔记
-            await this.fetchAssociatedNote(articleId, specificNoteId);
-          } else {
-            // 否则加载第一篇笔记
-            await this.fetchAssociatedNote(articleId, this.notesList[0].id);
-          }
-        } else {
-          // 没有笔记时创建新笔记
-          await this.fetchAssociatedNote(articleId);
-        }
-
-        // 处理PDF URL
-        if (pdfResponse && pdfResponse.data && pdfResponse.data.article_url) {
-          this.pdfUrl = pdfResponse.data.article_url;
-        } else {
-          console.error("PDF URL (article_url) not found in response:", pdfResponse);
-          ElMessage.error("获取 PDF 链接失败！");
-          this.pdfUrl = null;
-        }
       } catch (error) {
-        console.error("获取 PDF 文件失败：", error);
-        ElMessage.error("加载 PDF 文件失败，请检查后端服务！");
+        console.error("切换笔记失败：", error);
+        ElMessage.error("切换笔记失败！");
       }
     },
 
@@ -216,67 +250,6 @@ export default {
       this.savePaneSizes();
     },
 
-    async fetchAssociatedNote(articleId, specificNoteId = null) {
-      console.log("Fetching associated note for article ID:", articleId, "specific note ID:", specificNoteId);
-      try {
-        if (specificNoteId) {
-          // 如果提供了特定的笔记ID，直接获取该笔记
-          const note = await NoteAPI.getNotes({
-            id: specificNoteId,
-          });
-          if (note && note.data && note.data.notes && note.data.notes.length > 0) {
-            this.noteId = specificNoteId;
-            this.editorContent = note.data.notes[0].content;
-            return;
-          } else {
-            throw new Error("获取指定笔记失败");
-          }
-        }
-        
-        // 获取文章关联的所有笔记
-        const response = await getNotes({ article_id: articleId });
-        if (response && response.data && response.data.notes) {
-          // 更新笔记列表
-          this.notesList = response.data.notes;
-          
-          if (this.notesList.length > 0) {
-            // 有笔记时，加载第一个笔记
-            const firstNote = this.notesList[0];
-            this.noteId = firstNote.id;
-            this.editorContent = firstNote.content;
-          } else {
-            // 没有关联笔记，创建新笔记
-            const createResponse = await NoteAPI.createNote({
-              article_id: articleId,
-              content: "",
-              title: `笔记 ${new Date().toLocaleString()}`, // 使用时间作为新笔记标题
-              isGroup: this.is_group
-            });
-            
-            if (createResponse && createResponse.data) {
-              this.noteId = createResponse.data.note_id;
-              this.editorContent = "";
-              ElMessage.success("已为您创建新笔记，可以开始记录了。");
-              
-              // 将新创建的笔记添加到列表中
-              const newNote = {
-                id: createResponse.data.note_id,
-                title: `笔记 ${new Date().toLocaleString()}`,
-                content: ""
-              };
-              this.notesList.push(newNote);
-            } else {
-              throw new Error("创建笔记失败");
-            }
-          }
-        }
-      } catch (error) {
-        console.error("获取关联笔记失败：", error);
-        ElMessage.error("获取关联笔记失败！");
-        this.noteId = null;
-        this.editorContent = "";
-      }
-    }
   },
   mounted() {
     // 初始化面板尺寸
@@ -286,21 +259,16 @@ export default {
       this.notePaneSize = savedSizes.notePaneSize;
     }
 
+    // 从路由参数获取必要信息
     const currentArticleId = this.$route.query.article_id;
     const specificNoteId = this.$route.query.note_id;
-    const isGroup = this.$route.query.is_group === 'true';
-    console.log("Current route:", this.$route);
-  
-    this.is_group = isGroup; // 从路由参数设置is_group
+    this.is_group = this.$route.query.is_group === 'true';
+
     if (currentArticleId) {
-      this.fetchPdf(currentArticleId, specificNoteId);
+      this.initializePage(currentArticleId, specificNoteId);
     } else {
       ElMessage.error("请先选择要阅读的文献");
-      if(this.is_group) {
-        this.$router.push("/organization");
-      } else {
-        this.$router.push("/paper-library");
-      }
+      this.$router.push(this.is_group ? "/organization" : "/paper-library");
     }
   }
 };
