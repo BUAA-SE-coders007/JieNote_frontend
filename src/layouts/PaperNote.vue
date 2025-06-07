@@ -64,7 +64,8 @@
 import { Back, Loading } from '@element-plus/icons-vue';
 import http from '@/utils/http';
 import JieNoteEditor from '@/components/Editor/JieNoteEditor.vue';
-import { getNotes, createNote } from '@/api/note'; // 导入笔记相关 API
+import { getNotes } from '@/api/note'; // 导入笔记相关 API
+import NoteAPI from '@/api/note_unified'; // 笔记统一 API
 import { Splitpanes, Pane } from 'splitpanes';
 import 'splitpanes/dist/splitpanes.css';
 import { ElMessage } from 'element-plus';
@@ -132,10 +133,11 @@ export default {
           // 并通过 v-model 更新 editorContent。
         } else {
           // 没有关联笔记，创建新笔记
-          const createResponse = await createNote({
+          const createResponse = await NoteAPI.createNote({
             article_id: articleId,
             content: "",
-            title: `note` // 使用文献标题或ID作为笔记标题
+            title: `note`, // 使用文献标题或ID作为笔记标题
+            isGroup: this.is_group
           });
           
           if (createResponse && createResponse.data) {
