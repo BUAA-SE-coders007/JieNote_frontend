@@ -1,11 +1,16 @@
 <template>
   <div class="md-editor-container">
+    <div v-if="showYellowIndicator" class="readonly-indicator">
+      仅预览模式（无编辑权限）
+    </div>
     <MdEditor
       v-model="content"
       v-bind="$props"
-      :toolbars="toolbars"
+      :toolbars="computedToolbars"
       :inputBoxWidth="inputBoxWidth"
       :catalogLayout="'flat'"
+      :readOnly="effectiveReadOnly"
+      :disabled="effectiveReadOnly"
       @onSave="handleSave"
       @onUploadImg="handleUploadImg"
       @onChange="handleChange"
@@ -27,6 +32,7 @@ import {
   defineProps,
   defineEmits,
   defineExpose,
+  computed,
 } from 'vue';
 import NoteAPI from '@/api/note_unified';
 import { uploadImage } from '@/api/image';
@@ -45,7 +51,7 @@ const props = defineProps({
   // 自定义props
   ...defaultEditorProps,
   noteId: {
-    type: String,
+    type: [String, Number],
     default: null,
   },
   modelValue: {
@@ -56,20 +62,48 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  readonly: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 // 定义emit
 const emit = defineEmits(['update:modelValue', 'save', 'change', 'error']);
 
 const mdEditorRef = ref(null);
-const content = ref(props.modelValue);
+const content = ref(props.modelValue || '');  // 确保初始值不为null
 const updating = ref(false);
 const preview = ref(true);
+const groupPermissionReadOnly = ref(false); // 从API获取的群组笔记权限状态
+
+// 计算工具栏配置
+const computedToolbars = computed(() => {
+  return effectiveReadOnly.value ? [] : toolbarsConfig;
+});
+
+// 计算最终的只读状态和黄色指示器显示
+const effectiveReadOnly = computed(() => {
+  return props.readonly || (props.is_group && groupPermissionReadOnly.value);
+});
+
+const showYellowIndicator = computed(() => {
+  // 当是群组笔记，且群组权限导致只读，并且外部没有强制readonly时，显示指示器
+  return props.is_group && groupPermissionReadOnly.value && !props.readonly;
+});
+
+// 监听只读状态变化
+watch(effectiveReadOnly, (newValue) => {
+  mdEditorRef.value?.togglePreviewOnly(newValue);
+  if (!newValue) {
+    // 退出只读模式时恢复用户保存的编辑器宽度
+    inputBoxWidth.value = loadInputBoxWidth();
+  }
+});
 const hasChanges = ref(false); // 标记是否有未保存的更改
 let autoSaveTimer = null;
 
-// 使用配置的工具栏
-const toolbars = toolbarsConfig;
+// 页脚和语言配置
 const footers = footersConfig;
 const language = languageConfig;
 const inputBoxWidth = ref('50%'); // 编辑器宽度
@@ -91,22 +125,16 @@ const saveInputBoxWidth = (width) => {
 watch(
   () => props.modelValue,
   (newValue) => {
-    if (newValue !== content.value) {
-      content.value = newValue;
+    const newContent = newValue || '';  // 先转换为字符串
+    if (newContent !== content.value) {  // 然后再比较
+      content.value = newContent;
+      emit('update:modelValue', newContent);  // 确保同步更新
     }
-  }
+  },
+  { immediate: true }  // 确保首次加载时也执行
 );
 
-// 监听noteId变化，以便加载不同的笔记
-watch(
-  () => props.noteId,
-  async (newNoteId, oldNoteId) => {
-    if (newNoteId && newNoteId !== oldNoteId) {
-      await fetchNoteContent(newNoteId);
-    }
-  }
-);
-
+// 监听content变化
 watch(
   () => content.value,
   (newValue) => {
@@ -132,6 +160,11 @@ const handleSave = async (contentFromEditorEvent) => {
 
 // 添加 showNotification 参数，默认为 false，用于控制是否显示成功消息
 const saveNote = async (currentContent, showNotification = false) => {
+  // 如果是只读状态，直接返回
+  if (effectiveReadOnly.value) {
+    return;
+  }
+
   // 确保有 noteId，有改动，并且当前没有正在保存
   if (!props.noteId || !hasChanges.value || updating.value) {
     return;
@@ -179,6 +212,18 @@ const handleUploadImg = async (files, callback) => {
 
 // 获取笔记内容
 const fetchNoteContent = async (noteId) => {
+  const setEmptyContent = () => {
+    const emptyContent = '';
+    content.value = emptyContent;
+    emit('update:modelValue', emptyContent);
+    return emptyContent;
+  };
+
+  // 如果没有noteId，直接重置为空字符串
+  if (!noteId) {
+    return setEmptyContent();
+  }
+
   try {
     const response = await NoteAPI.getNotes({
       id: noteId,
@@ -186,24 +231,27 @@ const fetchNoteContent = async (noteId) => {
     });
 
     if (response?.data?.notes?.[0]) {
-      content.value = response.data.notes[0].content || '';
-      emit('update:modelValue', content.value);
-      return content.value;
+      const noteContent = response.data.notes[0].content || '';
+      content.value = noteContent;
+      emit('update:modelValue', noteContent);
+      return noteContent;
     }
-    return null;
+    // 笔记不存在时设置为空字符串
+    return setEmptyContent();
   } catch (error) {
     console.error('获取笔记内容失败:', error);
     ElMessage.error('获取笔记内容失败');
-    return null;
+    return setEmptyContent();
   }
 };
 
 // 启动自动保存定时器
 const startAutoSave = () => {
   clearAutoSave(); // 先清除已有的定时器
-  if (props.autoSave && props.noteId && props.autoSaveInterval > 0) {
+  // 增加 !effectiveReadOnly.value 条件
+  if (props.autoSave && props.noteId && props.autoSaveInterval > 0 && !effectiveReadOnly.value) {
     autoSaveTimer = setInterval(() => {
-      if (hasChanges.value) {
+      if (hasChanges.value && !effectiveReadOnly.value) { // 再次检查只读状态
         // 定时自动保存，不显示通知
         saveNote(content.value, false);
       }
@@ -219,55 +267,118 @@ const clearAutoSave = () => {
   }
 };
 
-const handleBeforeUnload = (event) => {
-  if (props.autoSave && hasChanges.value && props.noteId) {
-    // 尝试在页面卸载前保存笔记 (如果当前没有正在进行的保存操作)
-    // 注意: 异步操作在 beforeunload 事件中不保证完成
-    if (!updating.value) {
-      saveNote(content.value, false);
-    }
-
-    // 如果有未保存的更改, 总是提示用户，因为异步保存可能未完成
-    // 这会显示浏览器原生的 "离开此网站?" 对话框
-    event.preventDefault();
-    event.returnValue = ''; // Chrome 和一些其他浏览器需要这个来显示提示
-  }
-};
-
-onMounted(async () => {
-  // 初始化编辑器宽度
-  inputBoxWidth.value = loadInputBoxWidth();
-
-  // 如果有noteId，则获取笔记内容
+// 统一的笔记初始化/更新函数
+const initializeOrUpdateNoteState = async () => {
+  // 初始化content
+  content.value = props.modelValue || '';
+  emit('update:modelValue', content.value);
+  // 如果有noteId，获取笔记内容和权限
   if (props.noteId) {
     await fetchNoteContent(props.noteId);
+    await checkGroupEditPermission();
   }
 
-  // 自动聚焦
+  // 处理自动聚焦
   if (props.autoFocus && mdEditorRef.value) {
     mdEditorRef.value.focus();
   }
-  startAutoSave(); // 组件挂载时启动自动保存
+
+  // 启动自动保存
+  startAutoSave();
+  console.log('[StateUpdate] 初始化/更新完成');
+};
+
+const handleBeforeUnload = (event) => {
+  // 如果是只读状态，不需要保存或阻止离开
+  if (effectiveReadOnly.value) {
+    return;
+  }
+  // 如果有未保存的更改并且满足自动保存条件，尝试保存
+  if (props.autoSave && hasChanges.value && props.noteId) {
+    if (!updating.value) {
+      saveNote(content.value, false);
+    }
+    event.preventDefault();
+    event.returnValue = '';
+  }
+};
+
+onMounted(() => {
+  // 初始化编辑器宽度
+  inputBoxWidth.value = loadInputBoxWidth();
+  
+  // 第一次初始化笔记状态
+  initializeOrUpdateNoteState();
+  
+  // 添加页面卸载事件监听
   window.addEventListener('beforeunload', handleBeforeUnload);
+  
 });
 
 onBeforeUnmount(() => {
   clearAutoSave(); // 组件卸载前清除定时器
   window.removeEventListener('beforeunload', handleBeforeUnload);
   // Vue 组件卸载时的保存逻辑 (例如SPA内部导航)
-  if (props.autoSave && hasChanges.value && props.noteId && !updating.value) {
+  // 只有非只读状态下才执行保存
+  if (!effectiveReadOnly.value && props.autoSave && hasChanges.value && props.noteId && !updating.value) {
     // 退出前自动保存，不显示通知
     saveNote(content.value, false);
   }
 });
 
-// 监听 autoSave 和 noteId 的变化以重新启动定时器
+// 监听笔记id和群组状态变化
+// 监听 noteId 和 is_group 的变化，但不立即执行
 watch(
-  () => [props.autoSave, props.noteId, props.autoSaveInterval],
+  () => [props.noteId, props.is_group],
+  async ([newNoteId, newIsGroup], [oldNoteId, oldIsGroup]) => {
+    if (newNoteId !== oldNoteId || newIsGroup !== oldIsGroup) {
+      await initializeOrUpdateNoteState();
+    }
+  },
+  { immediate: false } // 添加 immediate: false，确保只在后续的 props 变化时执行
+);
+
+// 监听自动保存相关的属性变化
+watch(
+  () => [props.autoSave, props.autoSaveInterval],
   () => {
     startAutoSave();
   }
 );
+
+// 检查群组笔记编辑权限
+const checkGroupEditPermission = async () => {
+  if (!props.is_group || !props.noteId) {
+    if (props.is_group !== true && groupPermissionReadOnly.value === true) {
+      groupPermissionReadOnly.value = false;
+    }
+    return;
+  }
+
+  try {
+    const response = await NoteAPI.checkGroupNoteEditPermission(props.noteId);
+    const editable = response?.data?.editable;
+
+    let newPermissionReadOnlyValue;
+    if (typeof editable === 'boolean') {
+      newPermissionReadOnlyValue = !editable;
+    } else {
+      console.warn(`[PermCheck] 'editable' 字段未定义或非布尔值: '${editable}', 默认为只读`);
+      newPermissionReadOnlyValue = true;
+    }
+
+    if (groupPermissionReadOnly.value !== newPermissionReadOnlyValue) {
+      groupPermissionReadOnly.value = newPermissionReadOnlyValue;
+    }
+
+  } catch (error) {
+    console.error('[PermCheck] 检查群组笔记编辑权限失败:', error);
+    ElMessage.error('检查群组笔记编辑权限失败');
+    groupPermissionReadOnly.value = true;
+    groupPermissionReadOnly.value = true; // 出错时默认设置为只读
+  }
+  
+};
 
 const insertContent = (text, config = {}) => {
   if (mdEditorRef.value) {
@@ -291,7 +402,7 @@ const handleInputBoxWidthChange = (width) => {
 // 导出方法和变量供模板和外部使用
 defineExpose({
   content,
-  toolbars,
+  toolbars: computedToolbars, // 替换为计算后的工具栏
   footers,
   language,
   preview,
@@ -305,10 +416,27 @@ defineExpose({
   insertContent,
   getValue,
   fetchNoteContent,
+  showYellowIndicator,
 });
 </script>
 
 <style scoped>
+.readonly-indicator {
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #fffbe6;
+  border: 1px solid #ffe58f;
+  color: #d46b08;
+  padding: 4px 12px;
+  border-radius: 4px;
+  z-index: 50;
+  font-size: 13px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
 .md-editor-container {
   width: 100%;
   height: 100%;
