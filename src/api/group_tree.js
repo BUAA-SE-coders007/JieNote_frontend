@@ -42,7 +42,7 @@ export const uploadToSelfFolder = (folderId, formData) => {
  * @returns {Promise<any>} 操作结果
  */
 export const copyToPersonalFolder = (params) => {
-    return http.put('/database/copy', null, { params })
+    return http.put('/group/copy', null, { params })
 }
 
 /**

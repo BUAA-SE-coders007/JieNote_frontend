@@ -16,6 +16,28 @@ export const getSelfFolders = (params = {}) => {
 };
 
 /**
+ * 生成文章综述
+ * @param {Object} params - 查询参数
+ * @param {string} params.article_id - 文章ID
+ * @returns {Promise<any>} 文章综述数据
+ */
+export const getReview = (params = {}) => {
+  return http.get('/chat/review', { params });
+};
+
+/**
+ * 搜索个人文献
+ * @param {Object} params - 查询参数
+ * @param {string} params.query - 搜索关键词（必需）
+ * @param {number} [params.page_number] - 页码（从1开始）
+ * @param {number} [params.page_size] - 每页数量
+ * @returns {Promise<any>} 文献搜索结果
+ */
+export const searchArticles = (params = {}) => {
+  return http.get('/article/search', { params });
+};
+
+/**
  * 为个人新建文件夹
  * @param {Object} data - 文件夹数据
  * @param {string} data.folder_name - 文件夹名称，不可为空串
@@ -186,4 +208,6 @@ export default {
   readArticle,
   getSelfTree,
   generateKnowledgeGraph,
+  getReview,
+  searchArticles
 };
