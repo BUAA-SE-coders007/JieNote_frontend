@@ -249,7 +249,7 @@
 import NotificationDropdown from "@/components/Dropdowns/NotificationDropdown.vue";
 import UserDropdown from "@/components/Dropdowns/UserDropdown.vue";
 import { ElMessageBox } from "element-plus";
-
+import { sendRobotMessage } from "@/api/database"; // 引入 sendRobotMessage 函数
 export default {
   data() {
     return {
@@ -326,17 +326,12 @@ export default {
       this.robotController = new AbortController();
 
       try {
-        const token = localStorage.getItem("authToken") || "";
-        const response = await fetch("http://43.143.228.56:8000/chat/note", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + token,
-          },
-          body: JSON.stringify({ input }),
-          signal: this.robotController.signal,
+          const response = await sendRobotMessage({
+          input,
+          signal: this.robotController.signal, // 传递 AbortSignal
         });
 
+        console.log(response);
         if (!response.body) throw new Error("无响应流");
         const reader = response.body.getReader();
         const decoder = new TextDecoder("utf-8");

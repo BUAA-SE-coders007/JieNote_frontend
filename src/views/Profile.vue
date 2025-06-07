@@ -256,6 +256,7 @@ import {
   getNoteCount,
   getRecentNoteCount
 } from '@/api/profile';
+import { getAllGroups } from '@/api/someOrganization';
 import { ElMessageBox, ElMessage } from 'element-plus'
 
 export default {
@@ -425,6 +426,17 @@ export default {
       return result;
     },
 
+    async fetchOrganizationCount() {
+      try {
+        const response = await getAllGroups();
+        const data = response.data || {};
+        this.organizationCount = (data.leader?.length || 0) + (data.admin?.length || 0) + (data.member?.length || 0);
+        console.log('组织数量:', this.organizationCount);
+      } catch (error) {
+        console.error('获取组织数量失败:', error);
+        ElMessage.error('获取组织数量失败！');
+      }
+    },
 
     async fetchUser() {
       try {
@@ -489,6 +501,7 @@ export default {
         this.fetchNoteCount(), // 获取笔记数量
         this.fetchLiteratureData(), // 获取文献新增数量
         this.fetchNotesData(), // 获取笔记新增数量
+        this.fetchOrganizationCount(),
       ])
 
       // 启动定时刷新

@@ -62,11 +62,31 @@ export const generateArticleIntro = (params = {}) => {
   return http.get('/chat/intro', { params });
 };
 
+export const sendRobotMessage = async (params = {}) => {
+  const token = localStorage.getItem("authToken") || ""; // 获取 Token
+  const response = await fetch("https://jienote.top/chat/note", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`, // 添加 Authorization 头
+    },
+    body: JSON.stringify({ input: params.input }), // 请求体
+    signal: params.signal, // 可选的 AbortSignal
+  });
+
+  if (!response.ok) {
+    throw new Error(`请求失败，状态码：${response.status}`);
+  }
+
+  return response; // 返回 Response 对象
+};
+
 export default {
   searchLiterature,
   getLiteratureList,
   getSelfFolders,
   copyArticleToFolder,
   getRecommendLiterature,
-  generateArticleIntro
+  generateArticleIntro,
+  sendRobotMessage,
 };

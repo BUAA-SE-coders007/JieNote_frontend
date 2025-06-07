@@ -193,8 +193,9 @@ defineExpose({
 
 <style scoped>
 .pdf-iframe-viewer {
-  max-width: 1440px;
-  margin: 32px auto;
+  width: 100%;
+  height: 100%;
+  margin: 0;
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(17, 24, 39, 0.1);
   overflow: hidden;
@@ -205,7 +206,7 @@ defineExpose({
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px 32px;
+  padding: 12px 24px;
   background-color: #ffffff;
   border-bottom: 1px solid #e5e7eb;
 }
@@ -311,7 +312,7 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 400px;
+  height: 100%;
   font-size: 1.125rem;
   color: #6b7280;
   background-color: #f9fafb;
@@ -319,9 +320,8 @@ defineExpose({
 
 .pdf-iframe {
   width: 100%;
-  min-height: 700px;
+  height: 100%;
   border-top: 1px solid #e5e7eb;
   background-color: #f9fafb;
 }
 </style>
-    

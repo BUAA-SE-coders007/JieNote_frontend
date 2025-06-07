@@ -19,24 +19,24 @@
     <!-- 主内容区域 -->
     <div class="jienote-content">
       <!-- 使用 splitpanes 组件 -->
-      <splitpanes class="default-theme" :horizontal="false">
-        <pane :size="57" min-size="20">
-          <!-- PDF 查看区域 -->
+      <splitpanes class="default-theme" :horizontal="false" @resized="onPaneResized">
+        <pane :size="pdfPaneSize" min-size="20">
           <!-- PDF 查看区域 -->
           <div class="pdf-container">
-            <iframe
-                v-if="pdfUrl"
-                :src="pdfUrl"
-                class="pdf-viewer"
-                frameborder="0"
-            ></iframe>
+            <PdfViewer
+              v-if="pdfUrl"
+              :fileUrl="pdfUrl"
+              :fileName="documentTitle"
+              :articleId="articleId"
+              :write="true"
+            />
             <div v-else class="pdf-loading">
               <el-icon class="loading-icon is-loading"><Loading /></el-icon>
               <span>正在加载 PDF 文件，请稍候...</span>
             </div>
           </div>
         </pane>
-        <pane :size="43" min-size="20">
+        <pane :size="notePaneSize" min-size="20">
           <!-- 笔记编辑区域 -->
           <div class="note-container">
             <JieNoteEditor
@@ -62,10 +62,13 @@
 
 <script>
 import { Back, Loading } from '@element-plus/icons-vue';
-import http from '@/utils/http';
+// import http from '@/utils/http'; // No longer directly used here
+import { getArticleUrl } from '@/api/article'; // Import the new API function
 import JieNoteEditor from '@/components/Editor/JieNoteEditor.vue';
-import { getNotes, createNote } from '@/api/note'; // 导入笔记相关 API
+import { getNotes } from '@/api/note'; // 导入笔记相关 API
+import NoteAPI from '@/api/note_unified'; // 笔记统一 API
 import { Splitpanes, Pane } from 'splitpanes';
+import PdfViewer from '@/components/Pdfview/PdfViewer.vue';
 import 'splitpanes/dist/splitpanes.css';
 import { ElMessage } from 'element-plus';
 
@@ -78,6 +81,7 @@ export default {
     JieNoteEditor,
     Splitpanes,
     Pane,
+    PdfViewer,
   },
   data() {
     return {
@@ -86,26 +90,30 @@ export default {
       editorContent: "",
       noteId: null, // 新增 noteId
       articleId: null, // 存储 articleId
+      pdfPaneSize: 35, // PDF面板尺寸
+      notePaneSize: 65, // 笔记面板尺寸
     }
   },
   methods: {
     async fetchPdf(articleId) {
       this.articleId = articleId; // 存储 articleId
       try {
-        const response = await http.get("/article/readArticle", {
-          params: {
-            article_id: articleId,
-          },
-          responseType: "blob",
-        });
+        const response = await getArticleUrl(articleId); // Use the new API function
 
         // 获取文档标题
         await this.fetchDocumentTitle(articleId);
         // 获取关联的笔记
         await this.fetchAssociatedNote(articleId);
 
-        const blob = new Blob([response.data], { type: "application/pdf" });
-        this.pdfUrl = URL.createObjectURL(blob);
+        // According to OpenAPI spec, the URL is in response.data.article_url
+        if (response && response.data && response.data.article_url) {
+          this.pdfUrl = response.data.article_url;
+          // Optionally, you might want to use response.data.update_time if needed elsewhere
+        } else {
+          console.error("PDF URL (article_url) not found in response:", response);
+          ElMessage.error("获取 PDF 链接失败！");
+          this.pdfUrl = null; 
+        }
       } catch (error) {
         console.error("获取 PDF 文件失败：", error);
         ElMessage.error("加载 PDF 文件失败，请检查后端服务！");
@@ -122,7 +130,33 @@ export default {
       }
     },
 
+    // 从localStorage加载面板尺寸
+    loadPaneSizes() {
+      const savedSizes = localStorage.getItem('paperNotePaneSizes');
+      if (savedSizes) {
+        return JSON.parse(savedSizes);
+      }
+      return null;
+    },
+
+    // 保存面板尺寸到localStorage
+    savePaneSizes() {
+      localStorage.setItem('paperNotePaneSizes', JSON.stringify({
+        pdfPaneSize: this.pdfPaneSize,
+        notePaneSize: this.notePaneSize
+      }));
+    },
+
+    // 处理面板尺寸变化事件
+    onPaneResized(event) {
+      const panes = event.panes;
+      this.pdfPaneSize = panes[0].size;
+      this.notePaneSize = panes[1].size;
+      this.savePaneSizes();
+    },
+
     async fetchAssociatedNote(articleId) {
+      console.log("Fetching associated note for article ID:", articleId);
       try {
         const response = await getNotes({ article_id: articleId });
         if (response && response.data && response.data.notes && response.data.notes.length > 0) {
@@ -132,16 +166,17 @@ export default {
           // 并通过 v-model 更新 editorContent。
         } else {
           // 没有关联笔记，创建新笔记
-          const createResponse = await createNote({
+          const createResponse = await NoteAPI.createNote({
             article_id: articleId,
             content: "",
-            title: `note` // 使用文献标题或ID作为笔记标题
+            title: `note`, // 使用文献标题或ID作为笔记标题
+            isGroup: this.is_group
           });
           
           if (createResponse && createResponse.data) {
             this.noteId = createResponse.data.note_id; // 假设后端返回新创建笔记的ID
             this.editorContent = ""; // 清空编辑器内容
-            // ElMessage.success("已为您创建新笔记，可以开始记录了。");
+            ElMessage.success("已为您创建新笔记，可以开始记录了。");
           } else {
             throw new Error("创建笔记失败");
           }
@@ -154,10 +189,20 @@ export default {
       }
     }
   },
-  mounted() {
-    const currentArticleId = this.$route.query.article_id;
-    console.log("Current route:", this.$route);
+    mounted() {
+      // 初始化面板尺寸
+      const savedSizes = this.loadPaneSizes();
+      if (savedSizes) {
+        this.pdfPaneSize = savedSizes.pdfPaneSize;
+        this.notePaneSize = savedSizes.notePaneSize;
+      }
+
+      const currentArticleId = this.$route.query.article_id;
+      const isGroup = this.$route.query.is_group === 'true';
+      console.log("Current route:", this.$route);
+    
     if (currentArticleId) {
+      this.is_group = isGroup; // 从路由参数设置is_group
       this.fetchPdf(currentArticleId);
     } else {
       ElMessage.error("请先选择要阅读的文献");
@@ -240,15 +285,9 @@ export default {
   position: relative;
   border: 1px solid #e2e8f0;
   border-radius: 0.375rem;
-  margin: 0.5rem;
+  margin: 0.25rem;
   overflow: hidden;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.pdf-viewer {
-  width: 100%;
-  height: 100%; /* 改为 100% 填充父容器 */
-  min-height: 500px; /* 添加最小高度保障 */
 }
 
 .pdf-loading {
@@ -324,7 +363,9 @@ export default {
     font-size: 1rem;
   }
 
-  .pdf-container,
+  .pdf-container {
+    height: calc(100vh - 80px);
+  }
   .note-container {
     height: calc(100vh - 50px);
   }
