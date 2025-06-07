@@ -19,8 +19,8 @@
     <!-- 主内容区域 -->
     <div class="jienote-content">
       <!-- 使用 splitpanes 组件 -->
-      <splitpanes class="default-theme" :horizontal="false">
-        <pane :size="57" min-size="20">
+      <splitpanes class="default-theme" :horizontal="false" @resized="onPaneResized">
+        <pane :size="pdfPaneSize" min-size="20">
           <!-- PDF 查看区域 -->
           <div class="pdf-container">
             <PdfViewer
@@ -36,7 +36,7 @@
             </div>
           </div>
         </pane>
-        <pane :size="43" min-size="20">
+        <pane :size="notePaneSize" min-size="20">
           <!-- 笔记编辑区域 -->
           <div class="note-container">
             <JieNoteEditor
@@ -89,6 +89,8 @@ export default {
       editorContent: "",
       noteId: null, // 新增 noteId
       articleId: null, // 存储 articleId
+      pdfPaneSize: 35, // PDF面板尺寸
+      notePaneSize: 65, // 笔记面板尺寸
     }
   },
   methods: {
@@ -125,6 +127,31 @@ export default {
       }
     },
 
+    // 从localStorage加载面板尺寸
+    loadPaneSizes() {
+      const savedSizes = localStorage.getItem('paperNotePaneSizes');
+      if (savedSizes) {
+        return JSON.parse(savedSizes);
+      }
+      return null;
+    },
+
+    // 保存面板尺寸到localStorage
+    savePaneSizes() {
+      localStorage.setItem('paperNotePaneSizes', JSON.stringify({
+        pdfPaneSize: this.pdfPaneSize,
+        notePaneSize: this.notePaneSize
+      }));
+    },
+
+    // 处理面板尺寸变化事件
+    onPaneResized(event) {
+      const panes = event.panes;
+      this.pdfPaneSize = panes[0].size;
+      this.notePaneSize = panes[1].size;
+      this.savePaneSizes();
+    },
+
     async fetchAssociatedNote(articleId) {
       try {
         const response = await getNotes({ article_id: articleId });
@@ -158,10 +185,17 @@ export default {
       }
     }
   },
-  mounted() {
-    const currentArticleId = this.$route.query.article_id;
-    const isGroup = this.$route.query.is_group === 'true';
-    console.log("Current route:", this.$route);
+    mounted() {
+      // 初始化面板尺寸
+      const savedSizes = this.loadPaneSizes();
+      if (savedSizes) {
+        this.pdfPaneSize = savedSizes.pdfPaneSize;
+        this.notePaneSize = savedSizes.notePaneSize;
+      }
+
+      const currentArticleId = this.$route.query.article_id;
+      const isGroup = this.$route.query.is_group === 'true';
+      console.log("Current route:", this.$route);
     
     if (currentArticleId) {
       this.is_group = isGroup; // 从路由参数设置is_group

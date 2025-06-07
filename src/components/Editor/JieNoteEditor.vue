@@ -4,11 +4,13 @@
       v-model="content"
       v-bind="$props"
       :toolbars="toolbars"
+      :inputBoxWidth="inputBoxWidth"
+      :catalogLayout="'flat'"
       @onSave="handleSave"
       @onUploadImg="handleUploadImg"
       @onChange="handleChange"
       @onError="handleError"
-      @onDragWidth="handleDragWidth"
+      @oninputBoxWidthChange="handleInputBoxWidthChange"
       ref="mdEditorRef"
     />
   </div>
@@ -17,7 +19,15 @@
 <script setup>
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
-import { ref, onMounted, onBeforeUnmount, watch, defineProps, defineEmits, defineExpose } from 'vue';
+import {
+  ref,
+  onMounted,
+  onBeforeUnmount,
+  watch,
+  defineProps,
+  defineEmits,
+  defineExpose,
+} from 'vue';
 import NoteAPI from '@/api/note_unified';
 import { uploadImage } from '@/api/image';
 import { ElMessage } from 'element-plus';
@@ -26,7 +36,7 @@ import {
   footersConfig,
   languageConfig,
   defaultEditorProps,
-  editorUtils
+  editorUtils,
 } from './config/editorConfig';
 
 // 定义props
@@ -49,7 +59,7 @@ const props = defineProps({
 });
 
 // 定义emit
-const emit = defineEmits(['update:modelValue', 'save', 'change', 'error', 'dragWidth']);
+const emit = defineEmits(['update:modelValue', 'save', 'change', 'error']);
 
 const mdEditorRef = ref(null);
 const content = ref(props.modelValue);
@@ -62,6 +72,20 @@ let autoSaveTimer = null;
 const toolbars = toolbarsConfig;
 const footers = footersConfig;
 const language = languageConfig;
+const inputBoxWidth = ref('50%'); // 编辑器宽度
+
+// 从localStorage加载编辑器宽度
+const loadInputBoxWidth = () => {
+  const savedWidth = localStorage.getItem('mdEditorWidth');
+  return savedWidth ? `${savedWidth}%` : '50%';
+};
+
+// 保存编辑器宽度到localStorage
+const saveInputBoxWidth = (width) => {
+  // 移除百分号并保存数值
+  const numericWidth = parseInt(width);
+  localStorage.setItem('mdEditorWidth', numericWidth.toString());
+};
 
 // 监听值变化和noteId变化
 watch(
@@ -118,7 +142,7 @@ const saveNote = async (currentContent, showNotification = false) => {
     await NoteAPI.updateNote({
       note_id: props.noteId,
       content: currentContent,
-      isGroup: props.is_group
+      isGroup: props.is_group,
     });
 
     if (showNotification) {
@@ -135,11 +159,11 @@ const saveNote = async (currentContent, showNotification = false) => {
 
 const handleUploadImg = async (files, callback) => {
   try {
-    const uploadPromises = files.map(async file => {
+    const uploadPromises = files.map(async (file) => {
       const response = await uploadImage(file);
       return {
-       url: `https://jienote.top${response.image_url}`,  // 拼接完整的访问路径
-       alt: '',  // 保持空的alt文本
+        url: `https://jienote.top${response.image_url}`, // 拼接完整的访问路径
+        alt: '', // 保持空的alt文本
       };
     });
 
@@ -158,9 +182,9 @@ const fetchNoteContent = async (noteId) => {
   try {
     const response = await NoteAPI.getNotes({
       id: noteId,
-      isGroup: props.is_group
+      isGroup: props.is_group,
     });
-    
+
     if (response?.data?.notes?.[0]) {
       content.value = response.data.notes[0].content || '';
       emit('update:modelValue', content.value);
@@ -211,6 +235,9 @@ const handleBeforeUnload = (event) => {
 };
 
 onMounted(async () => {
+  // 初始化编辑器宽度
+  inputBoxWidth.value = loadInputBoxWidth();
+
   // 如果有noteId，则获取笔记内容
   if (props.noteId) {
     await fetchNoteContent(props.noteId);
@@ -228,12 +255,7 @@ onBeforeUnmount(() => {
   clearAutoSave(); // 组件卸载前清除定时器
   window.removeEventListener('beforeunload', handleBeforeUnload);
   // Vue 组件卸载时的保存逻辑 (例如SPA内部导航)
-  if (
-    props.autoSave &&
-    hasChanges.value &&
-    props.noteId &&
-    !updating.value
-  ) {
+  if (props.autoSave && hasChanges.value && props.noteId && !updating.value) {
     // 退出前自动保存，不显示通知
     saveNote(content.value, false);
   }
@@ -259,9 +281,11 @@ const getValue = () => {
   return content.value;
 };
 
-// 处理拖拽宽度变化
-const handleDragWidth = (width) => {
-  emit('dragWidth', width);
+// 处理编辑器宽度变化
+const handleInputBoxWidthChange = (width) => {
+  // ElMessage.info(`编辑器宽度已更改为: ${width}`);
+  inputBoxWidth.value = width;
+  saveInputBoxWidth(width);
 };
 
 // 导出方法和变量供模板和外部使用
@@ -277,7 +301,7 @@ defineExpose({
   handleError,
   handleSave,
   handleUploadImg,
-  handleDragWidth,
+  handleInputBoxWidthChange,
   insertContent,
   getValue,
   fetchNoteContent,

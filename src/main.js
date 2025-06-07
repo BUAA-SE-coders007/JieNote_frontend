@@ -45,7 +45,15 @@ import ProjectIntro from "@/views/ProjectIntro.vue";
 import Organization from "@/views/Organization.vue";
 // routes
 
+import { config } from 'md-editor-v3';
+import { foldGutter } from '@codemirror/language';
+// import { lineNumbers } from '@codemirror/view';
 
+config({
+  codeMirrorExtensions(_theme, extensions) {
+    return [...extensions, foldGutter()];
+  },
+});
 
 const routes = [
   {
