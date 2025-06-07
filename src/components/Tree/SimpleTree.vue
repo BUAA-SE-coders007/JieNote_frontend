@@ -727,18 +727,6 @@ export default {
       }
     }
 
-    const handleRead = (node, data) => {
-      // 检查是否是文献节点或笔记节点
-      console.log("handleRead, node.level:", node.level, "depth:", data.depth)
-      if (node.level === 2 && data.depth === 1) {  // PDF nodes: level 2 in tree, depth 1 in data
-        router.push(`/paper-note?article_id=${data.true_id}&is_group=true`); // 在组织页面中，is_group为true
-      } else if (node.level === 3 && data.depth === 2) {  // 笔记节点：level 3 in tree, depth 2 in data
-        router.push(`/note/${data.true_id}`);
-      } else {
-        ElMessage.warning('只能阅读文献或笔记');
-      }
-    }
-
     const toggleCheckbox = () => {
       showCheckbox.value = !showCheckbox.value
     }
@@ -805,18 +793,38 @@ export default {
     const handleNodeClick = (data) => {
       // 根据节点类型决定操作
       if (data.depth === 1) { // 文献节点
-        router.push(`/paper-note?article_id=${data.true_id}&is_group=true`); // 添加is_group参数
+        router.push({
+          name: 'paper-note',
+          query: {
+            article_id: data.true_id,
+            is_group: true
+          }
+        });
       } else if (data.depth === 2) { // 笔记节点
-        router.push(`/note/${data.true_id}`);
+        // 通过 treeRef 获取当前节点的 Node 对象
+        const currentNode = treeRef.value.getNode(data.id);
+        if (currentNode && currentNode.parent) {
+          const parentNodeData = currentNode.parent.data; // 获取父节点的数据
+          router.push({
+            name: 'paper-note',
+            query: {
+              article_id: parentNodeData.true_id, // 使用父节点数据中的 true_id
+              note_id: data.true_id, // 笔记本身的 ID
+              is_group: true
+            }
+          });
+        } else {
+          console.error("无法获取笔记节点的父节点信息", data);
+        }
       } else {
         // 其他类型节点保持原有点击逻辑（展开/折叠）
         if (expandedKeys.value.has(data.id)) {
-          handleNodeCollapse(data)
+          handleNodeCollapse(data);
         } else {
-          handleNodeExpand(data)
+          handleNodeExpand(data);
         }
       }
-    }
+    };
 
 
     const getIconForNode = (node) => {
@@ -1507,7 +1515,6 @@ export default {
       removeTag,
       onTagDragEnd,
       saveEdit,
-      handleRead,
       redirectToLogin,
       navItems,
       moveDialogVisible,
