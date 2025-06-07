@@ -95,15 +95,15 @@ export default {
     }
   },
   methods: {
-    async fetchPdf(articleId) {
+    async fetchPdf(articleId, specificNoteId = null) {
       this.articleId = articleId; // 存储 articleId
       try {
         const response = await getArticleUrl(articleId); // Use the new API function
 
         // 获取文档标题
         await this.fetchDocumentTitle(articleId);
-        // 获取关联的笔记
-        await this.fetchAssociatedNote(articleId);
+        // 获取关联的笔记，并传递specificNoteId
+        await this.fetchAssociatedNote(articleId, specificNoteId);
 
         // According to OpenAPI spec, the URL is in response.data.article_url
         if (response && response.data && response.data.article_url) {
@@ -155,9 +155,24 @@ export default {
       this.savePaneSizes();
     },
 
-    async fetchAssociatedNote(articleId) {
-      console.log("Fetching associated note for article ID:", articleId);
+    async fetchAssociatedNote(articleId, specificNoteId = null) {
+      console.log("Fetching associated note for article ID:", articleId, "specific note ID:", specificNoteId);
       try {
+        if (specificNoteId) {
+          // 如果提供了特定的笔记ID，直接获取该笔记
+          const note = await NoteAPI.getNotes({
+            id:specificNoteId,
+          });
+          if (note && note.data && note.data.notes && note.data.notes.length > 0) {
+            this.noteId = specificNoteId;
+            this.editorContent = note.data.notes[0].content;
+            return;
+          } else {
+            throw new Error("获取指定笔记失败");
+          }
+        }
+        
+        // 如果没有指定笔记ID，获取文章关联的所有笔记
         const response = await getNotes({ article_id: articleId });
         if (response && response.data && response.data.notes && response.data.notes.length > 0) {
           const firstNote = response.data.notes[0];
@@ -189,24 +204,29 @@ export default {
       }
     }
   },
-    mounted() {
-      // 初始化面板尺寸
-      const savedSizes = this.loadPaneSizes();
-      if (savedSizes) {
-        this.pdfPaneSize = savedSizes.pdfPaneSize;
-        this.notePaneSize = savedSizes.notePaneSize;
-      }
+  mounted() {
+    // 初始化面板尺寸
+    const savedSizes = this.loadPaneSizes();
+    if (savedSizes) {
+      this.pdfPaneSize = savedSizes.pdfPaneSize;
+      this.notePaneSize = savedSizes.notePaneSize;
+    }
 
-      const currentArticleId = this.$route.query.article_id;
-      const isGroup = this.$route.query.is_group === 'true';
-      console.log("Current route:", this.$route);
-    
+    const currentArticleId = this.$route.query.article_id;
+    const specificNoteId = this.$route.query.note_id;
+    const isGroup = this.$route.query.is_group === 'true';
+    console.log("Current route:", this.$route);
+  
+    this.is_group = isGroup; // 从路由参数设置is_group
     if (currentArticleId) {
-      this.is_group = isGroup; // 从路由参数设置is_group
-      this.fetchPdf(currentArticleId);
+      this.fetchPdf(currentArticleId, specificNoteId);
     } else {
       ElMessage.error("请先选择要阅读的文献");
-      this.$router.push("/paper-library");
+      if(this.is_group) {
+        this.$router.push("/organization");
+      } else {
+        this.$router.push("/paper-library");
+      }
     }
   }
 };
