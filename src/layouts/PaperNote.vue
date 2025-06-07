@@ -14,6 +14,22 @@
         <span class="title-text">JieNote 文献笔记</span>
         <span class="subtitle" v-if="documentTitle">{{ documentTitle }}</span>
       </div>
+      <!-- 笔记选择器 -->
+      <div class="header-note-selector">
+        <el-select
+          v-model="noteId"
+          placeholder="选择笔记"
+          class="header-note-select"
+          @change="handleNoteChange"
+        >
+          <el-option
+            v-for="note in notesList"
+            :key="note.id"
+            :label="note.title || `笔记ID: ${note.id}`"
+            :value="note.id"
+          />
+        </el-select>
+      </div>
     </div>
 
     <!-- 主内容区域 -->
@@ -39,6 +55,7 @@
         <pane :size="notePaneSize" min-size="20">
           <!-- 笔记编辑区域 -->
           <div class="note-container">
+            <!-- 笔记编辑器 -->
             <JieNoteEditor
               class="md-editor"
               v-model="editorContent"
@@ -92,27 +109,71 @@ export default {
       articleId: null, // 存储 articleId
       pdfPaneSize: 35, // PDF面板尺寸
       notePaneSize: 65, // 笔记面板尺寸
+      notesList: [], // 存储文献下的所有笔记
     }
   },
   methods: {
+    // 处理笔记切换
+    async handleNoteChange(newNoteId) {
+      try {
+        // 更新路由但保持其他查询参数不变
+        await this.$router.replace({
+          query: {
+            ...this.$route.query,
+            note_id: newNoteId
+          }
+        });
+
+        const note = await NoteAPI.getNotes({ id: newNoteId });
+        if (note && note.data && note.data.notes && note.data.notes.length > 0) {
+          this.editorContent = note.data.notes[0].content;
+          this.noteId = newNoteId;
+        } else {
+          throw new Error("获取笔记内容失败");
+        }
+      } catch (error) {
+        console.error("切换笔记失败：", error);
+        ElMessage.error("切换笔记失败！");
+      }
+    },
+
     async fetchPdf(articleId, specificNoteId = null) {
       this.articleId = articleId; // 存储 articleId
       try {
-        const response = await getArticleUrl(articleId); // Use the new API function
+        const [pdfResponse, notesResponse] = await Promise.all([
+          getArticleUrl(articleId),
+          getNotes({ article_id: articleId })
+        ]);
 
         // 获取文档标题
         await this.fetchDocumentTitle(articleId);
-        // 获取关联的笔记，并传递specificNoteId
-        await this.fetchAssociatedNote(articleId, specificNoteId);
 
-        // According to OpenAPI spec, the URL is in response.data.article_url
-        if (response && response.data && response.data.article_url) {
-          this.pdfUrl = response.data.article_url;
-          // Optionally, you might want to use response.data.update_time if needed elsewhere
+        // 更新笔记列表
+        if (notesResponse && notesResponse.data && notesResponse.data.notes) {
+          this.notesList = notesResponse.data.notes;
+        }
+
+        // 处理笔记选择逻辑
+        if (this.notesList.length > 0) {
+          if (specificNoteId) {
+            // 如果有指定笔记ID，加载该笔记
+            await this.fetchAssociatedNote(articleId, specificNoteId);
+          } else {
+            // 否则加载第一篇笔记
+            await this.fetchAssociatedNote(articleId, this.notesList[0].id);
+          }
         } else {
-          console.error("PDF URL (article_url) not found in response:", response);
+          // 没有笔记时创建新笔记
+          await this.fetchAssociatedNote(articleId);
+        }
+
+        // 处理PDF URL
+        if (pdfResponse && pdfResponse.data && pdfResponse.data.article_url) {
+          this.pdfUrl = pdfResponse.data.article_url;
+        } else {
+          console.error("PDF URL (article_url) not found in response:", pdfResponse);
           ElMessage.error("获取 PDF 链接失败！");
-          this.pdfUrl = null; 
+          this.pdfUrl = null;
         }
       } catch (error) {
         console.error("获取 PDF 文件失败：", error);
@@ -161,7 +222,7 @@ export default {
         if (specificNoteId) {
           // 如果提供了特定的笔记ID，直接获取该笔记
           const note = await NoteAPI.getNotes({
-            id:specificNoteId,
+            id: specificNoteId,
           });
           if (note && note.data && note.data.notes && note.data.notes.length > 0) {
             this.noteId = specificNoteId;
@@ -172,28 +233,41 @@ export default {
           }
         }
         
-        // 如果没有指定笔记ID，获取文章关联的所有笔记
+        // 获取文章关联的所有笔记
         const response = await getNotes({ article_id: articleId });
-        if (response && response.data && response.data.notes && response.data.notes.length > 0) {
-          const firstNote = response.data.notes[0];
-          this.noteId = firstNote.id;
-          //  会通过 noteId prop 自动加载其内容，
-          // 并通过 v-model 更新 editorContent。
-        } else {
-          // 没有关联笔记，创建新笔记
-          const createResponse = await NoteAPI.createNote({
-            article_id: articleId,
-            content: "",
-            title: `note`, // 使用文献标题或ID作为笔记标题
-            isGroup: this.is_group
-          });
+        if (response && response.data && response.data.notes) {
+          // 更新笔记列表
+          this.notesList = response.data.notes;
           
-          if (createResponse && createResponse.data) {
-            this.noteId = createResponse.data.note_id; // 假设后端返回新创建笔记的ID
-            this.editorContent = ""; // 清空编辑器内容
-            ElMessage.success("已为您创建新笔记，可以开始记录了。");
+          if (this.notesList.length > 0) {
+            // 有笔记时，加载第一个笔记
+            const firstNote = this.notesList[0];
+            this.noteId = firstNote.id;
+            this.editorContent = firstNote.content;
           } else {
-            throw new Error("创建笔记失败");
+            // 没有关联笔记，创建新笔记
+            const createResponse = await NoteAPI.createNote({
+              article_id: articleId,
+              content: "",
+              title: `笔记 ${new Date().toLocaleString()}`, // 使用时间作为新笔记标题
+              isGroup: this.is_group
+            });
+            
+            if (createResponse && createResponse.data) {
+              this.noteId = createResponse.data.note_id;
+              this.editorContent = "";
+              ElMessage.success("已为您创建新笔记，可以开始记录了。");
+              
+              // 将新创建的笔记添加到列表中
+              const newNote = {
+                id: createResponse.data.note_id,
+                title: `笔记 ${new Date().toLocaleString()}`,
+                content: ""
+              };
+              this.notesList.push(newNote);
+            } else {
+              throw new Error("创建笔记失败");
+            }
           }
         }
       } catch (error) {
@@ -233,6 +307,40 @@ export default {
 </script>
 
 <style scoped lang="scss">
+/* 笔记选择器样式 */
+.header-note-selector {
+  margin-left: auto;
+  padding: 0 1rem;
+}
+
+.header-note-select {
+  width: 200px;
+}
+
+/* 自定义 el-select 在标题栏中的样式 */
+:deep(.header-note-select .el-input__wrapper) {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+:deep(.header-note-select .el-input__wrapper:hover) {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+:deep(.header-note-select .el-input__inner) {
+  color: white;
+}
+
+:deep(.header-note-select .el-input__inner::placeholder) {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+:deep(.header-note-select .el-select__caret) {
+  color: white;
+}
+
 /* 主布局样式 */
 .jienote-layout {
   display: flex;
