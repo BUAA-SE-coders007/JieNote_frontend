@@ -33,7 +33,7 @@
                 </a>
                 <transition name="search-expand">
                   <div v-if="showSearch" class="flex items-center bg-white rounded-full ml-2 overflow-hidden px-2 py-1">
-                  <el-input
+                    <el-input
                         v-model="searchQuery"
                         placeholder="输入关键词..."
                         class="search-input"
@@ -54,9 +54,35 @@
                           :value="option.value"
                       />
                     </el-select>
+                    <!-- 添加搜索按钮 -->
+                    <el-button
+                        type="primary"
+                        size="small"
+                        @click="performSearch"
+                        class="ml-2"
+                    >
+                      搜索
+                    </el-button>
+                    <!-- 添加退出搜索按钮 -->
+                    <el-button
+                        v-if="isSearching"
+                        type="danger"
+                        size="small"
+                        @click="exitSearch"
+                        class="ml-2"
+                    >
+                      退出搜索
+                    </el-button>
                   </div>
                 </transition>
               </div>
+            </li>
+            <li class="nav-item">
+              <a class="px-3 py-2 flex items-center text-xs uppercase font-bold leading-snug text-white hover:opacity-75"
+                 href="javascript:;"
+                 @click="handleReview">
+                <i class="fas fa-brain text-lg leading-lg text-white opacity-75"></i><span class="ml-2">生成文献综述</span>
+              </a>
             </li>
             <li class="nav-item">
               <a class="px-3 py-2 flex items-center text-xs uppercase font-bold leading-snug text-white hover:opacity-75"
@@ -107,7 +133,8 @@
         custom-class="graph-modal"
         :close-on-click-modal="false"
         :destroy-on-close="false"
-    >
+        @close="graphDone = false;generatingGraph = false"
+     >
       <div class="graph-selector">
         <div v-if="availableArticles.length === 0" class="no-articles-hint">
           未找到文献，请确保选择了文献节点（depth=1）
@@ -546,11 +573,31 @@
         <el-button type="primary" v-btnAntiShake="saveEdit">保存</el-button>
       </template>
     </el-dialog>
+    <el-dialog
+        v-model="reviewVisible"
+        title="📘 生成文献综述"
+        width="720px"
+        :before-close="handleClose"
+        custom-class="review-dialog"
+    >
+      <div class="review-content" v-if="reviewGenerating">
+        ⏳ 正在生成文献综述，请稍候...
+      </div>
+      <div
+          class="review-content prose prose-blue max-h-96 overflow-y-auto whitespace-pre-wrap"
+          v-else
+          v-html="renderedMarkdown"
+      ></div>
+
+      <template #footer>
+        <el-button type="primary" @click="reviewVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { ref, nextTick, onMounted } from 'vue'
+import {ref, nextTick, onMounted, computed, watch} from 'vue'
 import { useRouter } from 'vue-router'
 import { Edit, DocumentAdd, Delete, Management, Rank } from '@element-plus/icons-vue'
 import KnowledgeGraph from '/src/components/Tree/KnowledgeGraph.vue'
@@ -571,11 +618,18 @@ import {
   changeArticleName,
   allTagsOrder,
   getArticleTags,
-  readArticle
+  readArticle,
+    searchArticles
 } from '@/api/dashboard';
 import { createNote, updateNote, deleteNote as apiDeleteNote,getNotes } from '@/api/note';
 import { generateKnowledgeGraph } from '@/api/dashboard';
 import mermaid from 'mermaid';
+import { getToken } from '@/utils/auth' // 确保你路径正确
+import { marked } from 'marked'
+import DOMPurify from 'dompurify'
+import 'katex/dist/katex.min.css'
+import MarkdownIt from 'markdown-it'
+import markdownItKatex from 'markdown-it-katex'
 
 export default {
   name: "dashboard-page",
@@ -593,6 +647,16 @@ export default {
 
 
   setup() {
+    const md = new MarkdownIt({
+      html: true,
+      linkify: true,
+      typographer: true
+    })
+    md.use(markdownItKatex)
+    watch(reviewContent, (newContent) => {
+      renderedMarkdown.value = md.render(newContent)
+    })
+    // 预览相关的状态
     // 预览相关的状态和变量
     const previewEnabled = ref(false)
     const currentPreviewNote = ref(null)
@@ -696,6 +760,19 @@ export default {
     const showEditDialog = ref(false)
     const currentEditNode = ref(null)
     const newTag = ref('')
+
+    const reviewContentChunks = ref([]) // 每段拼接成数组
+
+    const renderedMarkdown = computed(() => {
+      const combined = reviewContentChunks.value.join('')
+      return DOMPurify.sanitize(marked.parse(combined))
+    })
+
+// 关闭弹窗时清空内容（可选）
+    const handleClose = () => {
+      reviewContent.value = ''
+      reviewVisible.value = false
+    }
 
     const refreshData = async () => {
       // isLoading.value = true;
@@ -828,42 +905,6 @@ export default {
       }
     }
 
-    // // 更新标签到后端
-    // const updateTags = async () => {
-    //   // const res = await fetch(`https://jienote.top/article/allTagsOrder`, {
-    //   //   method: 'POST',
-    //   //   headers: {
-    //   //     'Content-Type': 'application/json',
-    //   //     'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-    //   //   },
-    //   //   body: JSON.stringify(tags.map(t => t.tag_content))
-    //   // })
-    //   // if (res.ok) {
-    //   //   ElMessage.success('标签更新成功')
-    //   // } else {
-    //   //   ElMessage.error('标签更新失败')
-    //   // }
-    //
-    //   //向后端发送请求
-    //   const tagdata =  {
-    //     article_id: currentEditNode.value.true_id,
-    //     tag_contents: currentEditNode.value.tags.map(tag => tag.tag_content)
-    //   }
-    //   console.log(tagdata.tag_contents)
-    //   const res = await fetch(`https://jienote.top/article/allTagsOrder`, {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //       'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-    //     },
-    //     body: JSON.stringify(tagdata)
-    //   })
-    //   if (res.ok) {
-    //     //ElMessage.success('标签顺序已更新')
-    //   } else {
-    //     //ElMessage.error('标签顺序更新失败')
-    //   }
-    // }
 
     const toggleCheckbox = () => {
       showCheckbox.value = !showCheckbox.value
@@ -979,8 +1020,6 @@ export default {
       // 获取节点深度
       const depth = node.depth
 
-      // 调试信息
-      console.log(`Node: ${node.label}, ID: ${node.id}, Depth: ${node.depth}, Has children: ${node.children && node.children.length > 0}, Is expanded: ${expandedKeys.value.has(node.id)}`)
 
       // 根据节点深度和状态返回对应图标
       if (depth === 0) {
@@ -1202,7 +1241,6 @@ export default {
 
             // 现在可以安全设置完成状态
             graphDone.value = true;
-            ElMessage.success("生成图谱成功");
           } else {
             console.error('Mermaid 返回的 SVG 无效:', svg);
             throw new Error('Mermaid 渲染失败：未生成 SVG 元素');
@@ -1277,7 +1315,9 @@ export default {
       }
     };
 
-
+    const reviewVisible = ref(false)
+    const reviewContent = ref('')
+    const selectedReviewNode = ref(null)
     const handleShowGraph = () => {
       // 重置状态
       selectedArticleId.value = null;
@@ -1328,6 +1368,123 @@ export default {
         treeRef.value.setCheckedKeys([]);
       });
     };
+
+    const handleReview = () => {
+      if (!showCheckbox.value) {
+        showCheckbox.value = true
+        ElMessage({
+          message: '请选择一个文献用于生成综述',
+          type: 'info'
+        })
+      } else {
+        const rawCheckedNodes = treeRef.value.getCheckedNodes(false, true)
+        const checkedKeys = treeRef.value.getCheckedKeys(false)
+        const checkedNodes = filterCheckedTreeNodes(rawCheckedNodes, checkedKeys)
+
+        if (checkedNodes.length !== 1) {
+          ElMessage({
+            message: '请选择一个且仅一个文献',
+            type: 'warning'
+          })
+          return
+        }
+
+        const selectedNode = checkedNodes[0]
+        if (selectedNode.depth !== 1) {
+          ElMessage({
+            message: '只能选择 PDF 文献生成综述',
+            type: 'warning'
+          })
+          return
+        }
+
+        selectedReviewNode.value = selectedNode // 存储选中的节点
+        reviewVisible.value = true             // 打开综述弹窗
+        reviewContent.value = ''               // 清空旧内容
+        startReviewSSE(selectedNode.true_id)        // 启动 SSE
+      }
+    }
+
+    const scrollToBottom = () => {
+      nextTick(() => {
+        const el = document.getElementById('review-markdown-scroll')
+        if (el) el.scrollTop = el.scrollHeight
+      })
+    }
+
+    const reviewGenerating = ref(false)
+
+    const startReviewSSE = async (articleId) => {
+      const token = getToken()
+
+      if (!token) {
+        ElMessage.error('未登录或 token 已失效')
+        return
+      }
+
+      reviewContentChunks.value = []
+      reviewVisible.value = true
+      reviewGenerating.value = true
+
+      try {
+        const response = await fetch(`https://jienote.top/chat/review?article_id=${articleId}`, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'text/event-stream'
+          }
+        })
+
+        if (!response.ok || !response.body) throw new Error('连接失败')
+
+        const reader = response.body.getReader()
+        const decoder = new TextDecoder('utf-8')
+        let buffer = ''
+
+        const readChunk = async () => {
+          const { done, value } = await reader.read()
+          if (done) return
+
+          buffer += decoder.decode(value, { stream: true })
+
+          const parts = buffer.split('\n\n')
+          buffer = parts.pop() || ''
+
+          for (const part of parts) {
+            const dataLines = part.split('\n').filter(line => line.startsWith('data:'))
+            if (!dataLines.length) continue
+
+            const dataStr = dataLines.map(line => line.replace(/^data:\s*/, '')).join('\n').trim()
+            if (dataStr === '[DONE]') return
+
+            try {
+              const parsed = JSON.parse(dataStr)
+              if (parsed.content) {
+                reviewContentChunks.value.push(parsed.content)
+                scrollToBottom()
+              }
+            } catch (e) {
+              console.warn('解析 SSE 数据失败:', dataStr, e)
+            }
+          }
+
+          await readChunk()
+        }
+
+        await readChunk()
+
+      } catch (err) {
+        console.error('SSE 请求错误:', err)
+        ElMessage.error('生成综述连接失败')
+        reviewVisible.value = false
+      }finally {
+        reviewGenerating.value = false
+      }
+    }
+
+
+
+
 
     const handleExport = () => {
       if (!showCheckbox.value) {
@@ -1512,7 +1669,7 @@ export default {
     const remove = async (node, data) => {
       // 显示确认弹窗
       await ElMessageBox.confirm(
-          `确定要删除 "${data.label}" 吗？此操作不可恢复。`,
+          `确定要删除 "${data.label}" 吗？此操作会将文件加入回收站。`,
           '删除确认',
           {
             confirmButtonText: '确定',
@@ -1806,12 +1963,167 @@ export default {
     const showSearch = ref(false)
     const searchQuery = ref('')
     const searchType = ref('all')
+    const isSearching = ref(false);
     const searchOptions = ref([
       { value: 'all', label: '全部内容' },
-      { value: 'title', label: '标题' },
+      { value: 'title', label: '文献标题' },
       { value: 'note', label: '笔记内容' },
-      { value: 'tag', label: '标签' }
     ])
+
+    const performSearch = async () => {
+      if (!searchQuery.value.trim()) {
+        ElMessage.warning('请输入搜索关键词');
+        return;
+      }
+
+      isSearching.value = true;
+      isLoading.value = true;
+
+      try {
+        if (searchType.value === 'title') {
+          // 文献标题搜索
+          await searchByArticleTitle();
+        } else if (searchType.value === 'note') {
+          // 笔记内容搜索
+          await searchByNoteContent();
+        } else {
+          // 全部内容搜索
+          await searchAllContent();
+        }
+      } catch (error) {
+        ElMessage.error('搜索失败: ' + error.message);
+      } finally {
+        isLoading.value = false;
+      }
+    };
+
+// 文献标题搜索
+    const searchByArticleTitle = async () => {
+      const response = await searchArticles({
+        query: searchQuery.value
+      });
+
+      dataSource.value = transformArticleResults(response.data);
+    };
+
+// 笔记内容搜索
+    const searchByNoteContent = async () => {
+      const response = await getNotes({
+        query: searchQuery.value
+      });
+
+      dataSource.value = transformNoteResults(response.data.notes);
+    };
+
+// 全部内容搜索
+    const searchAllContent = async () => {
+      // 同时执行文献和笔记搜索
+      const [articlesRes, notesRes] = await Promise.all([
+        searchArticles({ query: searchQuery.value }),
+        getNotes({ query: searchQuery.value })
+      ]);
+
+      const articleTree = transformArticleResults(articlesRes.data);
+      const noteTree = transformNoteResults(notesRes.data.notes);
+
+      // 合并两个结果
+      dataSource.value = mergeSearchResults(articleTree, noteTree);
+    };
+
+// 转换文献搜索结果为树结构
+    const transformArticleResults = (data) => {
+      if (!data || !data.folders) return [];
+
+      return data.folders.map(folder => {
+        return {
+          id: `folder-${folder.folder_id}`,
+          true_id: folder.folder_id,
+          label: folder.folder_name,
+          depth: 0,
+          children: folder.articles.map(article => ({
+            id: `article-${article.article_id}`,
+            true_id: article.article_id,
+            label: article.article_name,
+            depth: 1,
+            tags: article.tags,
+            children: [] // 文献搜索结果不包含笔记
+          }))
+        };
+      });
+    };
+
+// 转换笔记搜索结果为树结构
+    const transformNoteResults = (notes) => {
+      if (!notes || !notes.length) return [];
+
+      // 按文献分组
+      const articleMap = new Map();
+
+      notes.forEach(note => {
+        const articleId = note.article_id;
+
+        if (!articleMap.has(articleId)) {
+          articleMap.set(articleId, {
+            id: `article-${articleId}`,
+            true_id: articleId,
+            label: `文献ID: ${articleId}`, // 临时标题，实际中可能需要从其他接口获取
+            depth: 1,
+            children: []
+          });
+        }
+
+        articleMap.get(articleId).children.push({
+          id: `note-${note.id}`,
+          true_id: note.id,
+          label: note.title,
+          depth: 2
+        });
+      });
+
+      // 创建虚拟文件夹包含所有文献
+      return [{
+        id: 'search-results-folder',
+        true_id: -1, // 特殊ID表示搜索文件夹
+        label: '搜索结果',
+        depth: 0,
+        children: Array.from(articleMap.values())
+      }];
+    };
+
+// 合并文献和笔记搜索结果
+    const mergeSearchResults = (articleTree, noteTree) => {
+      // 创建一个虚拟文件夹包含所有结果
+      const mergedFolder = {
+        id: 'all-search-results',
+        true_id: -2, // 特殊ID表示合并搜索
+        label: '全部搜索结果',
+        depth: 0,
+        children: []
+      };
+
+      // 添加文献结果
+      articleTree.forEach(folder => {
+        folder.children.forEach(article => {
+          mergedFolder.children.push(article);
+        });
+      });
+
+      // 添加笔记结果
+      if (noteTree.length > 0 && noteTree[0].children) {
+        noteTree[0].children.forEach(article => {
+          mergedFolder.children.push(article);
+        });
+      }
+
+      return [mergedFolder];
+    };
+
+// 退出搜索状态
+    const exitSearch = () => {
+      isSearching.value = false;
+      searchQuery.value = '';
+      findAllfolders(); // 重新加载原始数据
+    };
 
     const toggleSearch = () => {
       showSearch.value = !showSearch.value
@@ -1821,13 +2133,6 @@ export default {
       }
     }
 
-    const performSearch = () => {
-      // 实现搜索逻辑
-      console.log('执行搜索:', {
-        query: searchQuery.value,
-        type: searchType.value
-      })
-    }
 
 
 
@@ -1838,6 +2143,10 @@ export default {
       handlePreviewShow,
       handlePreviewBeforeEnter,
       handleCheck,
+      reviewVisible,
+      reviewGenerating,
+      reviewContent,
+      selectedReviewNode,
       findAllfolders,
       showCheckbox,
       showGraph,
@@ -1853,6 +2162,7 @@ export default {
       dataSource,
       treeRef,
       handleShowGraph,
+      handleReview,
       handleExport,
       createNewCategory,
       confirmNewCategory,
@@ -1884,6 +2194,8 @@ export default {
       currentEditNode,
       newTag,
       openEditDialog,
+      renderedMarkdown,
+      handleClose,
       addTag,
       removeTag,
       onTagDragEnd,
@@ -1904,7 +2216,9 @@ export default {
       graphDone,
       zoomOut,
       zoomIn,
-      resetZoom
+      resetZoom,
+      isSearching,
+      exitSearch
     }
   }
 }
@@ -2895,5 +3209,90 @@ export default {
       padding: 16px;
     }
   }
+}
+
+.review-dialog {
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+  background: #f9fafb;
+  padding-bottom: 0;
+}
+
+.review-content {
+  max-height: 420px;
+  overflow-y: auto;
+  padding: 18px 24px;
+  font-size: 15px;
+  line-height: 1.7;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: #ffffff;
+  border: 1px solid #dbeafe; /* 浅蓝色边框 */
+  border-radius: 10px;
+  color: #1e293b;
+}
+
+/* 蓝色标题 */
+.review-content h1,
+.review-content h2,
+.review-content h3 {
+  color: #2563eb;
+  margin: 16px 0 10px;
+  font-weight: 600;
+}
+
+/* 加粗文本 */
+.review-content strong {
+  font-weight: bold;
+  color: #0f172a;
+}
+
+/* 段落 */
+.review-content p {
+  margin: 12px 0;
+}
+
+/* 行内代码 */
+.review-content code {
+  background: #e0f2fe;
+  color: #1e40af;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
+  font-size: 13px;
+}
+
+/* 代码块 */
+.review-content pre {
+  background-color: #1e293b;
+  color: #e5e7eb;
+  padding: 14px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 13px;
+  margin: 16px 0;
+}
+
+/* 滚动条 */
+.review-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.review-content::-webkit-scrollbar-thumb {
+  background-color: rgba(100, 149, 237, 0.3);
+  border-radius: 4px;
+}
+
+.review-content::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+/* 列表 */
+.review-content ul {
+  padding-left: 20px;
+  margin: 10px 0;
+}
+
+.review-content li::marker {
+  color: #3b82f6;
 }
 </style>

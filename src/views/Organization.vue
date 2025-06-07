@@ -110,8 +110,16 @@
       <div
           class="w-96 h-[calc(100vh-140px)] bg-white rounded-xl shadow-lg dark:bg-gray-800 border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col">
         <div class="p-6 pb-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 class="text-lg font-semibold text-gray-800 dark:text-white text-center">👥 组织成员</h2>
+          <div class="flex justify-center items-center">
+            <h2 class="text-lg font-semibold text-gray-800 dark:text-white">👥 组织成员</h2>
+            <el-tooltip v-if="showMessageBox" effect="dark" content="右键点击成员可管理成员状态" placement="top">
+              <el-icon class="ml-1 cursor-help text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-100">
+                <QuestionFilled />
+              </el-icon>
+            </el-tooltip>
+          </div>
         </div>
+
 
         <!-- 成员列表 -->
         <div class="flex-1 overflow-y-auto p-4 space-y-3">
@@ -293,7 +301,7 @@
           ✨ 将此邀请码发送给需要加入组织的成员，他们可以通过此码加入组织
         </p>
         <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
-          注意：每个邀请码只能使用一次，且与邮箱绑定
+          注意：每个邀请码只24小时内有效，且与邮箱绑定
         </p>
       </div>
     </el-dialog>
@@ -431,7 +439,7 @@
 <script>
 import SimpleTree from '@/components/Tree/SimpleTree.vue'
 import {ElMessageBox, ElMessage} from 'element-plus'
-import {CirclePlus, DocumentCopy, Calendar, User, Edit, Message} from '@element-plus/icons-vue'
+import {CirclePlus, DocumentCopy, Calendar, User, Edit, Message, QuestionFilled} from '@element-plus/icons-vue'
 import {
   genGroupInviteCode,
   getGroupBasicInfo, getGroupPeopleInfo, getMyGroupLevel,
@@ -456,7 +464,8 @@ export default {
     Calendar,
     User,
     Edit,
-    Message
+    Message,
+    QuestionFilled
   },
   created() {
     this.initData()
@@ -480,7 +489,7 @@ export default {
       return ['组长', '管理员'].includes(this.currentUserRole)
     },
     showEditButton() {
-      return ['组长', '管理员','组员'].includes(this.currentUserRole)
+      return ['组长', '管理员'].includes(this.currentUserRole)
     },
     sortedMembers() {
       const order = {'组长': 1, '管理员': 2, '组员': 3};

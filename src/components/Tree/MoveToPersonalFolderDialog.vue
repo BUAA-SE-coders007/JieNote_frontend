@@ -121,6 +121,8 @@ export default {
           is_group: true
         }
 
+        console.log(params)
+
         await copyToPersonalFolder(params)
 
         const targetFolder = this.folderList.find(f => f.folder_id === this.selectedFolderId)
