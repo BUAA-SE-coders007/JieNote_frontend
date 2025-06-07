@@ -34,7 +34,6 @@ import {
   computed,
 } from 'vue';
 import NoteAPI from '@/api/note_unified';
-import GroupNoteAPI from '@/api/group_note';
 import { uploadImage } from '@/api/image';
 import { ElMessage } from 'element-plus';
 import {
@@ -262,27 +261,55 @@ const clearAutoSave = () => {
 
 // 统一的笔记初始化/更新函数
 const initializeOrUpdateNoteState = async () => {
-  console.log('初始化/更新笔记状态:', { noteId: props.noteId, is_group: props.is_group });
+  console.log('[StateUpdate] 开始初始化/更新笔记状态:', {
+    noteId: props.noteId,
+    is_group: props.is_group,
+    currentContent: content.value?.length,
+    modelValue: props.modelValue?.length
+  });
+
+  console.log('[StateUpdate] 权限状态检查前:', {
+    groupPermissionReadOnly: groupPermissionReadOnly.value,
+    effectiveReadOnly: effectiveReadOnly.value,
+    showYellowIndicator: showYellowIndicator.value
+  });
 
   // 初始化content
   content.value = props.modelValue || '';
   emit('update:modelValue', content.value);
+  console.log('[StateUpdate] 内容已初始化，长度:', content.value.length);
 
   // 如果有noteId，获取笔记内容和权限
   if (props.noteId) {
-    await fetchNoteContent(props.noteId);
+    console.log('[StateUpdate] 开始获取笔记内容和权限检查');
+    const noteContent = await fetchNoteContent(props.noteId);
+    console.log('[StateUpdate] 笔记内容已获取，长度:', noteContent.length);
+    
+    console.log('[StateUpdate] 调用权限检查前的状态:', {
+      groupPermissionReadOnly: groupPermissionReadOnly.value,
+      effectiveReadOnly: effectiveReadOnly.value
+    });
+    
     await checkGroupEditPermission();
+    
+    console.log('[StateUpdate] 权限检查后的状态:', {
+      groupPermissionReadOnly: groupPermissionReadOnly.value,
+      effectiveReadOnly: effectiveReadOnly.value,
+      showYellowIndicator: showYellowIndicator.value
+    });
   } else {
-    console.log('未提供 noteId，使用默认空内容');
+    console.log('[StateUpdate] 未提供 noteId，使用默认空内容');
   }
 
   // 处理自动聚焦
   if (props.autoFocus && mdEditorRef.value) {
+    console.log('[StateUpdate] 设置编辑器自动聚焦');
     mdEditorRef.value.focus();
   }
 
   // 启动自动保存
   startAutoSave();
+  console.log('[StateUpdate] 初始化/更新完成');
 };
 
 const handleBeforeUnload = (event) => {
@@ -295,6 +322,27 @@ const handleBeforeUnload = (event) => {
   }
 };
 
+// 添加状态监听器
+watch(groupPermissionReadOnly, (newVal, oldVal) => {
+  console.log(`[Watcher] groupPermissionReadOnly 变化: ${oldVal} -> ${newVal}`);
+});
+
+watch(effectiveReadOnly, (newVal, oldVal) => {
+  console.log(`[Watcher] effectiveReadOnly 变化: ${oldVal} -> ${newVal}`);
+});
+
+watch(showYellowIndicator, (newVal, oldVal) => {
+  console.log(`[Watcher] showYellowIndicator 变化: ${oldVal} -> ${newVal}`);
+});
+
+watch(() => props.is_group, (newVal, oldVal) => {
+  console.log(`[Watcher] props.is_group 变化: ${oldVal} -> ${newVal}`);
+});
+
+watch(() => props.readonly, (newVal, oldVal) => {
+  console.log(`[Watcher] props.readonly 变化: ${oldVal} -> ${newVal}`);
+});
+
 onMounted(() => {
   // 初始化编辑器宽度
   inputBoxWidth.value = loadInputBoxWidth();
@@ -304,6 +352,14 @@ onMounted(() => {
   
   // 添加页面卸载事件监听
   window.addEventListener('beforeunload', handleBeforeUnload);
+  
+  console.log('[Mount] 组件初始状态:', {
+    groupPermissionReadOnly: groupPermissionReadOnly.value,
+    effectiveReadOnly: effectiveReadOnly.value,
+    showYellowIndicator: showYellowIndicator.value,
+    is_group: props.is_group,
+    readonly: props.readonly
+  });
 });
 
 onBeforeUnmount(() => {
@@ -338,22 +394,54 @@ watch(
 
 // 检查群组笔记编辑权限
 const checkGroupEditPermission = async () => {
-  // 如果不是群组笔记，直接设置为false并返回
-  if (!props.is_group) {
-    groupPermissionReadOnly.value = false;
-    console.log('非群组笔记，无需检查权限');
+  console.log(`[PermCheck] 开始检查权限: noteId=${props.noteId}, is_group=${props.is_group}`);
+  
+  // 检查之前的权限状态
+  console.log(`[PermCheck] 当前权限状态: groupPermissionReadOnly=${groupPermissionReadOnly.value}`);
+  
+  if (!props.is_group || !props.noteId) {
+    console.log('[PermCheck] 非群组笔记或无 noteId，跳过权限检查');
+    if (props.is_group !== true && groupPermissionReadOnly.value === true) {
+      console.log('[PermCheck] 从群组笔记切换到个人笔记，重置权限');
+      groupPermissionReadOnly.value = false;
+    }
     return;
   }
-  
+
   try {
-    const response = await GroupNoteAPI.getEditPermission(props.noteId);
-    groupPermissionReadOnly.value = !response.data.editable;
-    console.log('群组笔记编辑权限:', !response.data.editable);
+    console.log(`[PermCheck] 调用 API 获取权限 for noteId: ${props.noteId}`);
+    const response = await NoteAPI.checkGroupNoteEditPermission(props.noteId);
+    const editable = response?.data?.editable;
+    console.log(`[PermCheck] API 返回权限数据: response.data=${JSON.stringify(response?.data)}, editable=${editable}`);
+
+    let newPermissionReadOnlyValue;
+    if (typeof editable === 'boolean') {
+      newPermissionReadOnlyValue = !editable; // 如果 editable 为 true，readonly 为 false；如果 editable 为 false，readonly 为 true
+    } else {
+      console.warn(`[PermCheck] 'editable' 字段未定义或非布尔值: '${editable}', 默认为只读`);
+      newPermissionReadOnlyValue = true;
+    }
+
+    if (groupPermissionReadOnly.value !== newPermissionReadOnlyValue) {
+      console.log(`[PermCheck] groupPermissionReadOnly 将从 ${groupPermissionReadOnly.value} 更新为 ${newPermissionReadOnlyValue}`);
+      groupPermissionReadOnly.value = newPermissionReadOnlyValue;
+    } else {
+      console.log(`[PermCheck] groupPermissionReadOnly 无需更新，当前为 ${groupPermissionReadOnly.value} (新计算值也为 ${newPermissionReadOnlyValue})`);
+    }
+
   } catch (error) {
-    console.error('获取群组笔记权限失败:', error);
-    ElMessage.error('获取群组笔记权限失败，可能无法编辑');
+    console.error('[PermCheck] 检查群组笔记编辑权限失败:', error);
+    ElMessage.error('检查群组笔记编辑权限失败');
+    if (groupPermissionReadOnly.value !== true) {
+      console.log('[PermCheck][ERROR] groupPermissionReadOnly 将从 ${groupPermissionReadOnly.value} 更新为 true');
+      groupPermissionReadOnly.value = true;
+    } else {
+      console.log('[PermCheck][ERROR] groupPermissionReadOnly 无需更新 (已为 true)');
+    }
     groupPermissionReadOnly.value = true; // 出错时默认设置为只读
   }
+  
+  console.log(`[PermCheck] 权限检查结束，最终状态: groupPermissionReadOnly=${groupPermissionReadOnly.value}`);
 };
 
 const insertContent = (text, config = {}) => {
