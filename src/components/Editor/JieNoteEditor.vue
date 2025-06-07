@@ -6,10 +6,11 @@
     <MdEditor
       v-model="content"
       v-bind="$props"
-      :toolbars="toolbars"
+      :toolbars="computedToolbars"
       :inputBoxWidth="inputBoxWidth"
       :catalogLayout="'flat'"
       :readOnly="effectiveReadOnly"
+      :disabled="effectiveReadOnly"
       @onSave="handleSave"
       @onUploadImg="handleUploadImg"
       @onChange="handleChange"
@@ -76,6 +77,11 @@ const updating = ref(false);
 const preview = ref(true);
 const groupPermissionReadOnly = ref(false); // 从API获取的群组笔记权限状态
 
+// 计算工具栏配置
+const computedToolbars = computed(() => {
+  return effectiveReadOnly.value ? [] : toolbarsConfig;
+});
+
 // 计算最终的只读状态和黄色指示器显示
 const effectiveReadOnly = computed(() => {
   return props.readonly || (props.is_group && groupPermissionReadOnly.value);
@@ -98,8 +104,7 @@ watch(effectiveReadOnly, (newValue) => {
 const hasChanges = ref(false); // 标记是否有未保存的更改
 let autoSaveTimer = null;
 
-// 使用配置的工具栏
-const toolbars = toolbarsConfig;
+// 页脚和语言配置
 const footers = footersConfig;
 const language = languageConfig;
 const inputBoxWidth = ref('50%'); // 编辑器宽度
@@ -156,6 +161,12 @@ const handleSave = async (contentFromEditorEvent) => {
 
 // 添加 showNotification 参数，默认为 false，用于控制是否显示成功消息
 const saveNote = async (currentContent, showNotification = false) => {
+  // 如果是只读状态，直接返回
+  if (effectiveReadOnly.value) {
+    console.log(`[Save] 编辑器处于只读状态，跳过保存操作`);
+    return;
+  }
+
   // 确保有 noteId，有改动，并且当前没有正在保存
   if (!props.noteId || !hasChanges.value || updating.value) {
     return;
@@ -241,9 +252,10 @@ const fetchNoteContent = async (noteId) => {
 // 启动自动保存定时器
 const startAutoSave = () => {
   clearAutoSave(); // 先清除已有的定时器
-  if (props.autoSave && props.noteId && props.autoSaveInterval > 0) {
+  // 增加 !effectiveReadOnly.value 条件
+  if (props.autoSave && props.noteId && props.autoSaveInterval > 0 && !effectiveReadOnly.value) {
     autoSaveTimer = setInterval(() => {
-      if (hasChanges.value) {
+      if (hasChanges.value && !effectiveReadOnly.value) { // 再次检查只读状态
         // 定时自动保存，不显示通知
         saveNote(content.value, false);
       }
@@ -313,6 +325,11 @@ const initializeOrUpdateNoteState = async () => {
 };
 
 const handleBeforeUnload = (event) => {
+  // 如果是只读状态，不需要保存或阻止离开
+  if (effectiveReadOnly.value) {
+    return;
+  }
+  // 如果有未保存的更改并且满足自动保存条件，尝试保存
   if (props.autoSave && hasChanges.value && props.noteId) {
     if (!updating.value) {
       saveNote(content.value, false);
@@ -366,7 +383,8 @@ onBeforeUnmount(() => {
   clearAutoSave(); // 组件卸载前清除定时器
   window.removeEventListener('beforeunload', handleBeforeUnload);
   // Vue 组件卸载时的保存逻辑 (例如SPA内部导航)
-  if (props.autoSave && hasChanges.value && props.noteId && !updating.value) {
+  // 只有非只读状态下才执行保存
+  if (!effectiveReadOnly.value && props.autoSave && hasChanges.value && props.noteId && !updating.value) {
     // 退出前自动保存，不显示通知
     saveNote(content.value, false);
   }
@@ -466,7 +484,7 @@ const handleInputBoxWidthChange = (width) => {
 // 导出方法和变量供模板和外部使用
 defineExpose({
   content,
-  toolbars,
+  toolbars: computedToolbars, // 替换为计算后的工具栏
   footers,
   language,
   preview,
