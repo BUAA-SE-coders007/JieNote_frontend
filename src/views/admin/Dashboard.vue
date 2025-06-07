@@ -336,10 +336,10 @@
                           :modelValue="currentPreviewNote.content"
                           theme="light"
                         />
-                        <div v-else class="preview-loading">
+                        <!-- <div v-else class="preview-loading">
                           <el-icon class="is-loading"><Loading /></el-icon>
                           <span>加载中...</span>
-                        </div>
+                        </div> -->
                       </div>
                     </template>
                     <template #reference>
