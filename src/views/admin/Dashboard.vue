@@ -313,7 +313,7 @@
                 ref="treeRef"
             >
               <template #default="{ node, data }">
-                <div class="modern-node" @dblclick.stop="handleItemNavigation(data)">
+                <div class="modern-node" @dblclick.stop="handleItemNavigation(node)">
                   <!-- 预览 popover -->
                   <el-popover
                     v-if="previewEnabled && data.depth === 2"
@@ -422,7 +422,7 @@
                           type="success"
                           size="small"
                           round
-                          @click.stop="handleItemNavigation(node, data)"
+                          @click.stop="handleItemNavigation(node)"
                           class="action-btn read-btn"
                       >
                         <el-icon><Management /></el-icon>
