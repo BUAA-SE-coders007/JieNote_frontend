@@ -14,6 +14,22 @@
         <span class="title-text">JieNote 文献笔记</span>
         <span class="subtitle" v-if="documentTitle">{{ documentTitle }}</span>
       </div>
+      <!-- 笔记选择器 -->
+      <div class="header-note-selector">
+        <el-select
+          v-model="noteId"
+          placeholder="选择笔记"
+          class="header-note-select"
+          @change="handleNoteChange"
+        >
+          <el-option
+            v-for="note in notesList"
+            :key="note.id"
+            :label="note.title || `笔记ID: ${note.id}`"
+            :value="note.id"
+          />
+        </el-select>
+      </div>
     </div>
 
     <!-- 主内容区域 -->
@@ -39,6 +55,7 @@
         <pane :size="notePaneSize" min-size="20">
           <!-- 笔记编辑区域 -->
           <div class="note-container">
+            <!-- 笔记编辑器 -->
             <JieNoteEditor
               class="md-editor"
               v-model="editorContent"
@@ -92,31 +109,109 @@ export default {
       articleId: null, // 存储 articleId
       pdfPaneSize: 35, // PDF面板尺寸
       notePaneSize: 65, // 笔记面板尺寸
+      notesList: [], // 存储文献下的所有笔记
     }
   },
   methods: {
-    async fetchPdf(articleId, specificNoteId = null) {
-      this.articleId = articleId; // 存储 articleId
+    // 页面初始化方法
+    async initializePage(articleId, specificNoteId = null) {
+      this.articleId = articleId;
+      
       try {
-        const response = await getArticleUrl(articleId); // Use the new API function
+        // 并行获取所需数据
+        const [pdfResponse, notesResponse] = await Promise.all([
+          getArticleUrl(articleId),
+          getNotes({ article_id: articleId }),
+          this.fetchDocumentTitle(articleId),
+        ]);
 
-        // 获取文档标题
-        await this.fetchDocumentTitle(articleId);
-        // 获取关联的笔记，并传递specificNoteId
-        await this.fetchAssociatedNote(articleId, specificNoteId);
-
-        // According to OpenAPI spec, the URL is in response.data.article_url
-        if (response && response.data && response.data.article_url) {
-          this.pdfUrl = response.data.article_url;
-          // Optionally, you might want to use response.data.update_time if needed elsewhere
+        // 处理 PDF URL
+        if (pdfResponse?.data?.article_url) {
+          this.pdfUrl = pdfResponse.data.article_url;
         } else {
-          console.error("PDF URL (article_url) not found in response:", response);
+          console.error("PDF URL not found in response:", pdfResponse);
           ElMessage.error("获取 PDF 链接失败！");
-          this.pdfUrl = null; 
+          this.pdfUrl = null;
+        }
+
+        // 更新笔记列表
+        this.notesList = notesResponse?.data?.notes || [];
+        
+        // 确定要加载的笔记ID
+        let targetNoteId = null;
+        
+        if (this.notesList.length > 0) {
+          if (specificNoteId && this.notesList.some(note => note.id === specificNoteId)) {
+            targetNoteId = specificNoteId;
+          } else {
+            targetNoteId = this.notesList[0].id;
+          }
+        } else {
+          // 创建新笔记
+          const createResponse = await NoteAPI.createNote({
+            article_id: articleId,
+            content: "",
+            title: `笔记 ${new Date().toLocaleString()}`,
+            isGroup: this.is_group
+          });
+          
+          if (createResponse?.data?.note_id) {
+            const newNote = {
+              id: createResponse.data.note_id,
+              title: `笔记 ${new Date().toLocaleString()}`,
+              content: ""
+            };
+            this.notesList.push(newNote);
+            targetNoteId = newNote.id;
+            ElMessage.success("已为您创建新笔记，可以开始记录了。");
+          } else {
+            throw new Error("创建笔记失败");
+          }
+        }
+
+        // 加载笔记内容
+        if (targetNoteId) {
+          await this.loadNoteContent(targetNoteId);
         }
       } catch (error) {
-        console.error("获取 PDF 文件失败：", error);
-        ElMessage.error("加载 PDF 文件失败，请检查后端服务！");
+        console.error("页面初始化失败：", error);
+        ElMessage.error("页面加载失败，请检查网络连接！");
+      }
+    },
+
+    // 加载笔记内容
+    async loadNoteContent(noteIdToLoad) {
+      try {
+        const note = await NoteAPI.getNotes({ id: noteIdToLoad });
+        if (note?.data?.notes?.[0]) {
+          this.noteId = noteIdToLoad;
+          this.editorContent = note.data.notes[0].content;
+        } else {
+          throw new Error("获取笔记内容失败");
+        }
+      } catch (error) {
+        console.error("加载笔记内容失败：", error);
+        ElMessage.error("加载笔记内容失败！");
+        this.noteId = null;
+        this.editorContent = "";
+      }
+    },
+
+    // 处理笔记切换
+    async handleNoteChange(newNoteId) {
+      try {
+        await Promise.all([
+          this.loadNoteContent(newNoteId),
+          this.$router.replace({
+            query: {
+              ...this.$route.query,
+              note_id: newNoteId
+            }
+          })
+        ]);
+      } catch (error) {
+        console.error("切换笔记失败：", error);
+        ElMessage.error("切换笔记失败！");
       }
     },
 
@@ -155,54 +250,6 @@ export default {
       this.savePaneSizes();
     },
 
-    async fetchAssociatedNote(articleId, specificNoteId = null) {
-      console.log("Fetching associated note for article ID:", articleId, "specific note ID:", specificNoteId);
-      try {
-        if (specificNoteId) {
-          // 如果提供了特定的笔记ID，直接获取该笔记
-          const note = await NoteAPI.getNotes({
-            id:specificNoteId,
-          });
-          if (note && note.data && note.data.notes && note.data.notes.length > 0) {
-            this.noteId = specificNoteId;
-            this.editorContent = note.data.notes[0].content;
-            return;
-          } else {
-            throw new Error("获取指定笔记失败");
-          }
-        }
-        
-        // 如果没有指定笔记ID，获取文章关联的所有笔记
-        const response = await getNotes({ article_id: articleId });
-        if (response && response.data && response.data.notes && response.data.notes.length > 0) {
-          const firstNote = response.data.notes[0];
-          this.noteId = firstNote.id;
-          //  会通过 noteId prop 自动加载其内容，
-          // 并通过 v-model 更新 editorContent。
-        } else {
-          // 没有关联笔记，创建新笔记
-          const createResponse = await NoteAPI.createNote({
-            article_id: articleId,
-            content: "",
-            title: `note`, // 使用文献标题或ID作为笔记标题
-            isGroup: this.is_group
-          });
-          
-          if (createResponse && createResponse.data) {
-            this.noteId = createResponse.data.note_id; // 假设后端返回新创建笔记的ID
-            this.editorContent = ""; // 清空编辑器内容
-            ElMessage.success("已为您创建新笔记，可以开始记录了。");
-          } else {
-            throw new Error("创建笔记失败");
-          }
-        }
-      } catch (error) {
-        console.error("获取关联笔记失败：", error);
-        ElMessage.error("获取关联笔记失败！");
-        this.noteId = null;
-        this.editorContent = "";
-      }
-    }
   },
   mounted() {
     // 初始化面板尺寸
@@ -212,27 +259,56 @@ export default {
       this.notePaneSize = savedSizes.notePaneSize;
     }
 
+    // 从路由参数获取必要信息
     const currentArticleId = this.$route.query.article_id;
     const specificNoteId = this.$route.query.note_id;
-    const isGroup = this.$route.query.is_group === 'true';
-    console.log("Current route:", this.$route);
-  
-    this.is_group = isGroup; // 从路由参数设置is_group
+    this.is_group = this.$route.query.is_group === 'true';
+
     if (currentArticleId) {
-      this.fetchPdf(currentArticleId, specificNoteId);
+      this.initializePage(currentArticleId, specificNoteId);
     } else {
       ElMessage.error("请先选择要阅读的文献");
-      if(this.is_group) {
-        this.$router.push("/organization");
-      } else {
-        this.$router.push("/paper-library");
-      }
+      this.$router.push(this.is_group ? "/organization" : "/paper-library");
     }
   }
 };
 </script>
 
 <style scoped lang="scss">
+/* 笔记选择器样式 */
+.header-note-selector {
+  margin-left: auto;
+  padding: 0 1rem;
+}
+
+.header-note-select {
+  width: 200px;
+}
+
+/* 自定义 el-select 在标题栏中的样式 */
+:deep(.header-note-select .el-input__wrapper) {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+:deep(.header-note-select .el-input__wrapper:hover) {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+:deep(.header-note-select .el-input__inner) {
+  color: white;
+}
+
+:deep(.header-note-select .el-input__inner::placeholder) {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+:deep(.header-note-select .el-select__caret) {
+  color: white;
+}
+
 /* 主布局样式 */
 .jienote-layout {
   display: flex;
