@@ -156,8 +156,11 @@ export default {
   },
   mounted() {
     const currentArticleId = this.$route.query.article_id;
+    const isGroup = this.$route.query.is_group === 'true';
     console.log("Current route:", this.$route);
+    
     if (currentArticleId) {
+      this.is_group = isGroup; // 从路由参数设置is_group
       this.fetchPdf(currentArticleId);
     } else {
       ElMessage.error("请先选择要阅读的文献");
