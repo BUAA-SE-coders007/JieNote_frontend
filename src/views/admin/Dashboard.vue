@@ -20,7 +20,7 @@
                  href="javascript:;"
                  @click="togglePreview">
                 <i class="fas fa-eye text-lg leading-lg text-white opacity-75"></i>
-                <span class="ml-2">{{ previewEnabled ? '关闭预览' : '开启预览' }}</span>
+                <span class="ml-2">{{ previewEnabled ? '关闭悬停预览' : '开启悬停预览' }}</span>
               </a>
             </li>
             <li class="nav-item relative group">
@@ -594,7 +594,7 @@ export default {
 
   setup() {
     // 预览相关的状态和变量
-    const previewEnabled = ref(false)
+    const previewEnabled = ref(true) // 默认开启预览
     const currentPreviewNote = ref(null)
     const previewCache = ref(new Map()) // 用于缓存预览内容
     const previewLoadingDelay = ref(null) // 用于延迟加载动画
