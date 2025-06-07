@@ -62,7 +62,8 @@
 
 <script>
 import { Back, Loading } from '@element-plus/icons-vue';
-import http from '@/utils/http';
+// import http from '@/utils/http'; // No longer directly used here
+import { getArticleUrl } from '@/api/article'; // Import the new API function
 import JieNoteEditor from '@/components/Editor/JieNoteEditor.vue';
 import { getNotes } from '@/api/note'; // 导入笔记相关 API
 import NoteAPI from '@/api/note_unified'; // 笔记统一 API
@@ -97,20 +98,22 @@ export default {
     async fetchPdf(articleId) {
       this.articleId = articleId; // 存储 articleId
       try {
-        const response = await http.get("/article/readArticle", {
-          params: {
-            article_id: articleId,
-          },
-          responseType: "blob",
-        });
+        const response = await getArticleUrl(articleId); // Use the new API function
 
         // 获取文档标题
         await this.fetchDocumentTitle(articleId);
         // 获取关联的笔记
         await this.fetchAssociatedNote(articleId);
 
-        const blob = new Blob([response.data], { type: "application/pdf" });
-        this.pdfUrl = URL.createObjectURL(blob);
+        // According to OpenAPI spec, the URL is in response.data.article_url
+        if (response && response.data && response.data.article_url) {
+          this.pdfUrl = response.data.article_url;
+          // Optionally, you might want to use response.data.update_time if needed elsewhere
+        } else {
+          console.error("PDF URL (article_url) not found in response:", response);
+          ElMessage.error("获取 PDF 链接失败！");
+          this.pdfUrl = null; 
+        }
       } catch (error) {
         console.error("获取 PDF 文件失败：", error);
         ElMessage.error("加载 PDF 文件失败，请检查后端服务！");
@@ -153,6 +156,7 @@ export default {
     },
 
     async fetchAssociatedNote(articleId) {
+      console.log("Fetching associated note for article ID:", articleId);
       try {
         const response = await getNotes({ article_id: articleId });
         if (response && response.data && response.data.notes && response.data.notes.length > 0) {
@@ -172,7 +176,7 @@ export default {
           if (createResponse && createResponse.data) {
             this.noteId = createResponse.data.note_id; // 假设后端返回新创建笔记的ID
             this.editorContent = ""; // 清空编辑器内容
-            // ElMessage.success("已为您创建新笔记，可以开始记录了。");
+            ElMessage.success("已为您创建新笔记，可以开始记录了。");
           } else {
             throw new Error("创建笔记失败");
           }
