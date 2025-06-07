@@ -7,11 +7,6 @@
           <a class="text-lg font-bold leading-relaxed inline-block mr-4 py-2 whitespace-no-wrap uppercase text-white" href="#pablo">
             文献管理
           </a>
-          <button class="cursor-pointer text-xl leading-none px-3 py-1 border border-solid border-transparent rounded bg-transparent block lg:hidden outline-none focus:outline-none" type="button">
-            <span class="block relative w-6 h-px rounded-sm bg-white"></span>
-            <span class="block relative w-6 h-px rounded-sm bg-white mt-1"></span>
-            <span class="block relative w-6 h-px rounded-sm bg-white mt-1"></span>
-          </button>
         </div>
         <div class="lg:flex flex-grow items-center">
           <ul class="flex flex-col lg:flex-row list-none ml-auto">
@@ -607,6 +602,7 @@ import draggable from 'vuedraggable'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
 import { clearAuth } from '@/utils/auth';
+import { useRoute } from 'vue-router';
 import { onUnmounted } from 'vue'
 import {
   getSelfTree,
@@ -977,12 +973,22 @@ export default {
       });
     };
 
+    const route = useRoute();
+
     onMounted(async () => {
       initMermaid();
       try {
-        await findAllfolders()
-        // 数据加载完成后设置默认展开
-        setInitialExpandedKeys()
+        const queryParam = route.query.search;
+        if (queryParam) {
+          searchQuery.value = queryParam;
+          searchType.value = 'all'; // 也可以设置为 'all' 或从 query 传参
+          await performSearch(); // 触发搜索
+        }
+        else {
+          await findAllfolders()
+          // 数据加载完成后设置默认展开
+          setInitialExpandedKeys()
+        }
       } catch (error) {
         ElMessage.error('数据加载失败: ' + error.message)
       } finally {

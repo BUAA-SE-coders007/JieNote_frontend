@@ -497,7 +497,6 @@ defineExpose({
   }
   .el-input__inner:focus {
     outline: transparent !important;
-    box-shadow: white !important; // 关键：去除蓝色外框
     border: transparent !important;
     background: linear-gradient(90deg, #3b82f6 0%, #1e40af 100%) !important;
     border-color: transparent !important;
@@ -571,30 +570,6 @@ defineExpose({
   &:hover {
     background: #64748b;
   }
-}
-.robot-float {
-  position: fixed;
-  right: 36px;
-  bottom: 36px;
-  z-index: 9999;
-  box-shadow: 0 8px 32px 0 rgba(37,99,235,0.18), 0 1.5px 8px 0 #2563eb33;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.95);
-  padding: 12px;
-  transition: transform 0.3s;
-  animation: robot-float-ani 2.5s infinite ease-in-out;
-  cursor: pointer;
-  &:hover {
-    transform: translateY(-8px) scale(1.08) rotate(-4deg);
-    box-shadow: 0 12px 36px 0 #2563eb44, 0 2px 12px 0 #60a5fa33;
-    background: #f0f9ff;
-  }
-}
-
-@keyframes robot-float-ani {
-  0% { transform: translateY(0);}
-  50% { transform: translateY(-10px);}
-  100% { transform: translateY(0);}
 }
 
 .folder-dialog-custom ::v-deep(.el-dialog__header) {
