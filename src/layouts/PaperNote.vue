@@ -22,14 +22,14 @@
       <splitpanes class="default-theme" :horizontal="false">
         <pane :size="57" min-size="20">
           <!-- PDF 查看区域 -->
-          <!-- PDF 查看区域 -->
           <div class="pdf-container">
-            <iframe
-                v-if="pdfUrl"
-                :src="pdfUrl"
-                class="pdf-viewer"
-                frameborder="0"
-            ></iframe>
+            <PdfViewer
+              v-if="pdfUrl"
+              :fileUrl="pdfUrl"
+              :fileName="documentTitle"
+              :articleId="articleId"
+              :write="true"
+            />
             <div v-else class="pdf-loading">
               <el-icon class="loading-icon is-loading"><Loading /></el-icon>
               <span>正在加载 PDF 文件，请稍候...</span>
@@ -67,6 +67,7 @@ import JieNoteEditor from '@/components/Editor/JieNoteEditor.vue';
 import { getNotes } from '@/api/note'; // 导入笔记相关 API
 import NoteAPI from '@/api/note_unified'; // 笔记统一 API
 import { Splitpanes, Pane } from 'splitpanes';
+import PdfViewer from '@/components/Pdfview/PdfViewer.vue';
 import 'splitpanes/dist/splitpanes.css';
 import { ElMessage } from 'element-plus';
 
@@ -79,6 +80,7 @@ export default {
     JieNoteEditor,
     Splitpanes,
     Pane,
+    PdfViewer,
   },
   data() {
     return {
@@ -245,15 +247,9 @@ export default {
   position: relative;
   border: 1px solid #e2e8f0;
   border-radius: 0.375rem;
-  margin: 0.5rem;
+  margin: 0.25rem;
   overflow: hidden;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.pdf-viewer {
-  width: 100%;
-  height: 100%; /* 改为 100% 填充父容器 */
-  min-height: 500px; /* 添加最小高度保障 */
 }
 
 .pdf-loading {
@@ -329,7 +325,9 @@ export default {
     font-size: 1rem;
   }
 
-  .pdf-container,
+  .pdf-container {
+    height: calc(100vh - 80px);
+  }
   .note-container {
     height: calc(100vh - 50px);
   }
