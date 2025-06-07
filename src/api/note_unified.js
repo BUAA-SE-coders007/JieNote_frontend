@@ -41,12 +41,11 @@ class NoteAPI {
         note_content: content
       })
     } else {
-      return http.put(`/notes/${note_id}`, null, {
-        params: {
-          content,
-          title
-        }
-      })
+      // 构建查询参数
+      const params = {};
+      if (content !== undefined) params.content = content;
+      if (title !== undefined) params.title = title;
+      return http.post(`/notes/${note_id}`, params);
     }
   }
 
