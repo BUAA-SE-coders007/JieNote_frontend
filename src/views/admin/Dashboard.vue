@@ -820,9 +820,24 @@ export default {
       // 检查是否是文献节点或笔记节点
       console.log("handleRead, node.level:", node.level, "depth:", data.depth)
       if (node.level === 2 && data.depth === 1) {  // PDF nodes: level 2 in tree, depth 1 in data
-        router.push(`/paper-note?article_id=${data.true_id}`);
+        router.push({
+          name: 'paper-note',
+          query: {
+            article_id: data.true_id,
+            is_group: false
+          }
+        });
       } else if (node.level === 3 && data.depth === 2) {  // 笔记节点：level 3 in tree, depth 2 in data
-        router.push(`/note/${data.true_id}`);
+        // 从父节点(文献节点)获取article_id
+        const articleId = node.parent.data.true_id;
+        router.push({
+          name: 'paper-note',
+          query: {
+            article_id: articleId,
+            note_id: data.true_id,
+            is_group: false
+          }
+        });
       } else {
         ElMessage.warning('只能阅读文献或笔记');
       }
@@ -942,12 +957,28 @@ export default {
     }
 
     // 处理双击事件
-    const handleNodeDblClick = async (data) => {
+    const handleNodeDblClick = async (node) => {
       // 直接处理跳转逻辑
+      const data = node.data;
       if (data.depth === 1) { // 文献节点
-        router.push(`/paper-note?article_id=${data.true_id}`);
+        router.push({
+          name: 'paper-note',
+          query: {
+            article_id: data.true_id,
+            is_group: false
+          }
+        });
       } else if (data.depth === 2) { // 笔记节点
-        router.push(`/note/${data.true_id}`);
+        // 从父节点(文献节点)获取article_id
+        const articleId = node.parent.data.true_id;
+        router.push({
+          name: 'paper-note',
+          query: {
+            article_id: articleId,
+            note_id: data.true_id,
+            is_group: false
+          }
+        });
       }
     }
 
