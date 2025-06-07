@@ -313,19 +313,21 @@
                 ref="treeRef"
             >
               <template #default="{ node, data }">
-                <div class="modern-node" @dblclick.stop="handleNodeClick(data)">
+                <div class="modern-node" @dblclick.stop="handleNodeDblClick(data)">
                   <!-- 预览 popover -->
                   <el-popover
                     v-if="previewEnabled && data.depth === 2"
                     placement="right-start"
                     :width="400"
                     trigger="hover"
-                    :hide-after="300"
+                    :hide-after="400"
                     :show-arrow="true"
                     :offset="12"
-                    :show-after="600"
+                    :show-after="300"
+                    transition="el-fade-in-linear"
                     popper-class="preview-popover"
                     @show="handlePreviewShow(data)"
+                    @before-enter="handlePreviewBeforeEnter(data)"
                   >
                     <template #default>
                       <div class="preview-content">
@@ -591,11 +593,25 @@ export default {
 
 
   setup() {
-    // 预览相关的状态
+    // 预览相关的状态和变量
     const previewEnabled = ref(false)
     const currentPreviewNote = ref(null)
     const previewCache = ref(new Map()) // 用于缓存预览内容
+    const previewLoadingDelay = ref(null) // 用于延迟加载动画
     
+    // 处理预览显示
+    // 预览加载前的处理
+    const handlePreviewBeforeEnter = (data) => {
+      // 清除之前的延迟加载定时器
+      if (previewLoadingDelay.value) {
+        clearTimeout(previewLoadingDelay.value);
+      }
+      // 如果没有缓存，显示加载状态
+      if (!previewCache.value.has(data.id)) {
+        currentPreviewNote.value = null;
+      }
+    }
+
     // 处理预览显示
     const handlePreviewShow = async (data) => {
       // 如果缓存中已有内容，直接使用缓存
@@ -604,7 +620,9 @@ export default {
         return;
       }
 
-      try {
+      // 设置延迟加载动画
+      previewLoadingDelay.value = setTimeout(async () => {
+        try {
         const response = await getNotes({ id: data.true_id });
         if (response.data && response.data.notes && response.data.notes.length > 0) {
           const note = {
@@ -620,8 +638,13 @@ export default {
       } catch (error) {
         console.error('预览加载失败:', error);
         ElMessage.error('预览加载失败：' + (error.message || '请稍后重试'));
+      } finally {
+        // 清除延迟加载定时器
+        clearTimeout(previewLoadingDelay.value);
+        previewLoadingDelay.value = null;
       }
-    }
+    }, 300); // 300ms后开始加载，避免频繁触发
+  }
     const router = useRouter()
 
     const showNewNoteDialog = ref(false)
@@ -918,18 +941,20 @@ export default {
       }
     }
 
-    const handleNodeClick = async (data) => {
-      // 如果预览模式已启用且点击了笔记节点，则不执行其他操作
-      if (previewEnabled.value && data.depth === 2) {
-        return;
-      }
-
-      // 常规点击处理逻辑保持不变
+    // 处理双击事件
+    const handleNodeDblClick = async (data) => {
+      // 直接处理跳转逻辑
       if (data.depth === 1) { // 文献节点
         router.push(`/paper-note?article_id=${data.true_id}`);
       } else if (data.depth === 2) { // 笔记节点
         router.push(`/note/${data.true_id}`);
-      } else {
+      }
+    }
+
+    // 处理普通点击事件
+    const handleNodeClick = (data) => {
+      // 只处理文件夹的展开/收起
+      if (data.depth === 0) {
         if (expandedKeys.value.has(data.id)) {
           handleNodeCollapse(data)
         } else {
@@ -1811,6 +1836,7 @@ export default {
       currentPreviewNote,
       togglePreview,
       handlePreviewShow,
+      handlePreviewBeforeEnter,
       handleCheck,
       findAllfolders,
       showCheckbox,
@@ -1820,6 +1846,7 @@ export default {
       showNewNoteDialog,
       newNoteForm,
       handleNodeClick,
+      handleNodeDblClick,
       toggleCheckbox,
       append,
       remove,
@@ -1899,7 +1926,15 @@ export default {
 
 .modern-node {
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &.hovering {
+    background-color: rgba(70, 160, 255, 0.05);
+  }
 
   .node-actions {
     /* 防止点击操作按钮时触发节点点击 */

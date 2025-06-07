@@ -57,7 +57,7 @@ export const updateNote = (noteId, data) => {
   if (data.content !== undefined) params.content = data.content;
   if (data.title !== undefined) params.title = data.title;
   
-  return http.put(`/notes/${noteId}`, null, { params });
+  return http.post(`/notes/${noteId}`, params);
 };
 
 /**
