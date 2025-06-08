@@ -359,10 +359,10 @@ export default {
             content = `${log.person1} 修改了组织基本信息`;
             break;
           case 3:
-            content = `${log.person1} 被设为管理员`;
+            content = `${log.person2} 被设为管理员`;
             break;
           case 4:
-            content = `${log.person1} 被取消管理员权限`;
+            content = `${log.person2} 被取消管理员权限`;
             break;
           case 5:
             content = `${log.person2} 将 ${log.person1} 踢出组织`;
@@ -374,7 +374,7 @@ export default {
             content = `${log.person1} 创建了文件夹 "${log.folder}"`;
             break;
           case 8:
-            content = `${log.person1} 在文件夹 "${log.folder}" 中创建了文献 "${log.article}"`;
+            content = `${log.person1} 在文件夹 "${log.folder}" 中上传了文献 "${log.article}"`;
             break;
           case 9:
             content = `${log.person1} 在文件夹 "${log.folder}" 的文献 "${log.article}" 中创建了笔记 "${log.note}"`;
@@ -386,16 +386,16 @@ export default {
             content = `${log.person1} 在文件夹 "${log.folder}" 中将文献 "${log.article}" 重命名为 "${log.article_new}"`;
             break;
           case 12:
-            content = `${log.person1} 在文件夹 "${log.folder}" 的文献 "${log.article}" 中将笔记 "${log.note}" 重命名为 "${log.note_new}"`;
+            content = `${log.person1} 将文件夹 "${log.folder}" 的文献 "${log.article}" 的标签由 "${log.article_tags}" 修改为为 "${log.article_new}"`;
             break;
           case 13:
-            content = `${log.person1} 删除了文件夹 "${log.folder}"`;
+            content = `${log.person1} 在文件夹 "${log.folder}" 中将文献 "${log.article}" 的笔记 "${log.note}" 重命名为 "${log.note_new}"`;
             break;
           case 14:
-            content = `${log.person1} 在文件夹 "${log.folder}" 中删除了文献 "${log.article}"`;
+            content = `${log.person1} 编辑了文件夹 "${log.folder}" 中文献 "${log.article}" 的笔记 "${log.note}"`;
             break;
           case 15:
-            content = `${log.person1} 在文件夹 "${log.folder}" 的文献 "${log.article}" 中删除了笔记 "${log.note}"`;
+            content = `${log.person1} 删除了文件夹 "${log.folder}"`;
             break;
           case 16:
             content = `${log.person1} 删除了文件夹 "${log.folder}" 下的文献 "${log.article}"`;
