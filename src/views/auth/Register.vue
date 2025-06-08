@@ -87,10 +87,10 @@
                     required
                   />
                   <button
-                    type="button"
-                    @click="sendVerificationCode"
-                    :disabled="isSendingCode"
-                    class="ml-2 bg-blueGray-800 text-white text-sm font-bold uppercase px-4 py-2 rounded shadow hover:shadow-lg outline-none focus:outline-none ease-linear transition-all duration-150"
+                      type="button"
+                      @click="sendVerificationCode"
+                      :disabled="isSendingCode"
+                      class="ml-2 bg-blueGray-800 text-white text-xs font-bold uppercase px-4 py-2 rounded shadow hover:shadow-lg outline-none focus:outline-none ease-linear transition-all duration-150 whitespace-nowrap"
                   >
                     {{ isSendingCode ? `${countdown}s后可重发` : "发送验证码" }}
                   </button>
