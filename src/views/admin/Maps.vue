@@ -28,7 +28,7 @@
                 class="literature-simple-item"
               >
                 <span class="literature-icon"><svg t="1748777710670" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1020" data-spm-anchor-id="a313x.collections_detail.0.i0.223b3a81QSiUzk" width="200" height="200"><path d="M911.232 536.064a30.784 30.784 0 0 1 14.912 57.6c-24 13.44-86.464 60.16-86.464 113.024 0 76.672 64.832 115.84 80.896 124.352l3.456 1.792a30.784 30.784 0 0 1-12.8 58.624H260.672a177.92 177.92 0 0 1-177.728-177.728 177.92 177.92 0 0 1 177.728-177.728h407.552c-15.616 0.064-28.16 10.944-30.784 25.28l-0.512 5.504c0 16.96 13.76 30.72 30.72 30.72l-0.704-0.128 0.704 0.064c10.368 0 4.928-8.576-16.384-25.792l-6.144-4.928c26.304-20.48 33.856-30.72 22.528-30.72h0.576l243.008 0.064z m-244.288 61.312l-406.272 0.064a116.48 116.48 0 0 0-116.288 116.288 116.48 116.48 0 0 0 116.288 116.288h563.008a187.712 187.712 0 0 1-45.44-123.328c0-44.16 22.08-81.28 47.104-109.184h-157.696l-0.704-0.128z m-63.296 106.368a30.72 30.72 0 1 1 0 61.44H266.24a30.72 30.72 0 0 1 0-61.44h337.344z m160.64-576.64a177.92 177.92 0 0 1 177.664 177.728 177.92 177.92 0 0 1-177.728 177.664H113.664a30.784 30.784 0 0 1-14.976-57.536c24.064-13.504 86.528-60.16 86.528-113.088 0-85.696-80.96-124.544-84.416-126.08a30.784 30.784 0 0 1 12.864-58.624h650.624z m0 61.44h-93.248l-0.832 0.064H201.216c24.448 29.12 45.44 69.696 45.44 123.328 0 44.16-22.016 81.28-47.104 109.184h564.736a116.48 116.48 0 0 0 116.224-116.288 116.48 116.48 0 0 0-116.224-116.288z m-9.984 110.528a30.72 30.72 0 1 1 0 61.44h-337.28a30.72 30.72 0 0 1 0-61.44h337.28z m-84.096-171.904l-5.504 0.448a30.72 30.72 0 0 0 5.504 60.928h0.832l1.6-0.128c6.72-1.408 0.128-9.984-19.776-25.6l-6.4-4.928c27.136-20.48 35.072-30.72 23.744-30.72z" fill="#505766" p-id="1021"></path><path d="M911.232 523.264a43.584 43.584 0 0 1 21.184 81.472c-40.32 22.72-79.936 65.28-79.936 101.952 0 30.784 11.392 56.96 31.168 79.232 13.568 15.168 29.056 26.496 42.688 33.728l3.136 1.6a43.52 43.52 0 0 1-18.24 83.008H260.672a190.72 190.72 0 0 1-190.528-190.528 190.72 190.72 0 0 1 190.528-190.528h406.976l243.584 0.064z m-283.072 25.472l-367.488 0.064a165.12 165.12 0 0 0-164.928 164.928 165.12 165.12 0 0 0 164.928 164.928h650.496a17.92 17.92 0 0 0 17.472-14.08 18.112 18.112 0 0 0-10.368-20.352l-3.712-1.856a182.08 182.08 0 0 1-50.048-39.424 141.44 141.44 0 0 1-37.632-96.256c0-48.768 45.376-97.408 93.056-124.288a17.92 17.92 0 0 0-8.704-33.536l-228.928-0.128-1.536 2.56a92.16 92.16 0 0 1-13.312 13.632l-2.048 1.728c6.4 5.568 10.88 9.984 14.08 13.824l2.624 3.648 0.256 0.512 171.648 0.064-19.136 21.312c-27.904 31.168-43.84 64.896-43.84 100.672 0 44.8 15.488 83.008 42.432 115.072l17.728 21.056H260.672a129.28 129.28 0 0 1-129.088-129.088 129.28 129.28 0 0 1 129.088-129.088h367.616l-0.704-1.408a45.44 45.44 0 0 1-3.008-11.456l-0.384-6.144 0.64-6.656a43.392 43.392 0 0 1 1.792-6.656l1.536-3.584z m170.56 61.504l-131.072-0.128H665.6l-404.992 0.128a103.68 103.68 0 0 0-103.04 94.08l-0.448 9.408a103.68 103.68 0 0 0 103.488 103.488h537.6l-1.216-1.728a196.48 196.48 0 0 1-31.104-93.632l-0.512-15.168c0-34.304 11.904-66.368 32.96-96l0.32-0.448z m-195.072 80.64a43.52 43.52 0 1 1 0 87.04H266.24a43.52 43.52 0 0 1 0-87.04h337.344z m0 25.6H266.304a17.92 17.92 0 0 0 0 35.84h337.28a17.92 17.92 0 0 0 0.064-35.84z m351.104-411.648a190.72 190.72 0 0 1-190.528 190.464H113.664a43.584 43.584 0 0 1-21.248-81.472c40.32-22.72 80-65.28 80-101.952 0-58.304-38.464-96.64-76.992-114.56a43.52 43.52 0 0 1 18.24-82.944h650.624a190.72 190.72 0 0 1 190.464 190.464z m-270.144-164.992l-1.728 2.816a96.96 96.96 0 0 1-13.76 13.632l-1.92 1.536 4.8 4.224c3.2 2.816 5.888 5.376 8.064 7.68l2.816 3.392 1.728 2.56 79.68 0.064a129.28 129.28 0 0 1 129.024 129.088 129.28 129.28 0 0 1-129.024 129.088H170.88l19.072-21.312c27.904-31.168 43.84-64.896 43.84-100.672 0-44.8-15.424-83.008-42.432-115.072l-17.728-21.056h27.52l429.376 0.064-2.048-5.44a43.2 43.2 0 0 1-1.408-6.144l-0.384-5.504-1.344-0.96 1.28-1.088 0.448-5.12a42.688 42.688 0 0 1 3.392-11.648H113.664a17.792 17.792 0 0 0-16.064 10.176l-1.344 3.84a17.92 17.92 0 0 0 9.92 20.16c46.656 21.568 91.84 66.624 91.84 137.728 0 48.768-45.376 97.408-93.056 124.288a17.92 17.92 0 0 0 8.704 33.536h650.56a165.12 165.12 0 0 0 164.928-164.864 165.12 165.12 0 0 0-164.864-164.928h-79.68z m-11.2 61.312l-1.408 0.128H672l-1.728 0.128H226.624l1.216 1.728c17.728 27.584 28.672 58.816 31.104 93.632l0.512 15.168c0 34.304-11.904 66.368-32.896 96l-0.32 0.32 538.048 0.064a103.68 103.68 0 0 0 103.04-94.08l0.384-9.408a103.68 103.68 0 0 0-103.424-103.488l-90.88-0.192z m80.896 85.12a43.52 43.52 0 1 1 0 87.04h-337.28a43.52 43.52 0 0 1 0-87.04h337.28z m0 25.6h-337.28a17.92 17.92 0 0 0 0 35.84h337.28a17.92 17.92 0 0 0 0-35.84z" fill="#505766" p-id="1022" data-spm-anchor-id="a313x.collections_detail.0.i1.223b3a81QSiUzk" class="selected"></path></svg></span>
-                <div class="literature-info">
+                <div class="literature-info" @click="handlePreview(article.id)">
                   <span class="literature-title-text" :title="article.title">{{ article.title }}</span>
                   <div v-if="article.author" class="literature-author-text">
                     <el-icon style="font-size:16px;color:#2563eb;margin-right:4px;"><i class="el-icon-user" /></el-icon>
@@ -152,12 +152,14 @@
 <script setup>
 import { ref,  watch ,computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus'
 import { defineExpose } from 'vue'
-import { searchLiterature, getLiteratureList, getSelfFolders, copyArticleToFolder, generateArticleIntro } from '@/api/database'
+import { searchLiterature, getRecommendLiterature, getSelfFolders, copyArticleToFolder, generateArticleIntro } from '@/api/database'
 import patternVue from "@/assets/img/logo4.png"
 
 const route = useRoute()
+const router = useRouter();
 const articles = ref([])
 const isLoading = ref(true)
 const searchQuery = ref('')
@@ -230,6 +232,10 @@ function handleBackToRecommend() {
   fetchLiteratureList()
 }
 
+function handlePreview(articleId) {
+  router.push(`/paper?article_id=${articleId}`); // 跳转到 PDF 阅读页面
+}
+
 async function fetchArticleIntro(article) {
   if (article.loadingIntro) return; // 防止重复加载
   article.loadingIntro = true; // 标记为加载中
@@ -267,7 +273,7 @@ async function handleSearch() {
 async function fetchLiteratureList() {
   isLoading.value = true;
   try {
-    const response = await getLiteratureList();
+    const response = await getRecommendLiterature({size: 10});
     const data = response.data || {};
     articles.value = (data.articles || []).map(article => ({
       ...article,
@@ -335,7 +341,8 @@ defineExpose({
   handlePageSizeChange,
   goToPage,
   jumpToPage,
-  fetchArticleIntro
+  fetchArticleIntro,
+  handlePreview,
 })
 </script>
 
@@ -704,5 +711,26 @@ defineExpose({
   text-align: center;
 }
 
+.literature-info {
+  cursor: pointer; /* 鼠标样式为手型，表示可点击 */
+  transition: background 0.2s;
+}
 
+.literature-info:hover {
+  background: #f0f9ff; /* 鼠标悬停时背景颜色变化 */
+}
+
+.literature-action-icon {
+  margin-left: auto;
+  cursor: pointer; /* 鼠标样式为手型，表示可点击 */
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.literature-action-icon:hover {
+  background: #d1fae5; /* 鼠标悬停时背景颜色变化 */
+}
 </style>

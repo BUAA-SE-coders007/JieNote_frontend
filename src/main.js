@@ -2,7 +2,7 @@ import { createApp } from "vue";
 import { createWebHistory, createRouter } from "vue-router";
 import 'flowbite';
 
-
+import Paper from "@/layouts/Paper.vue";
 import PaperNote from '@/layouts/PaperNote.vue';
 // styles
 
@@ -122,6 +122,10 @@ const routes = [
     path: "/paper-note",
     name: "paper-note",
     component: PaperNote,
+  },
+  {
+    path: "/paper",
+    component: Paper,
   },
   {
     path: "/",
