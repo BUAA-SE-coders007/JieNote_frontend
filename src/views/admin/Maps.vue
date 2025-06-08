@@ -10,9 +10,29 @@
             v-if="!isSearched"
             class="recommend-title flex items-center mb-4"
           >
-            <span class="recommend-icon" aria-label="个性推荐">
+            <button
+              v-if="currentView === 'recommend'"
+              @click="switchToDatabase"
+              class="switch-button database-button"
+              title="切换到数据库"
+            >
+            <div class="clickable-area">
+              <svg t="1749366903645" class="icon" viewBox="0 0 1303 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4406" width="30" height="30"><path d="M1252.838233 407.733734H51.978606a51.851071 51.851071 0 0 1-44.962418-24.668822 48.499835 48.499835 0 0 1 13.032585-63.859667L434.019529 11.077697a51.478711 51.478711 0 0 1 70.934499 9.30899 48.499835 48.499835 0 0 1-9.495169 69.072701l-295.094962 219.692149h1051.357258c26.34444 0 49.151464 19.176518 51.478711 44.776238a48.499835 48.499835 0 0 1-13.032585 37.701407 51.199441 51.199441 0 0 1-37.235958 16.104552zM838.960566 1023.988829a50.454722 50.454722 0 0 1-47.941295-33.512361 48.592924 48.592924 0 0 1 17.221631-54.923038l295.094962-219.692148H51.792426a50.733992 50.733992 0 0 1-51.478711-44.776239 48.499835 48.499835 0 0 1 13.032585-37.794497 51.199441 51.199441 0 0 1 37.329048-16.011462h1200.859627a51.757981 51.757981 0 0 1 44.962418 24.668822 48.499835 48.499835 0 0 1-13.125675 63.859667l-413.877666 308.127548A51.199441 51.199441 0 0 1 838.960566 1023.988829z" fill="#5F6269" p-id="4407"></path></svg>
+            </div>
+            </button>
+            <button
+              v-if="currentView === 'database'"
+              @click="switchToRecommend"
+              class="switch-button recommend-button"
+              title="切换到个性推荐"
+            >
+            <div class="clickable-area">
+              <svg t="1749366903645" class="icon" viewBox="0 0 1303 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4406" width="30" height="30"><path d="M1252.838233 407.733734H51.978606a51.851071 51.851071 0 0 1-44.962418-24.668822 48.499835 48.499835 0 0 1 13.032585-63.859667L434.019529 11.077697a51.478711 51.478711 0 0 1 70.934499 9.30899 48.499835 48.499835 0 0 1-9.495169 69.072701l-295.094962 219.692149h1051.357258c26.34444 0 49.151464 19.176518 51.478711 44.776238a48.499835 48.499835 0 0 1-13.032585 37.701407 51.199441 51.199441 0 0 1-37.235958 16.104552zM838.960566 1023.988829a50.454722 50.454722 0 0 1-47.941295-33.512361 48.592924 48.592924 0 0 1 17.221631-54.923038l295.094962-219.692148H51.792426a50.733992 50.733992 0 0 1-51.478711-44.776239 48.499835 48.499835 0 0 1 13.032585-37.794497 51.199441 51.199441 0 0 1 37.329048-16.011462h1200.859627a51.757981 51.757981 0 0 1 44.962418 24.668822 48.499835 48.499835 0 0 1-13.125675 63.859667l-413.877666 308.127548A51.199441 51.199441 0 0 1 838.960566 1023.988829z" fill="#5F6269" p-id="4407"></path></svg>
+            </div>
+            </button>
+            <span class="recommend-text ml-2">
+              {{ currentView === 'recommend' ? '个性推荐' : '数据库' }}
             </span>
-            <span class="recommend-text ml-2">个性推荐</span>
           </div>
           <div v-if="isLoading" class="loading-wrapper">
             <div class="loading-content">
@@ -155,7 +175,7 @@ import { useRoute } from 'vue-router'
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus'
 import { defineExpose } from 'vue'
-import { searchLiterature, getRecommendLiterature, getSelfFolders, copyArticleToFolder, generateArticleIntro } from '@/api/database'
+import { searchLiterature, getRecommendLiterature, getSelfFolders, copyArticleToFolder, generateArticleIntro, getLiteratureList } from '@/api/database'
 import patternVue from "@/assets/img/logo4.png"
 
 const route = useRoute()
@@ -172,6 +192,7 @@ const isSearched = ref(false)
 const pageSize = ref(10); // 每页显示的文献数量
 const currentPage = ref(1); // 当前页码
 const jumpToPage = ref(null); // 跳转到的页码
+const currentView = ref('recommend'); // 当前视图，默认为个性推荐
 
 // 计算总页数
 const totalPages = computed(() => Math.ceil(articles.value.length / pageSize.value));
@@ -182,6 +203,17 @@ const paginatedArticles = computed(() => {
   const end = start + pageSize.value;
   return articles.value.slice(start, end);
 });
+
+function switchToDatabase() {
+  currentView.value = 'database';
+  fetchLiteratureList();
+}
+
+function switchToRecommend() {
+  currentPage.value = 1;
+  currentView.value = 'recommend';
+  fetchRecommendLiteratureList();
+}
 
 // 可见的页码（最多显示 4 个页码）
 const visiblePages = computed(() => {
@@ -219,7 +251,7 @@ watch(
       await handleSearch()
     } else {
       searchQuery.value = ''
-      await fetchLiteratureList()
+      await fetchRecommendLiteratureList()
       isSearched.value = false
     }
   },
@@ -270,10 +302,34 @@ async function handleSearch() {
 }
 
 
-async function fetchLiteratureList() {
+async function fetchRecommendLiteratureList() {
   isLoading.value = true;
   try {
     const response = await getRecommendLiterature({size: 10});
+    const data = response.data || {};
+    articles.value = (data.articles || []).map(article => ({
+      ...article,
+      intro: article.intro || null, // 初始化简介字段
+      loadingIntro: false, // 初始化加载状态
+    }));
+
+    // 自动加载当前页文献简介
+    for (const article of paginatedArticles.value) {
+      if (!article.intro) {
+        fetchArticleIntro(article);
+      }
+    }
+  } catch (e) {
+    ElMessage.error('文献列表加载失败');
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+async function fetchLiteratureList() {
+  isLoading.value = true;
+  try {
+    const response = await getLiteratureList();
     const data = response.data || {};
     articles.value = (data.articles || []).map(article => ({
       ...article,
@@ -343,6 +399,9 @@ defineExpose({
   jumpToPage,
   fetchArticleIntro,
   handlePreview,
+  fetchRecommendLiteratureList,
+  switchToDatabase,
+  switchToRecommend,
 })
 </script>
 
@@ -757,5 +816,42 @@ defineExpose({
 
 .literature-action-icon:hover {
   background: #d1fae5; /* 鼠标悬停时背景颜色变化 */
+}
+
+.switch-button {
+  font-size: 16px;
+
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px; /* 图标和文字之间的间距 */
+  position: relative; /* 为伪元素定位 */
+}
+
+.switch-button::before {
+  content: '';
+  position: absolute;
+  left: -50px; /* 向左扩展点击范围 */
+  top: 0;
+  width: 30px; /* 扩展的宽度 */
+  background: transparent; /* 保持透明 */
+  cursor: pointer; /* 鼠标样式为手型 */
+}
+
+.clickable-area {
+  position: relative;
+  width: 60px; /* 增加宽度 */
+  height: 60px; /* 增加高度 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer; /* 鼠标样式为手型 */
+  background: transparent; /* 保持透明背景 */
+}
+
+.clickable-area:hover {
+  background: rgba(0, 0, 0, 0.05); /* 鼠标悬停时显示轻微背景变化 */
+  border-radius: 50%; /* 圆形效果 */
 }
 </style>
