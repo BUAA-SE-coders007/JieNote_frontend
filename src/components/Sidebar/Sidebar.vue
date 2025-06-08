@@ -219,30 +219,23 @@
 
         <div class="robot-dialog-content">
           <div class="robot-dialog-history-area">
-            <!-- 渲染历史消息（前 n-1 条） -->
+            <!-- 1. 渲染所有已确认的历史消息 -->
             <div
-                v-for="(item, idx) in robotHistory.slice(0,-1)"
+                v-for="(item, idx) in robotHistory"
                 :key="idx"
                 class="robot-history-msg"
             >
               <div class="robot-question">你：{{ item.question }}</div>
               <div class="robot-answer" v-html="'回答：' + item.answer"></div>
             </div>
-            <!-- 当前正在输出的内容或最后一条历史 -->
-            <div v-if="robotLoading || robotOutput || robotHistory.length" class="robot-history-msg">
-              <div class="robot-question">
-                你：
-                <span v-if="robotLoading || robotOutput">
-                {{ robotInput || (robotHistory.length ? robotHistory[robotHistory.length - 1].question : '') }}
-              </span>
-                <span v-else-if="robotHistory.length">
-                {{ robotHistory[robotHistory.length - 1].question }}
-              </span>
-              </div>
+
+            <!-- 2. 仅当有进行中的请求时才显示临时消息 -->
+            <div v-if="(robotLoading || robotOutput) && !currentQuestionSaved" class="robot-history-msg">
+              <!-- 使用固定值显示当前问题（避免绑定robotInput） -->
+              <div class="robot-question">你：{{ currentProcessingQuestion }}</div>
               <div class="robot-answer">
                 回答：
-                <span v-if="robotLoading || robotOutput" v-html="robotOutput"></span>
-                <span v-else-if="robotHistory.length" v-html="robotHistory[robotHistory.length - 1].answer"></span>
+                <span v-html="robotOutput"></span>
                 <span v-if="robotLoading" class="blink-cursor">|</span>
               </div>
             </div>
@@ -281,6 +274,8 @@ import {sendRobotMessage} from "@/api/database"; // 引入 sendRobotMessage 函�
 export default {
   data() {
     return {
+      currentQuestionSaved: false, // 跟踪当前问题是否已保存到历史
+      currentProcessingQuestion: '',
       collapseShow: "hidden",
       showSearchDialog: false,
       showRobotDialog: false, // 新增
@@ -602,6 +597,8 @@ export default {
     },
     async sendRobotMsg() {
       if (!this.robotInput.trim()) return;
+      this.currentProcessingQuestion = this.robotInput;
+      this.currentQuestionSaved = false;
       const input = this.robotInput;
       this.robotOutput = "";
       this.robotLoading = true;
@@ -642,14 +639,17 @@ export default {
         }
         // 聊天历史保存
         this.robotHistory.push({
-          question: input,
+          question: this.currentProcessingQuestion,
           answer: this.robotOutput,
         });
+        this.currentQuestionSaved = true;
       } catch (e) {
         //this.robotOutput += "\n[机器人服务异常]";
+        this.currentQuestionSaved = true; // 即使出错也标记为已保存
       } finally {
         this.robotLoading = false;
         this.robotInput = "";
+        this.currentProcessingQuestion = ''; // 清空当前问题
         this.robotController = null;
       }
     },
