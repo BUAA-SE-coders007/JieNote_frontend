@@ -1,6 +1,5 @@
 # JieNote_frontend
 2025春季软件工程团队项目JieNote前端仓库
-以下是根据你的 `package.json` 文件内容生成的前端项目 `README.md` 中 **“Setup”** 小节内容，详细描述了构建流程、依赖环境和开发命令，适用于 `vue-notus` 项目：
 
 ---
 
