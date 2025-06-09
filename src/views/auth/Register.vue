@@ -55,19 +55,22 @@
 
               <div class="relative w-full mb-3">
                 <label
-                  class="block uppercase text-blueGray-600 text-xs font-bold mb-2"
-                  for="password"
+                    class="block uppercase text-blueGray-600 text-xs font-bold mb-2"
+                    for="password"
                 >
                   密码
                 </label>
                 <input
-                  type="password"
-                  id="password"
-                  v-model="password"
-                  class="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
-                  placeholder="请输入密码"
-                  required
+                    type="password"
+                    id="password"
+                    v-model="password"
+                    class="border-0 px-3 py-3 placeholder-blueGray-300 text-blueGray-600 bg-white rounded text-sm shadow focus:outline-none focus:ring w-full ease-linear transition-all duration-150"
+                    placeholder="请输入密码"
+                    required
                 />
+                <p class="text-xs text-gray-500 mt-1">
+                  8-20 位，可包含字母、数字和 !@#$%^&* 符号
+                </p>
               </div>
 
               <div class="relative w-full mb-3">
@@ -181,6 +184,15 @@ export default {
         !this.verificationCode
       ) {
         ElMessage.warning("请填写所有字段！");
+        return;
+      }
+      const passwordPattern = /^[a-zA-Z0-9!@#$%^&*]{8,20}$/;
+
+      if (!passwordPattern.test(this.password)) {
+        this.$message({
+          message: '密码格式不正确，应为8-20位字母、数字或 !@#$%^&*',
+          type: 'warning'
+        });
         return;
       }
       try {
