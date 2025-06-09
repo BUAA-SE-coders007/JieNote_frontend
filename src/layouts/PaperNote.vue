@@ -262,7 +262,7 @@ export default {
         if (pdfResponse?.data?.article_url) {
           
           const nowTime = new Date().getTime();
-          this.pdfUrl = pdfResponse.data.article_url + `&=${nowTime}`;
+          this.pdfUrl = pdfResponse.data.article_url + `&t=${nowTime}`;
         } else {
           console.error("获取PDF链接失败：", pdfResponse);
           ElMessage.error("获取 PDF 链接失败！");
