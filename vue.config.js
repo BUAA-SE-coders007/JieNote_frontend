@@ -25,7 +25,10 @@ module.exports = {
         bundler: 'webpack',
       })
     );
-    
+    config.plugin('html').tap(args => {
+      args[0].favicon = './src/assets/img/logo4.png' // 根据你图标路径改
+      return args
+    });
     // 添加对node_modules的处理
     config.resolve.modules
       .add('node_modules')
