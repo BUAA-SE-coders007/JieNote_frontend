@@ -1,42 +1,6 @@
 
 <template>
   <div class="pdf-iframe-viewer">
-    <div class="toolbar">
-      <div class="left-tools">
-        <div class="file-header">
-          <span class="file-icon">📄</span>
-          <span class="file-name">{{ props.fileName }}</span>
-        </div>
-      </div>
-
-      <!-- 使用v-show根据屏幕宽度控制显示 -->
-      <div class="time-info" v-show="!isMobile">
-        <div class="time-item">
-          <el-icon class="icon"><Calendar /></el-icon>
-          <span>最近修改：{{ displayLastModified }}</span>
-        </div>
-        <div class="time-item">
-          <el-icon class="icon"><Clock /></el-icon>
-          <span>当前时间：{{ currentTime }}</span>
-        </div>
-      </div>
-
-      <div class="action-buttons">
-        <div
-          v-if="pdfUrl && write"
-          class="save-btn"
-          :class="{ 'is-loading': isSaving }"
-          @click="handleSave"
-        >
-          <el-icon class="icon"><Document /></el-icon>
-          <span v-show="!isSaving">保存</span>
-          <span v-show="isSaving">
-            保存中 <span class="spinner">.</span><span class="spinner">.</span><span class="spinner">.</span>
-          </span>
-        </div>
-      </div>
-    </div>
-
     <!-- loading骨架 -->
     <div v-if="isLoading" class="iframe-loading">📄 PDF 加载中...</div>
 
@@ -87,20 +51,14 @@ const pdfUrl = ref('')
 const pdfIframe = ref(null)
 const isSaving = ref(false)
 const isLoading = ref(true)
-let countdownTimer = null
 const BASE_URL = 'https://jienote.top/pdfjs/web/viewer.html'
 
-// 新增当前时间响应式变量
-const currentTime = ref('');
+
 
 // 新增屏幕宽度检测
 const isMobile = ref(window.innerWidth < 600);
 
-// 时间格式化函数
-function formatDate(date) {
-  const d = new Date(date);
-  return d.toISOString().split('T')[0] + ' ' + d.toTimeString().split(' ')[0];
-}
+
 
 // 窗口大小变化事件处理
 const handleResize = () => {
@@ -109,10 +67,7 @@ const handleResize = () => {
 
 // 实时更新当前时间（每秒更新）
 onMounted(() => {
-  currentTime.value = formatDate(new Date());
-  const timer = setInterval(() => {
-    currentTime.value = formatDate(new Date());
-  }, 1000);
+  
   
   // 初始化窗口大小监听
   window.addEventListener('resize', handleResize);
@@ -125,10 +80,8 @@ onMounted(() => {
   }
   
   onUnmounted(() => {
-    clearInterval(timer);
     window.removeEventListener('resize', handleResize);
     window.removeEventListener('message', onMessage)
-    clearInterval(countdownTimer)
   })
 });
 
@@ -148,10 +101,7 @@ function handleSave() {
   sendMessageToIframe({ type: 'save', token: token, articleId: props.articleId })
   isSaving.value = true;
   
-  // 10秒后自动取消加载状态
-  countdownTimer = setTimeout(() => {
-    isSaving.value = false;
-  }, 10000);
+  
 }
 
 function sendMessageToIframe(data) {
@@ -180,14 +130,10 @@ function onMessage(event) {
 }
 
 // 计算展示的修改时间
-const displayLastModified = computed(() => {
-  return props.lastModified
-    ? formatDate(props.lastModified)
-    : formatDate(new Date())
-})
 
 defineExpose({
   pdfUrl,
+  handleSave,
 })
 </script>
 
