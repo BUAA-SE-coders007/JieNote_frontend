@@ -10,9 +10,32 @@
       >
         <el-icon><Back /></el-icon>
       </el-button>
+
       <div class="jienote-title">
         <span class="title-text">JieNote 文献笔记</span>
         <span class="subtitle" v-if="documentTitle">{{ documentTitle }}</span>
+      </div>
+
+      <div class="save-button-container">
+        <el-button
+          type="success"
+          class="header-save-btn"
+          @click="handleSaveNote"
+          :loading="isSaving"
+          size="small"
+          round
+        >
+          <template #icon>
+            <el-icon><EditPen /></el-icon>
+          </template>
+          <template v-if="!isSaving">
+            <span class="save-text">保存批注</span>
+          </template>
+          <template v-else>
+            <el-icon class="loading-icon"><Loading /></el-icon>
+            <span class="save-text">保存中…</span>
+          </template>
+        </el-button>
       </div>
       <!-- 笔记选择器 -->
       <div class="header-note-selector">
@@ -45,6 +68,7 @@
               :fileName="documentTitle"
               :articleId="articleId"
               :write="true"
+              :ref="PdfViewerRef"
             />
             <div v-else class="pdf-loading">
               <el-icon class="loading-icon is-loading"><Loading /></el-icon>
@@ -96,6 +120,7 @@ import PdfViewer from '@/components/Pdfview/PdfViewer.vue';
 import 'splitpanes/dist/splitpanes.css';
 import { ElMessage } from 'element-plus';
 import debounce from 'lodash/debounce';
+import {ref} from 'vue'
 
 
 export default {
@@ -122,6 +147,7 @@ export default {
       editorPropsReady: false,
       notesListLoading: true, // 新增：标记笔记列表是否正在加载
       updateRoute: null, // 将在 created 中初始化
+      PdfViewerRef: ref(null), // 新增：PdfViewer组件实例
     }
   },
   created() {
@@ -234,7 +260,9 @@ export default {
 
         // 处理 PDF URL
         if (pdfResponse?.data?.article_url) {
-          this.pdfUrl = pdfResponse.data.article_url;
+          
+          const nowTime = new Date().getTime();
+          this.pdfUrl = pdfResponse.data.article_url + `&t=${nowTime}`;
         } else {
           console.error("获取PDF链接失败：", pdfResponse);
           ElMessage.error("获取 PDF 链接失败！");
@@ -272,6 +300,22 @@ export default {
         console.error("[Note] 切换笔记失败：", error);
         ElMessage.error("切换笔记失败！");
       }
+    },
+
+    async handleSaveNote() {
+      if (this.isSaving) return;
+      
+      try {
+        this.isSaving = true;
+        if (this.PdfViewerRef) {
+          this.PdfViewerRef.value.handleSave();
+        }
+
+    } catch (error) {
+        console.error("[Note] 保存笔记失败：", error);
+    } finally {
+        this.isSaving = false;
+    }
     },
 
     async fetchDocumentTitle(articleId) {
@@ -605,4 +649,38 @@ export default {
     height: 100% !important; /* 强制填充可用高度 */
   }
 }
+
+.save-button-container {
+    /* 右侧布局，保持与选择器间距 */
+    margin-left: 20px;
+    flex-shrink: 0; /* 防止按钮被压缩 */
+  }
+
+  .header-save-btn {
+    /* 按钮样式定制 */
+    background-color: #3e8e8f; /* 主色，可替换为绿色或其他品牌色 */
+    color: #fff;
+    padding: 0 16px;
+    transition: all 0.3s;
+    
+    &:hover {
+      background-color: #228fd8;
+    }
+
+    .icon-margin {
+      margin-right: 4px; /* 图标与文字间距 */
+    }
+
+    .el-progress {
+      vertical-align: middle;
+      margin-left: 4px;
+      width: 14px;
+      height: 14px;
+      line-height: 14px;
+
+      .el-progress__text {
+        display: none; /* 隐藏百分比文字 */
+      }
+    }
+  }
 </style>
