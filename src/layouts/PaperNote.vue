@@ -62,13 +62,13 @@
         <pane :size="pdfPaneSize" min-size="20">
           <!-- PDF 查看区域 -->
           <div class="pdf-container">
-            <PdfViewer
+            <PdfViewer ref="PdfViewerRef"
               v-if="pdfUrl"
               :fileUrl="pdfUrl"
               :fileName="documentTitle"
               :articleId="articleId"
               :write="true"
-              :ref="PdfViewerRef"
+              
             />
             <div v-else class="pdf-loading">
               <el-icon class="loading-icon is-loading"><Loading /></el-icon>
@@ -120,11 +120,12 @@ import PdfViewer from '@/components/Pdfview/PdfViewer.vue';
 import 'splitpanes/dist/splitpanes.css';
 import { ElMessage } from 'element-plus';
 import debounce from 'lodash/debounce';
-import {ref} from 'vue'
+
 
 
 export default {
   name: "PaperNote",
+  
   components: {
     Back,
     Loading,
@@ -147,7 +148,7 @@ export default {
       editorPropsReady: false,
       notesListLoading: true, // 新增：标记笔记列表是否正在加载
       updateRoute: null, // 将在 created 中初始化
-      PdfViewerRef: ref(null), // 新增：PdfViewer组件实例
+  
     }
   },
   created() {
@@ -262,7 +263,7 @@ export default {
         if (pdfResponse?.data?.article_url) {
           
           const nowTime = new Date().getTime();
-          this.pdfUrl = pdfResponse.data.article_url + `&t=${nowTime}`;
+          this.pdfUrl = pdfResponse.data.article_url + `?t=${nowTime}`;
         } else {
           console.error("获取PDF链接失败：", pdfResponse);
           ElMessage.error("获取 PDF 链接失败！");
@@ -302,20 +303,21 @@ export default {
       }
     },
 
-    async handleSaveNote() {
-      if (this.isSaving) return;
+     handleSaveNote() {
       
       try {
-        this.isSaving = true;
-        if (this.PdfViewerRef) {
-          this.PdfViewerRef.value.handleSave();
+        
+        if (this.$refs.PdfViewerRef) {
+          this.$refs.PdfViewerRef.handleSave();
+        } else {
+          console.log('is null,waiting...')
         }
 
-    } catch (error) {
+      } catch (error) {
         console.error("[Note] 保存笔记失败：", error);
-    } finally {
-        this.isSaving = false;
-    }
+      } 
+
+      
     },
 
     async fetchDocumentTitle(articleId) {
